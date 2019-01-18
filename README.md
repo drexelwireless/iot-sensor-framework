@@ -47,7 +47,7 @@ sudo pip install git+https://github.com/ajmendez/PyMix.git
 ```
 
 ### Instructions (Running framework on localhost for testing/development)
-Start the following components in the order presented below:
+Start the following components in the order presented below.  Note that some scripts may be in a scripts/ subdirectory.
 
 #### Set up
 Use a separate command window or tab for each of the following:
