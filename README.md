@@ -62,18 +62,13 @@ MySQL v5.5 (Raspberry Pi):
 sudo service mysql start
 ```
 ###### Web Server
-Navigate to `rfid_v6/rfid/v6/rssi_db/`:
+Navigate to `rssi_db/`:
 * Run `./server_mysql.sh` (for use with the interrogator and MySQL) or `./server.sh` (for a SQLite instance when running processing modules)
 
 ###### RFID Interrogator
-Navigate to `rfid_v6/rfid/v6/interrogator/` and run either of the following:
+Navigate to `interrogator/` and run either of the following:
 * `client_r1000.sh` to use the Impinj Speedway R1000 RFID Reader
 * `client_r420.sh` to use Impinj Speedway R420 RFID Reader
-
-###### Visualizer
-Navigate to `visualizer_v1/v1/` and run either of the following:
-* `live.sh` for a live visualizer.
-* `simulate.sh` for a simulation of previously collected data.
 
 #### Shutdown
 1. In the command window running the visualizer, type 'q' and press enter.
@@ -83,7 +78,7 @@ Navigate to `visualizer_v1/v1/` and run either of the following:
 
 #### Export to .db file
 Before running the following, make sure MySQL and webserver are running.
-* Navigate to `rfid_v6/rfid/v6/rssi_db/`
+* Navigate to `rssi_db/`
 * Run `./export_mysql_to_sqlite.sh`
 * This will create a database file named 'out.db1' in the current working directory with data from the MySQL database.
 
