@@ -1,11 +1,18 @@
-# RFID Data Collection & Visualization Software  
+# RFID Data Collection & Visualization Software
 
-This software suite contains scripts to collect and visualize RFID tag information using an Impinj Speedway RFID reader.
+This software suite contains scripts to collect and visualize RFID tag
+information using an Impinj Speedway RFID reader.
 
-*Note: These instructions assume that the web server, interrogation and visualizer will be run on the same machine (IP addresses in all shell scripts have been set to `localhost`). 
+*Note: These instructions assume that the web server, interrogation and
+visualizer will be run on the same machine (IP addresses in all shell scripts
+have been set to `localhost`).
 
 ### Requirements
-The following software packages need to be installed before running RFID data collection. You will have to use the same install method (such as `pip install` or `easy_install`) listed here. Also, alternatives to using `sudo` for `pip install` are  `sudo -H pip install <package-name>` or `pip install --user <package-name>`. 
+The following software packages need to be installed before running RFID
+data collection. You will have to use the same install method (such as
+`pip install` or `easy_install`) listed here. Also, alternatives to using
+`sudo` for `pip install` are  `sudo -H pip install <package-name>` or
+`pip install --user <package-name>`.
 
 MySQL:
 ```
@@ -47,7 +54,8 @@ sudo pip install git+https://github.com/ajmendez/PyMix.git
 ```
 
 ### Instructions (Running framework on localhost for testing/development)
-Start the following components in the order presented below.  Note that some scripts may be in a scripts/ subdirectory.
+Start the following components in the order presented below.
+Note that some scripts may be in a scripts/ subdirectory.
 
 #### Set up
 Use a separate command window or tab for each of the following:
@@ -63,7 +71,8 @@ sudo service mysql start
 ```
 ###### Web Server
 Navigate to `rssi_db/`:
-* Run `./server_mysql.sh` (for use with the interrogator and MySQL) or `./server.sh` (for a SQLite instance when running processing modules)
+* Run `./server_mysql.sh` (for use with the interrogator and MySQL) or
+`./server.sh` (for a SQLite instance when running processing modules)
 
 ###### RFID Interrogator
 Navigate to `interrogator/` and run either of the following:
@@ -80,7 +89,8 @@ Navigate to `interrogator/` and run either of the following:
 Before running the following, make sure MySQL and webserver are running.
 * Navigate to `rssi_db/`
 * Run `./export_mysql_to_sqlite.sh`
-* This will create a database file named 'out.db1' in the current working directory with data from the MySQL database.
+* This will create a database file named 'out.db1' in the current working
+directory with data from the MySQL database.
 
 #### Convert .db file to .csv
 * Rename the output db file to `database.db`
@@ -88,38 +98,56 @@ Before running the following, make sure MySQL and webserver are running.
 mv out.db1 database.db
 ```
 * Run: `./retrieve_wholedb_json.sh`
-* This will create a file named `out.csv`. This file contains the collected RFID tag data.
+* This will create a file named `out.csv`. This file contains the collected RFID
+tag data.
 
 #### Remove collected data from MySQL database and re-initialize database
 * Run: `./destroy_mysql.sh`. When prompted for a password, press enter.
 * Run: `./initialize_mysql.sh`.
 
 #### Run a processing module
-* Change into the `fusionframework_v1` directory (or `fusionframework_v2` or other processing unit as appropriate)
-* Run `./simulate.sh sensor_test.TestSensor` (replace with `sensor_your.YourSensor` for a YourSensor class written into the sensor_your.py file)
+* Change into the `fusionframework_v1` directory (or `fusionframework_v2` or
+other processing unit as appropriate)
+* Run `./simulate.sh sensor_test.TestSensor` (replace with
+`sensor_your.YourSensor` for a YourSensor class written into the sensor_your.py
+file)
 
-## Data Export Instructions 
-Following instructions below to export the collected data. Ensure shutdown steps listed above have been completed before proceeding to export data:
-1. Export MySQL database to SQL database: `./export_mysql_to_sqlite.sh`. 
-2. You will now have a file named `out.db1` in your working directory. If you would like to export db files, proceed to step 6.  
+## Data Export Instructions
+Following instructions below to export the collected data. Ensure shutdown steps
+listed above have been completed before proceeding to export data:
+1. Export MySQL database to SQL database: `./export_mysql_to_sqlite.sh`.
+2. You will now have a file named `out.db1` in your working directory. If you
+would like to export db files, proceed to step 6.
 3. Rename db file: `mv out.db1 database.db`
-4. Convert db file to csv: `./retrieve_wholedb_json.sh`. 
-5. You will now have a csv file named `out.csv` in your working directory. 
-6. Copy your desired file (either `out.db1` or `out.csv`) from the server Raspberry Pi to the Bellyband laptop by running the following on the Bellyband Laptop: 
-	1. Open a terminal window. 
-	1. Navigate to your desired directory. For example, a folder on the Desktop: `cd ~/Desktop/data_dir`. 
-	1. Run: 
-	```
-	scp pi@192.168.0.105:/home/pi/rssi_db/<desired_file> . 
-	``` 
-	Where `<desired_file>` is either `out.db1` or `out.csv`. 
+4. Convert db file to csv: `./retrieve_wholedb_json.sh`.
+5. You will now have a csv file named `out.csv` in your working directory.
+6. Copy your desired file (either `out.db1` or `out.csv`) from the server
+Raspberry Pi to the Bellyband laptop by running the following on the Bellyband
+Laptop:
+    1. Open a terminal window.
+    2. Navigate to your desired directory. For example, a folder on the Desktop:
+    `cd ~/Desktop/data_dir`.
+    3. Run:
+    ```
+    scp pi@192.168.0.105:/home/pi/rssi_db/<desired_file> .
+    ```
+    Where `<desired_file>` is either `out.db1` or `out.csv`.
 7. Rename your data file, for example: `mv out.csv breathing_30.csv`
-8. Copy the file to a USB drive to export to your personal computer. 
+8. Copy the file to a USB drive to export to your personal computer.
 
-You have now completed data collection and export. If you are done with data collection, close all terminal windows on the Bellyband laptop by typing `exit` and pressing enter (for Raspberry Pi terminals, you will need to do this twice for terminal window to close). Shutdown the laptop by clicking the gear icon on the top right and selecting shutdown. Finally, power down all devices at the RFID setup. 
+You have now completed data collection and export.
+If you are done with data collection, close all terminal windows on the
+Bellyband laptop by typing `exit` and pressing enter (for Raspberry Pi
+terminals, you will need to do this twice for terminal window to close).
+Shutdown the laptop by clicking the gear icon on the top right and selecting
+shutdown. Finally, power down all devices at the RFID setup.
 
-## Troubleshooting 
-* **Interrogator script hangs**: If the interrogator script hangs after quitting or during data collection, do the following to kill the interrogator process: 
-	1. Press CTRL+Z
-	1. Find the interrogator process ID: `ps -a`. The process ID will be listed next to `./client_r420.py` or something similar. 
-	1. Once you have obtained the process ID, kill it using `kill -9 <process_id>` (where `<process_id>` is the process ID you determined in the previous step without the angular brackets). 
+## Troubleshooting
+* **Interrogator script hangs**: If the interrogator script hangs after quitting
+or during data collection, do the following to kill the interrogator process:
+    1. Press CTRL+Z
+    1. Find the interrogator process ID: `ps -a`. The process ID will be listed
+    next to `./client_r420.py` or something similar.
+    1. Once you have obtained the process ID, kill it using
+    `kill -9 <process_id>` (where `<process_id>` is the process ID you
+    determined in the previous step without the angular brackets).
