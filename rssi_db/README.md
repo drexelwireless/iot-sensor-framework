@@ -1,14 +1,8 @@
 # RFID Data Collection - MySQL Server
 
-## Required Software
-1. Docker Community Edition
-2. Docker Compose
-
 ## Server Setup
 From the host machine run the following:
 ```
-$ docker-compose build
-$ docker-compose up
 $ docker-compose run rssi_db
 ```
 
@@ -34,9 +28,4 @@ mysql> quit
 From within the container run the following:
 ```
 service mysql stop
-```
-
-From the host machine run the following:
-```
-docker-compose down
 ```

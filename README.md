@@ -151,3 +151,31 @@ or during data collection, do the following to kill the interrogator process:
     1. Once you have obtained the process ID, kill it using
     `kill -9 <process_id>` (where `<process_id>` is the process ID you
     determined in the previous step without the angular brackets).
+
+----
+
+## Containerization
+*TODO*: This section should be considered WIP. Add updates to this section until
+the full software stack is capable or independently running containerized.
+
+### Software Requirements
+1. [Docker](https://www.docker.com/products/docker-engine)
+2. [Docker Compose](https://docs.docker.com/compose/)
+
+### Using the Containers
+#### Container Build & Startup
+```
+$ docker-compose build
+$ docker-compose up
+```
+
+#### Container Shutdown
+```
+$ docker-compose down
+```
+
+#### Running a Container
+From within a host machine terminal execute any of the following:
+1. Database Container - `$ docker-compose run rssi_db`
+2. Interrogator Container - `$ docker-compose run interrogator`
+```
