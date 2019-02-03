@@ -174,8 +174,21 @@ $ docker-compose up
 $ docker-compose down
 ```
 
-#### Running a Container
-From within a host machine terminal execute any of the following:
-1. Database Container - `$ docker-compose run rssi_db`
-2. Interrogator Container - `$ docker-compose run interrogator`
+## Troubleshooting 
+* **Interrogator script hangs**: If the interrogator script hangs after quitting or during data collection, do the following to kill the interrogator process: 
+	1. Press CTRL+Z
+	1. Find the interrogator process ID: `ps -a`. The process ID will be listed next to `./client_r420.py` or something similar. 
+	1. Once you have obtained the process ID, kill it using `kill -9 <process_id>` (where `<process_id>` is the process ID you determined in the previous step without the angular brackets). 
+
+## Development Guidelines
+### Formatting Python
+Install the `autopep8` code formatting tool.
 ```
+pip install autopep8
+```
+Run the following command from within the root directory of the repository.
+```
+autopep8 --in-place --recursive .
+```
+In the future we may want to use the `--aggressive` option to make
+non-whitespace style changes.

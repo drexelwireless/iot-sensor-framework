@@ -7,19 +7,23 @@ from mycrypto import MyCrypto
 from database import Database
 from database_sqlite import SqliteDatabase
 import time
-    
-############################################## OPTIONS
-def usage(flask_host, db_path, key_path_prefix, password, csvpath):   
+
+# OPTIONS
+
+
+def usage(flask_host, db_path, key_path_prefix, password, csvpath):
     print '%s [<options>]' % sys.argv[0]
     print 'where <options> are:\n' \
-            '\t-h - show this help message\n' \
-            '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
-            '\t-b <path> - path to the database: default %s\n' \
-            '\t-k <path> - path to tke ssl key: default %s\n' \
-            '\t-c <path> - path to tke csv file: default %s\n' \
-            '\t-p <password> - database password: default %s\n' % (flask_host, db_path, key_path_prefix, csvpath, password)
+        '\t-h - show this help message\n' \
+        '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
+        '\t-b <path> - path to the database: default %s\n' \
+        '\t-k <path> - path to tke ssl key: default %s\n' \
+        '\t-c <path> - path to tke csv file: default %s\n' \
+        '\t-p <password> - database password: default %s\n' % (
+            flask_host, db_path, key_path_prefix, csvpath, password)
     sys.exit(1)
-    
+
+
 def getopts():
     # Defaults
     flask_host = '0.0.0.0'
@@ -28,7 +32,7 @@ def getopts():
     password = ''
     mysql = False
     csvpath = 'database.csv'
-    
+
     # Check command line
     optlist, list = getopt.getopt(sys.argv[1:], 'hp:f:b:k:c:')
     for opt in optlist:
@@ -44,19 +48,22 @@ def getopts():
             key_path_prefix = opt[1]
         if opt[0] == '-c':
             csvpath = opt[1]
-                
+
     return flask_host, db_path, key_path_prefix, password, csvpath
 
-############################################## MAIN
+# MAIN
+
+
 def db_decrypt(s, counter, password, crypto):
-    #counter = int(counter) % 10^16 # counter must be at most 16 digits
-    counter = int(str(counter)[-16:]) # counter must be at most 16 digits
+    # counter = int(counter) % 10^16 # counter must be at most 16 digits
+    counter = int(str(counter)[-16:])  # counter must be at most 16 digits
 
     aes = crypto.get_db_aes(password, counter)
     b64dec = base64.b64decode(s)
     dec = aes.decrypt(b64dec)
     unpaddec = crypto.unpad(dec)
     return unpaddec
+
 
 def getfield(row, field, default=''):
     if type(field) is list:
@@ -69,23 +76,25 @@ def getfield(row, field, default=''):
             return row[field]
         else:
             return default
-            
+
+
 def main():
     # Get options
     flask_host, db_path, key_path_prefix, password, csvpath = getopts()
-                
+
     # Start up the database module and the database AES / web server SSL module
     crypto = MyCrypto(hostname=flask_host, key_path_prefix=key_path_prefix)
     database = SqliteDatabase(crypto=crypto, db_path=db_path)
-        
+
     csvfile = open(csvpath, 'rb')
     conn = database.open_db_connection()
 
     # read all records from csv
     reader = csv.DictReader(csvfile)
-    
+
     for row in reader:
-        interrogatortime = getfield(row, ['interrogatortime', 'interrogator_timestamp'])
+        interrogatortime = getfield(
+            row, ['interrogatortime', 'interrogator_timestamp'])
         relativetime = getfield(row, ['relativetime', 'relative_timestamp'])
         rssi = getfield(row, 'rssi')
         epc96 = getfield(row, 'epc96')
@@ -98,27 +107,29 @@ def main():
         accessspecid = getfield(row, 'accessspecid')
         inventoryparameterspecid = getfield(row, 'inventoryparameterspecid')
         lastseentimestamp = getfield(row, 'lastseentimestamp')
-        
+
         # decrypt each according to the password
         rssi = db_decrypt(rssi, interrogatortime, password, crypto)
         epc96 = db_decrypt(doppler, interrogatortime, password, crypto)
         doppler = db_decrypt(doppler, interrogatortime, password, crypto)
         phase = db_decrypt(phase, interrogatortime, password, crypto)
-        
+
         #print '*****'
         #print row
         #print '*****'
         #print relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp
-    
+
         # insert each into sqlite database
-        database.insert_row(relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw = password)
+        database.insert_row(relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid,
+                            channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=password)
 
     csvfile.close()
-    time.sleep(5) # allow the database to write
+    time.sleep(5)  # allow the database to write
     os._exit(0)
-    
+
+
 if __name__ == "__main__":
-    main()        
-    
+    main()
+
 # References:
 #   http://kailaspatil.blogspot.com/2013/07/python-script-to-convert-json-file-into.html

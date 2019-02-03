@@ -9,20 +9,24 @@ import json
 import os
 import math
 import numpy as np
-    
-############################################## OPTIONS
-def usage(flask_host, db_path, key_path_prefix, password):   
+
+# OPTIONS
+
+
+def usage(flask_host, db_path, key_path_prefix, password):
     print '%s [<options>]' % sys.argv[0]
     print 'where <options> are:\n' \
-            '\t-h - show this help message\n' \
-            '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
-            '\t-b <path> - path to the database: default %s\n' \
-            '\t-k <path> - path to tke ssl key: default %s\n' \
-            '\t-m - Enable mysql instead of sqlite (also add -s xxx and -w xxx)\n' \
-            '\t-g <tag> - The EPC tag to remove\n' \ 
-            '\t-p <password> - database password: default %s\n' % (flask_host, db_path, key_path_prefix, password)
+        '\t-h - show this help message\n' \
+        '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
+        '\t-b <path> - path to the database: default %s\n' \
+        '\t-k <path> - path to tke ssl key: default %s\n' \
+        '\t-m - Enable mysql instead of sqlite (also add -s xxx and -w xxx)\n' \
+        '\t-g <tag> - The EPC tag to remove\n' \
+        '\t-p <password> - database password: default %s\n' % (
+            flask_host, db_path, key_path_prefix, password)
     sys.exit(1)
-    
+
+
 def getopts():
     # Defaults
     flask_host = '0.0.0.0'
@@ -32,8 +36,8 @@ def getopts():
     mysql = False
     db_user = 'rssi'
     db_password = ''
-    tag = None 
-    
+    tag = None
+
     # Check command line
     optlist, list = getopt.getopt(sys.argv[1:], 'hmp:f:b:k:s:w:g:')
     for opt in optlist:
@@ -55,45 +59,54 @@ def getopts():
             db_password = opt[1]
         if opt[0] == '-g':
             tag = opt[1]
-                
+
     return flask_host, db_path, key_path_prefix, password, mysql, db_user, db_password, tag
-    
-############################################## MAIN
+
+# MAIN
+
+
 def getdict(dic, key, default):
     if key in dic:
         return dic[key]
     else:
         return default
-        
+
+
 def get_data(row):
     rssi = getdict(row, 'rssi', '')
-    relative_time = getdict(row, 'relative_timestamp', '') 
-    interrogator_time = getdict(row, 'interrogator_timestamp', '') 
-    epc96 = getdict(row, 'epc96', '') 
-    doppler = getdict(row, 'doppler', '-1') 
-    phase = getdict(row, 'phase', '-1') 
-    antenna = getdict(row, 'antenna', '-1') 
-    rospecid = getdict(row, 'rospecid', '-1') 
-    channelindex = getdict(row, 'channelindex', '-1') 
-    tagseencount = getdict(row, 'tagseencount', '-1') 
-    accessspecid = getdict(row, 'accessspecid', '-1') 
-    inventoryparameterspecid = getdict(row, 'inventoryparameterspecid', '-1') 
+    relative_time = getdict(row, 'relative_timestamp', '')
+    interrogator_time = getdict(row, 'interrogator_timestamp', '')
+    epc96 = getdict(row, 'epc96', '')
+    doppler = getdict(row, 'doppler', '-1')
+    phase = getdict(row, 'phase', '-1')
+    antenna = getdict(row, 'antenna', '-1')
+    rospecid = getdict(row, 'rospecid', '-1')
+    channelindex = getdict(row, 'channelindex', '-1')
+    tagseencount = getdict(row, 'tagseencount', '-1')
+    accessspecid = getdict(row, 'accessspecid', '-1')
+    inventoryparameterspecid = getdict(row, 'inventoryparameterspecid', '-1')
     lastseentimestamp = getdict(row, 'lastseentimestamp', '-1')
 
     return relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp
 
-def insert_row(db, relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_password):
-    db.insert_row(relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=db_password)
-    
-def process(row, outdb, db_pw, tag=None):
-    relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp = get_data(row)
 
-    if tag == epc96 or tag is None: 
+def insert_row(db, relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_password):
+    db.insert_row(relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid, channelindex,
+                  tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=db_password)
+
+
+def process(row, outdb, db_pw, tag=None):
+    relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp = get_data(
+        row)
+
+    if tag == epc96 or tag is None:
         print 'INSERTING', relative_time
-        insert_row(outdb, relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw)
+        insert_row(outdb, relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid,
+                   channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw)
     else:
         print 'ELIMINATING', relative_time
-    
+
+
 def main():
     # Get options
     flask_host, db_path, key_path_prefix, password, mysql, db_user, db_password, tag = getopts()
@@ -101,19 +114,20 @@ def main():
     # Start up the database module and the database AES / web server SSL module
     crypto = MyCrypto(hostname=flask_host, key_path_prefix=key_path_prefix)
     if mysql == True:
-        database = MysqlDatabase(crypto=crypto, db_path=db_path, db_password=db_password, db_user=db_user)
+        database = MysqlDatabase(
+            crypto=crypto, db_path=db_path, db_password=db_password, db_user=db_user)
     else:
         database = SqliteDatabase(crypto=crypto, db_path=db_path)
-    
+
     outdb_path = 'out.db0'
     sqliteoutdb = SqliteDatabase(crypto=crypto, db_path=outdb_path)
-    
+
     data = database.fetch_all(password)
 
     #print data
 
-    myjson = data # assumed to be a json array
-    
+    myjson = data  # assumed to be a json array
+
     keys = dict()
 
     #print myjson
@@ -123,10 +137,10 @@ def main():
             keys[k] = 1
     elif isinstance(myjson[0], list):
         for k in myjson[0][0].keys():
-            keys[k] = 1        
-        
+            keys[k] = 1
+
     #print 'keys', keys
-    
+
     for batch in myjson:
         #print 'got:', batch
         if isinstance(batch, dict):
@@ -137,14 +151,15 @@ def main():
                 #print 'list:', row
                 process(row, sqliteoutdb, password, tag=tag)
         else:
-            print 'Error on data (not inserting):', batch  
+            print 'Error on data (not inserting):', batch
 
     database.close_db_connection()
     sqliteoutdb.close_db_connection()
     os._exit(0)
-    
+
+
 if __name__ == "__main__":
-    main()        
-    
+    main()
+
 # References:
 #   http://kailaspatil.blogspot.com/2013/07/python-script-to-convert-json-file-into.html
