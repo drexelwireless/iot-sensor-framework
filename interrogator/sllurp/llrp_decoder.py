@@ -24,7 +24,8 @@ tve_param_formats = {
     16: ('AccessSpecID', '!I')
 }
 
-def decode_tve_parameter (data):
+
+def decode_tve_parameter(data):
     """Generic byte decoding function for TVE parameters.
 
     Given an array of bytes, tries to interpret a TVE parameter from the
@@ -53,6 +54,7 @@ def decode_tve_parameter (data):
     except struct.error:
         return None, 0
 
-def decode_parameter (data):
+
+def decode_parameter(data):
     """Decode a single parameter."""
     pass
