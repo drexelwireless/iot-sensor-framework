@@ -174,12 +174,6 @@ $ docker-compose up
 $ docker-compose down
 ```
 
-## Troubleshooting 
-* **Interrogator script hangs**: If the interrogator script hangs after quitting or during data collection, do the following to kill the interrogator process: 
-	1. Press CTRL+Z
-	1. Find the interrogator process ID: `ps -a`. The process ID will be listed next to `./client_r420.py` or something similar. 
-	1. Once you have obtained the process ID, kill it using `kill -9 <process_id>` (where `<process_id>` is the process ID you determined in the previous step without the angular brackets). 
-
 ## Development Guidelines
 ### Formatting Python
 Install the `autopep8` code formatting tool.
