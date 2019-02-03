@@ -1,0 +1,17 @@
+version: '3'
+services:
+  rssi_db:
+    build: ./rssi_db
+    volumes:
+      - ./rssi_db:/rssi_db
+    ports:
+      - 5000:3306
+    working_dir: /rssi_db
+
+  interrogator:
+    build: ./interrogator
+    volumes:
+      - ./interrogator:/interrogator
+    #ports:
+    #  - TODO
+    working_dir: /interrogator

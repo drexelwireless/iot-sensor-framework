@@ -1,0 +1,51 @@
+# Binaries
+*.o
+*.out
+*.a
+*.lib
+*.la
+*.lo
+*.so
+*.exe
+
+# Archive and compression files
+*.tar
+*.7z
+*.jar
+*.rar
+*.zip
+*.gz
+*.tgz
+*.bzip
+*.bz2
+*.xz
+*.lzma
+*.cab
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-v][a-z]
+[._]sw[a-p]
+*.vim
+
+# Windows Specific
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+*.lnk
+
+# Mac Specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Docker specific
+.ash_history
+.bash_history
