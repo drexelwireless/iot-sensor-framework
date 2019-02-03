@@ -23,7 +23,9 @@
 # TODO: use generic functions from llrp_decoder where possible
 #
 
-import logging, struct, exceptions
+import logging
+import struct
+import exceptions
 from collections import defaultdict
 import traceback
 from threading import *
@@ -43,7 +45,7 @@ __all__ = [
     "LLRPdCapabilities",
     "LLRPROSpec",
     "LLRPMessageDict",
-    
+
     # Misc
     "func",
 ]
@@ -54,35 +56,38 @@ logger = logging.getLogger(__name__)
 # Local functions
 #
 
+
 def decode(data):
     return Message_struct[data]['decode']
+
 
 def encode(data):
     return Message_struct[data]['encode']
 
+
 def bin2dump(data, label=''):
     def isprint(c):
         return ord(c) >= 32 and ord(c) <= 126
-    
+
     def conv(c):
         if isprint(c):
             return c
         return '.'
-    
+
     l = len(data)
     if len(label) > 0:
         str = label + '\n'
     else:
         str = ''
-    
+
     p = 0
     line = ' ' * 80
     i = 0
     while i < l:
         num = '%02x' % struct.unpack('B', data[i])
-        line = line[ : p * 3] + num + line[p * 3 + 2 : ]
-        line = line[ : 50 + p] + conv(data[i])
-        
+        line = line[: p * 3] + num + line[p * 3 + 2:]
+        line = line[: 50 + p] + conv(data[i])
+
         p += 1
         if p == 16:
             str += line + '\n'
@@ -91,7 +96,8 @@ def bin2dump(data, label=''):
         i += 1
     if p != 0:
         str += line + '\n'
-    return str[ : -1]
+    return str[: -1]
+
 
 def dump(data, label):
     logger.debug(bin2dump(data, label))
@@ -100,9 +106,10 @@ def dump(data, label):
 # LLRP defines & structs
 #
 
-LLRP_PORT               = 5084
 
-VER_PROTO_V1                = 1
+LLRP_PORT = 5084
+
+VER_PROTO_V1 = 1
 
 gen_header = '!HI'
 gen_header_len = struct.calcsize(gen_header)
@@ -175,32 +182,32 @@ for m in ConnEvent_Name2Type:
 # http://www.gs1.org/gsmp/kc/epcglobal/llrp/llrp_1_0_1-standard-20070813.pdf
 # Section 14.1.1 Error messages
 Error_Name2Type = {
-    'Success'                : 0,
-    'ParameterError'         : 100,
-    'FieldError'             : 101,
-    'UnexpectedParameter'    : 102,
-    'MissingParameter'       : 103,
-    'DuplicateParameter'     : 104,
-    'OverflowParameter'      : 105,
-    'OverflowField'          : 106,
-    'UnknownParameter'       : 107,
-    'UnknownField'           : 108,
-    'UnsupportedMessage'     : 109,
-    'UnsupportedVersion'     : 110,
-    'UnsupportedParameter'   : 111,
-    'P_ParameterError'       : 200,
-    'P_FieldError'           : 201,
-    'P_UnexpectedParameter'  : 202,
-    'P_MissingParameter'     : 203,
-    'P_DuplicateParameter'   : 204,
-    'P_OverflowParameter'    : 205,
-    'P_OverflowField'        : 206,
-    'P_UnknownParameter'     : 207,
-    'P_UnknownField'         : 208,
-    'P_UnsupportedParameter' : 209,
-    'A_Invalid'              : 300,
-    'A_OutOfRange'           : 301,
-    'DeviceError'            : 401,
+    'Success': 0,
+    'ParameterError': 100,
+    'FieldError': 101,
+    'UnexpectedParameter': 102,
+    'MissingParameter': 103,
+    'DuplicateParameter': 104,
+    'OverflowParameter': 105,
+    'OverflowField': 106,
+    'UnknownParameter': 107,
+    'UnknownField': 108,
+    'UnsupportedMessage': 109,
+    'UnsupportedVersion': 110,
+    'UnsupportedParameter': 111,
+    'P_ParameterError': 200,
+    'P_FieldError': 201,
+    'P_UnexpectedParameter': 202,
+    'P_MissingParameter': 203,
+    'P_DuplicateParameter': 204,
+    'P_OverflowParameter': 205,
+    'P_OverflowField': 206,
+    'P_UnknownParameter': 207,
+    'P_UnknownField': 208,
+    'P_UnsupportedParameter': 209,
+    'A_Invalid': 300,
+    'A_OutOfRange': 301,
+    'DeviceError': 401,
 }
 
 Error_Type2Name = reverse_dict(Error_Name2Type)
@@ -237,12 +244,15 @@ DEFAULT_MODULATION = 'M4'
 # LLRP Messages
 #
 
-Message_struct = { }
+Message_struct = {}
 
 # 16.1.1 GET_READER_CAPABILITIES
+
+
 def encode_GetReaderCapabilities(msg):
     req = msg['RequestedData']
     return struct.pack('!B', req)
+
 
 Message_struct['GET_READER_CAPABILITIES'] = {
     'type': 1,
@@ -254,33 +264,36 @@ Message_struct['GET_READER_CAPABILITIES'] = {
 }
 
 # 16.1.2 GET_READER_CAPABILITIES_RESPONSE
+
+
 def decode_GetReaderCapabilitiesResponse(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
-    
+
     # Decode parameters
     ret, body = decode('LLRPStatus')(data)
     if ret:
         msg['LLRPStatus'] = ret
     else:
         raise LLRPError('missing or invalid LLRPStatus parameter')
-    
+
     ret, body = decode('GeneralDeviceCapabilities')(body)
     if ret:
         msg['GeneralDeviceCapabilities'] = ret
-    
+
     ret, body = decode('LLRPCapabilities')(body)
     if ret:
         msg['LLRPCapabilities'] = ret
-    
+
     ret, body = decode('RegulatoryCapabilities')(body)
     if ret:
         msg['RegulatoryCapabilities'] = ret
-    
+
     if len(body):
         msg['AirProtocolLLRPCapabilities'] = body
-    
+
     return msg
+
 
 Message_struct['GET_READER_CAPABILITIES_RESPONSE'] = {
     'type': 11,
@@ -296,8 +309,11 @@ Message_struct['GET_READER_CAPABILITIES_RESPONSE'] = {
 }
 
 # 16.1.3 ADD_ROSPEC
+
+
 def encode_AddROSpec(msg):
     return encode('ROSpec')(msg['ROSpec'])
+
 
 Message_struct['ADD_ROSPEC'] = {
     'type': 20,
@@ -309,22 +325,25 @@ Message_struct['ADD_ROSPEC'] = {
 }
 
 # 16.1.4 ADD_ROSPEC_RESPONSE
+
+
 def decode_AddROSpecResponse(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
-    
+
     # Decode parameters
     ret, body = decode('LLRPStatus')(data)
     if ret:
         msg['LLRPStatus'] = ret
     else:
         raise LLRPError('missing or invalid LLRPStatus parameter')
-    
+
     # Check the end of the message
     if len(body) > 0:
         raise LLRPError('junk at end of message: ' + bin2dump(body))
-    
+
     return msg
+
 
 Message_struct['ADD_ROSPEC_RESPONSE'] = {
     'type': 30,
@@ -336,10 +355,13 @@ Message_struct['ADD_ROSPEC_RESPONSE'] = {
 }
 
 # 16.1.5 DELETE_ROSPEC
+
+
 def encode_DeleteROSpec(msg):
-        msgid = msg['ROSpecID']
-        
-        return struct.pack('!I', msgid)
+    msgid = msg['ROSpecID']
+
+    return struct.pack('!I', msgid)
+
 
 Message_struct['DELETE_ROSPEC'] = {
     'type': 21,
@@ -351,22 +373,25 @@ Message_struct['DELETE_ROSPEC'] = {
 }
 
 # 16.1.6 DELETE_ROSPEC_RESPONSE
+
+
 def decode_DeleteROSpecResponse(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
-    
+
     # Decode parameters
     ret, body = decode('LLRPStatus')(data)
     if ret:
         msg['LLRPStatus'] = ret
     else:
         raise LLRPError('missing or invalid LLRPStatus parameter')
-    
+
     # Check the end of the message
     if len(body) > 0:
         raise LLRPError('junk at end of message: ' + bin2dump(body))
-    
+
     return msg
+
 
 Message_struct['DELETE_ROSPEC_RESPONSE'] = {
     'type': 31,
@@ -378,10 +403,13 @@ Message_struct['DELETE_ROSPEC_RESPONSE'] = {
 }
 
 # 16.1.7 START_ROSPEC
+
+
 def encode_StartROSpec(msg):
-        msgid = msg['ROSpecID']
-        
-        return struct.pack('!I', msgid)
+    msgid = msg['ROSpecID']
+
+    return struct.pack('!I', msgid)
+
 
 Message_struct['START_ROSPEC'] = {
     'type': 22,
@@ -393,22 +421,25 @@ Message_struct['START_ROSPEC'] = {
 }
 
 # 16.1.8 START_ROSPEC_RESPONSE
+
+
 def decode_StartROSpecResponse(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
-    
+
     # Decode parameters
     ret, body = decode('LLRPStatus')(data)
     if ret:
         msg['LLRPStatus'] = ret
     else:
         raise LLRPError('missing or invalid LLRPStatus parameter')
-    
+
     # Check the end of the message
     if len(body) > 0:
         raise LLRPError('junk at end of message: ' + bin2dump(body))
-    
+
     return msg
+
 
 Message_struct['START_ROSPEC_RESPONSE'] = {
     'type': 32,
@@ -420,10 +451,13 @@ Message_struct['START_ROSPEC_RESPONSE'] = {
 }
 
 # 16.1.9 STOP_ROSPEC
+
+
 def encode_StopROSpec(msg):
-        msgid = msg['ROSpecID']
-        
-        return struct.pack('!I', msgid)
+    msgid = msg['ROSpecID']
+
+    return struct.pack('!I', msgid)
+
 
 Message_struct['STOP_ROSPEC'] = {
     'type': 23,
@@ -435,22 +469,25 @@ Message_struct['STOP_ROSPEC'] = {
 }
 
 # 16.1.10 STOP_ROSPEC_RESPONSE
+
+
 def decode_StopROSpecResponse(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
-    
+
     # Decode parameters
     ret, body = decode('LLRPStatus')(data)
     if ret:
         msg['LLRPStatus'] = ret
     else:
         raise LLRPError('missing or invalid LLRPStatus parameter')
-    
+
     # Check the end of the message
     if len(body) > 0:
         raise LLRPError('junk at end of message: ' + bin2dump(body))
-    
+
     return msg
+
 
 Message_struct['STOP_ROSPEC_RESPONSE'] = {
     'type': 33,
@@ -462,10 +499,13 @@ Message_struct['STOP_ROSPEC_RESPONSE'] = {
 }
 
 # 16.1.11 ENABLE_ROSPEC
+
+
 def encode_EnableROSpec(msg):
     msgid = msg['ROSpecID']
-    
+
     return struct.pack('!I', msgid)
+
 
 Message_struct['ENABLE_ROSPEC'] = {
     'type': 24,
@@ -477,22 +517,25 @@ Message_struct['ENABLE_ROSPEC'] = {
 }
 
 # 16.1.12 ENABLE_ROSPEC_RESPONSE
+
+
 def decode_EnableROSpecResponse(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
-    
+
     # Decode parameters
     ret, body = decode('LLRPStatus')(data)
     if ret:
         msg['LLRPStatus'] = ret
     else:
         raise LLRPError('missing or invalid LLRPStatus parameter')
-    
+
     # Check the end of the message
     if len(body) > 0:
         raise LLRPError('junk at end of message: ' + bin2dump(body))
-    
+
     return msg
+
 
 Message_struct['ENABLE_ROSPEC_RESPONSE'] = {
     'type': 34,
@@ -504,10 +547,13 @@ Message_struct['ENABLE_ROSPEC_RESPONSE'] = {
 }
 
 # 16.1.13 DISABLE_ROSPEC
+
+
 def encode_DisableROSpec(msg):
-        msgid = msg['ROSpecID']
-        
-        return struct.pack('!I', msgid)
+    msgid = msg['ROSpecID']
+
+    return struct.pack('!I', msgid)
+
 
 Message_struct['DISABLE_ROSPEC'] = {
     'type': 25,
@@ -519,22 +565,25 @@ Message_struct['DISABLE_ROSPEC'] = {
 }
 
 # 16.1.14 DISABLE_ROSPEC_RESPONSE
+
+
 def decode_DisableROSpecResponse(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
-    
+
     # Decode parameters
     ret, body = decode('LLRPStatus')(data)
     if ret:
         msg['LLRPStatus'] = ret
     else:
         raise LLRPError('missing or invalid LLRPStatus parameter')
-    
+
     # Check the end of the message
     if len(body) > 0:
         raise LLRPError('junk at end of message: ' + bin2dump(body))
-    
+
     return msg
+
 
 Message_struct['DISABLE_ROSPEC_RESPONSE'] = {
     'type': 35,
@@ -546,16 +595,18 @@ Message_struct['DISABLE_ROSPEC_RESPONSE'] = {
 }
 
 # 16.1.30 RO_ACCESS_REPORT
+
+
 def decode_ROAccessReport(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
-    
+
     # Decode parameters
-    msg['TagReportData'] = [ ]
+    msg['TagReportData'] = []
     while True:
         try:
             ret, data = decode('TagReportData')(data)
-        except TypeError: # XXX
+        except TypeError:  # XXX
             logger.error('Unable to decode TagReportData')
             break
         #print('len(ret) = {}'.format(len(ret)))
@@ -564,12 +615,13 @@ def decode_ROAccessReport(data):
             msg['TagReportData'].append(ret)
         else:
             break
-    
-    ## Check the end of the message
-    #if len(data) > 0:
+
+    # Check the end of the message
+    # if len(data) > 0:
     #    raise LLRPError('junk at end of message: ' + bin2dump(data))
-    
+
     return msg
+
 
 Message_struct['RO_ACCESS_REPORT'] = {
     'type': 61,
@@ -581,8 +633,11 @@ Message_struct['RO_ACCESS_REPORT'] = {
 }
 
 # 16.1.35 KEEPALIVE
+
+
 def decode_Keepalive(msg):
     return ''
+
 
 Message_struct['KEEPALIVE'] = {
     'type': 62,
@@ -593,8 +648,11 @@ Message_struct['KEEPALIVE'] = {
 }
 
 # 16.1.36 KEEPALIVE_ACK
+
+
 def encode_KeepaliveAck(msg):
     return ''
+
 
 Message_struct['KEEPALIVE_ACK'] = {
     'type': 72,
@@ -605,20 +663,23 @@ Message_struct['KEEPALIVE_ACK'] = {
 }
 
 # 16.1.33 READER_EVENT_NOTIFICATION
+
+
 def decode_ReaderEventNotification(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
-    
+
     # Decode parameters
     ret, body = decode('ReaderEventNotificationData')(data)
     if ret:
         msg['ReaderEventNotificationData'] = ret
-    
+
     # Check the end of the message
         if len(body) > 0:
-                raise LLRPError('junk at end of message: ' + bin2dump(body))
-    
+            raise LLRPError('junk at end of message: ' + bin2dump(body))
+
     return msg
+
 
 Message_struct['READER_EVENT_NOTIFICATION'] = {
     'type': 63,
@@ -630,8 +691,11 @@ Message_struct['READER_EVENT_NOTIFICATION'] = {
 }
 
 # 16.1.40 CLOSE_CONNECTION
+
+
 def encode_CloseConnection(msg):
     return ''
+
 
 Message_struct['CLOSE_CONNECTION'] = {
     'type': 14,
@@ -642,22 +706,25 @@ Message_struct['CLOSE_CONNECTION'] = {
 }
 
 # 16.1.41 CLOSE_CONNECTION_RESPONSE
+
+
 def decode_CloseConnectionResponse(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
-    
+
     # Decode parameters
     ret, body = decode('LLRPStatus')(data)
     if ret:
         msg['LLRPStatus'] = ret
     else:
         raise LLRPError('missing or invalid LLRPStatus parameter')
-    
+
     # Check the end of the message
     if len(body) > 0:
         raise LLRPError('junk at end of message: ' + bin2dump(body))
-    
+
     return msg
+
 
 # 16.1.41 CLOSE_CONNECTION_RESPONSE
 Message_struct['CLOSE_CONNECTION_RESPONSE'] = {
@@ -674,25 +741,28 @@ Message_struct['CLOSE_CONNECTION_RESPONSE'] = {
 #
 
 # 16.2.2.1 UTCTimestamp Parameter
+
+
 def decode_UTCTimestamp(data):
     logger.debug(func())
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['UTCTimestamp']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (par['Microseconds'], ) = struct.unpack('!Q', body)
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['UTCTimestamp'] = {
     'type':   128,
@@ -700,7 +770,7 @@ Message_struct['UTCTimestamp'] = {
         'Type',
         'Microseconds'
     ],
-    'decode' : decode_UTCTimestamp
+    'decode': decode_UTCTimestamp
 }
 """
 Message_struct['LLRPdCapabilities'] = {
@@ -713,33 +783,35 @@ Message_struct['LLRPdCapabilities'] = {
     ]
 }
 """
+
+
 def decode_RegulatoryCapabilities(data):
     logger.debug(func())
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['RegulatoryCapabilities']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     fmt = '!HH'
     fmt_len = struct.calcsize(fmt)
     # Decode fields
     (par['CountryCode'],
      par['CommunicationsStandard']) = struct.unpack(fmt, body[:fmt_len])
-    
-    body = body[fmt_len : ]
+
+    body = body[fmt_len:]
     ret, body = decode('UHFBandCapabilities')(body)
     if ret:
         par['UHFBandCapabilities'] = ret
-    
-    return par, data[length : ]
+
+    return par, data[length:]
 
 
 Message_struct['RegulatoryCapabilities'] = {
@@ -753,19 +825,20 @@ Message_struct['RegulatoryCapabilities'] = {
     'decode': decode_RegulatoryCapabilities
 }
 
+
 def decode_UHFBandCapabilities(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['UHFBandCapabilities']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     i = 0
     ret, body = decode('TransmitPowerLevelTableEntry')(body)
@@ -773,19 +846,20 @@ def decode_UHFBandCapabilities(data):
         par['TransmitPowerLevelTableEntry' + str(i)] = ret
         ret, body = decode('TransmitPowerLevelTableEntry')(body)
         i += 1
-    
+
     ret, body = decode('FrequencyInformation')(body)
     if ret:
         par['FrequencyInformation'] = ret
-    
+
     ret, body = decode('UHFRFModeTable')(body)
     if ret:
         par['UHFRFModeTable'] = ret
-    
+
     ret, body = decode('RFSurveyFrequencyCapabilities')(body)
     if ret:
         par['RFSurveyFrequencyCapabilities'] = ret
-    return par, data[length : ]
+    return par, data[length:]
+
 
 Message_struct['UHFBandCapabilities'] = {
     'type': 144,
@@ -799,24 +873,26 @@ Message_struct['UHFBandCapabilities'] = {
     'decode': decode_UHFBandCapabilities
 }
 
+
 def decode_TransmitPowerLevelTableEntry(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['TransmitPowerLevelTableEntry']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (par['Index'],
-      par['TransmitPowerValue']) = struct.unpack('!HH', body)
-    
-    return par, data[length : ]
+     par['TransmitPowerValue']) = struct.unpack('!HH', body)
+
+    return par, data[length:]
+
 
 Message_struct['TransmitPowerLevelTableEntry'] = {
     'type': 145,
@@ -828,37 +904,39 @@ Message_struct['TransmitPowerLevelTableEntry'] = {
     'decode': decode_TransmitPowerLevelTableEntry
 }
 
+
 def decode_FrequencyInformation(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['FrequencyInformation']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     fmt_len = struct.calcsize('!B')
     # Decode fields
-    (flags, ) = struct.unpack('!B', body[ : fmt_len])
+    (flags, ) = struct.unpack('!B', body[: fmt_len])
     par['Hopping'] = flags & BIT(7) == BIT(7)
-    body = body[fmt_len : ]
-    
+    body = body[fmt_len:]
+
     i = 0
     ret, body = decode('FrequencyHopTable')(body)
     while ret:
         par['FrequencyHopTable' + str(i)] = ret
         ret, body = decode('FrequencyHopTable')(body)
         i += 1
-    
+
     ret, body = decode('FixedFrequencyTable')(body)
     if ret:
         par['FixedFrequencyTable'] = ret
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['FrequencyInformation'] = {
     'type': 146,
@@ -871,35 +949,37 @@ Message_struct['FrequencyInformation'] = {
     'decode': decode_FrequencyInformation
 }
 
+
 def decode_FrequencyHopTable(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['FrequencyHopTable']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     fmt = '!BBH'
     fmt_len = struct.calcsize(fmt)
-    
+
     id_fmt = '!I'
     id_fmt_len = struct.calcsize(id_fmt)
     # Decode fields
     (par['HopTableId'],
      flags,
      par['NumHops']) = struct.unpack(fmt, body[: fmt_len])
-    body = body[fmt_len : ]
+    body = body[fmt_len:]
     num = int(par['NumHops'])
     for x in range(1, num + 1):
-       par['Frequency' + str(x)] = struct.unpack(id_fmt, body[: id_fmt_len])
-       body = body[id_fmt_len : ]
-    
-    return par, data[length : ]
+        par['Frequency' + str(x)] = struct.unpack(id_fmt, body[: id_fmt_len])
+        body = body[id_fmt_len:]
+
+    return par, data[length:]
+
 
 Message_struct['FrequencyHopTable'] = {
     'type': 147,
@@ -912,33 +992,35 @@ Message_struct['FrequencyHopTable'] = {
     'decode': decode_FrequencyHopTable
 }
 
+
 def decode_FixedFrequencyTable(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['FixedFrequencyTable']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     fmt = '!H'
     fmt_len = struct.calcsize(fmt)
-    
+
     id_fmt = '!I'
     id_fmt_len = struct.calcsize(id_fmt)
     # Decode fields
     par['NumFrequencies'] = struct.unpack(fmt, body[: fmt_len])
-    body = body[fmt_len : ]
+    body = body[fmt_len:]
     num = int(par['NumFrequencies'])
     for x in range(1, num + 1):
-       par['Frequency' + str(x)] = struct.unpack(id_fmt, body[ : id_fmt_len])
-       body = body[id_fmt_len : ]
-    
-    return par, data[length : ]
+        par['Frequency' + str(x)] = struct.unpack(id_fmt, body[: id_fmt_len])
+        body = body[id_fmt_len:]
+
+    return par, data[length:]
+
 
 Message_struct['FixedFrequencyTable'] = {
     'type': 148,
@@ -950,22 +1032,23 @@ Message_struct['FixedFrequencyTable'] = {
     'decode': decode_FrequencyInformation
 }
 
-def decode_UHFRFModeTable (data):
+
+def decode_UHFRFModeTable(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     if msgtype != Message_struct['UHFRFModeTable']['type']:
         return (None, data)
-    
-    body = data[par_header_len : length]
+
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     i = 0
     ret, body = decode('UHFC1G2RFModeTableEntry')(body)
@@ -973,8 +1056,9 @@ def decode_UHFRFModeTable (data):
         par['UHFC1G2RFModeTableEntry' + str(i)] = ret
         ret, body = decode('UHFC1G2RFModeTableEntry')(body)
         i += 1
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['UHFRFModeTable'] = {
     'type': 328,
@@ -985,21 +1069,22 @@ Message_struct['UHFRFModeTable'] = {
     'decode': decode_UHFRFModeTable
 }
 
-def decode_UHFC1G2RFModeTableEntry (data):
+
+def decode_UHFC1G2RFModeTableEntry(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     if msgtype != Message_struct['UHFC1G2RFModeTableEntry']['type']:
         return (None, data)
-    
-    body = data[par_header_len : length]
-    
+
+    body = data[par_header_len: length]
+
     # Decode fields
     (par['ModeIdentifier'],
      RC,
@@ -1011,12 +1096,13 @@ def decode_UHFC1G2RFModeTableEntry (data):
      par['MinTari'],
      par['MaxTari'],
      par['StepTari']) = struct.unpack('!IBBBBIIIII', body)
-    
+
     # parse RC
     par['R'] = RC >> 7
     par['C'] = (RC >> 6) & 1
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['UHFC1G2RFModeTableEntry'] = {
     'type': 329,
@@ -1035,26 +1121,28 @@ Message_struct['UHFC1G2RFModeTableEntry'] = {
     'decode': decode_UHFC1G2RFModeTableEntry
 }
 
+
 def decode_RFSurveyFrequencyCapabilities(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
-    
+
     if msgtype != Message_struct['RFSurveyFrequencyCapabilities']['type']:
         return (None, data)
-    
-    body = data[par_header_len : length]
+
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (par['MinimumFrequency'],
      par['MaximumFrequency']) = struct.unpack('!II', body)
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['RFSurveyFrequencyCapabilities'] = {
     'type': 365,
@@ -1067,21 +1155,23 @@ Message_struct['RFSurveyFrequencyCapabilities'] = {
 }
 
 # 16.2.3.2 LLRPCapabilities Parameter
+
+
 def decode_LLRPCapabilities(data):
     logger.debug(func())
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['LLRPCapabilities']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (flags,
      par['MaxPriorityLevelSupported'],
@@ -1091,15 +1181,16 @@ def decode_LLRPCapabilities(data):
      par['MaxNumInventoryParametersSpecsPerAISpec'],
      par['MaxNumAccessSpec'],
      par['MaxNumOpSpecsPerAccessSpec']) = struct.unpack('!BBHIIIII', body)
-    
+
     par['CanDoRFSurvey'] = (flags & BIT(7) == BIT(7))
     par['CanReportBufferFillWarning'] = (flags & BIT(6) == BIT(6))
     par['SupportsClientRequestOpSpec'] = (flags & BIT(5) == BIT(5))
     par['CanDoTagInventoryStateAwareSingulation'] = \
-                    (flags & BIT(4) == BIT(4))
+        (flags & BIT(4) == BIT(4))
     par['SupportsEventAndReportHolding'] = (flags & BIT(3) == BIT(3))
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['LLRPCapabilities'] = {
     'type': 142,
@@ -1122,21 +1213,23 @@ Message_struct['LLRPCapabilities'] = {
 }
 
 # 16.2.3.2 GeneralDeviceCapabilities Parameter
+
+
 def decode_GeneralDeviceCapabilities(data):
     logger.debug(func())
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['GeneralDeviceCapabilities']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     fmt = '!HHIIH'
     fmt_len = struct.calcsize(fmt)
     # Decode fields
@@ -1145,35 +1238,35 @@ def decode_GeneralDeviceCapabilities(data):
      par['DeviceManufacturerName'],
      par['ModelName'],
      par['FirmwareVersionByteCount']) = struct.unpack(fmt, body[:fmt_len])
-    
+
     par['CanSetAntennaProperties'] = (flags & BIT(15) == BIT(15))
     par['HasUTCClockCapability'] = (flags & BIT(14) == BIT(14))
-    
+
     pastVer = fmt_len + par['FirmwareVersionByteCount']
-    par['ReaderFirmwareVersion'] = body[fmt_len : pastVer]
-    body = body[pastVer : ]
+    par['ReaderFirmwareVersion'] = body[fmt_len: pastVer]
+    body = body[pastVer:]
     ret, body = decode('ReceiveSensitivityTableEntry')(body)
     if ret:
         par['ReceiveSensitivityTableEntry'] = ret
-    
+
     ret, body = decode('PerAntennaReceiveSensitivityRange')(body)
     if ret:
         par['PerAntennaReceiveSensitivityRange'] = ret
-    
+
     ret, body = decode('GPIOCapabilities')(body)
     if ret:
         par['GPIOCapabilities'] = ret
-    
+
     ret, body = decode('PerAntennaAirProtocol')(body)
     if ret:
         par['PerAntennaAirProtocol'] = ret
-    
+
     ret, body = decode('MaximumReceiveSensitivity')(body)
     if ret:
         par['MaximumReceiveSensitivity'] = ret
 
-    
-    return par, data[length : ]
+    return par, data[length:]
+
 
 Message_struct['GeneralDeviceCapabilities'] = {
     'type': 137,
@@ -1195,23 +1288,25 @@ Message_struct['GeneralDeviceCapabilities'] = {
     'decode': decode_GeneralDeviceCapabilities
 }
 
+
 def decode_MaximumReceiveSensitivity(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['MaximumReceiveSensitivity']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (par['MaximumSensitivityValue']) = struct.unpack('!H', body)
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['MaximumReceiveSensitivity'] = {
     'type': 363,
@@ -1222,24 +1317,26 @@ Message_struct['MaximumReceiveSensitivity'] = {
     'decode': decode_MaximumReceiveSensitivity
 }
 
+
 def decode_ReceiveSensitivityTableEntry(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['ReceiveSensitivityTableEntry']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (par['Index'],
      par['ReceiveSensitivityValue']) = struct.unpack('!HH', body)
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['ReceiveSensitivityTableEntry'] = {
     'type': 139,
@@ -1251,25 +1348,27 @@ Message_struct['ReceiveSensitivityTableEntry'] = {
     'decode': decode_ReceiveSensitivityTableEntry
 }
 
+
 def decode_PerAntennaReceiveSensitivityRange(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['PerAntennaReceiveSensitivityRange']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (par['AntennaID'],
      par['ReceiveSensitivityIndexMin'],
      par['ReceiveSensitivityIndexMax']) = struct.unpack('!HHH', body)
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['PerAntennaReceiveSensitivityRange'] = {
     'type': 149,
@@ -1282,32 +1381,34 @@ Message_struct['PerAntennaReceiveSensitivityRange'] = {
     'decode': decode_PerAntennaReceiveSensitivityRange
 }
 
+
 def decode_PerAntennaAirProtocol(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['PerAntennaAirProtocol']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     fmt = '!HH'
     fmt_len = struct.calcsize(fmt)
-    
+
     # Decode fields
     (par['AntennaID'],
      par['NumProtocols']) = struct.unpack(fmt, body[:fmt_len])
-    body = body[fmt_len : ]
+    body = body[fmt_len:]
     num = int(par['NumProtocols'])
     id_fmt = '!B'
     for i in xrange(num):
         par['ProtocolID{}'.format(i+1)] = struct.unpack(id_fmt, body[i])[0]
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['PerAntennaAirProtocol'] = {
     'type': 140,
@@ -1320,24 +1421,26 @@ Message_struct['PerAntennaAirProtocol'] = {
     'decode': decode_PerAntennaAirProtocol
 }
 
+
 def decode_GPIOCapabilities(data):
     logger.debug(func())
     par = {}
     if len(data) == 0:
         return None, data
-    header = data[0 : par_header_len]
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['GPIOCapabilities']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (par['NumGPIs'],
      par['NumGPIs']) = struct.unpack('!HH', body)
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['GPIOCapabilities'] = {
     'type': 141,
@@ -1349,6 +1452,7 @@ Message_struct['GPIOCapabilities'] = {
     'decode': decode_GPIOCapabilities
 }
 
+
 def decode_ErrorMessage(data):
     msg = LLRPMessageDict()
     logger.debug('%s' % func())
@@ -1358,6 +1462,7 @@ def decode_ErrorMessage(data):
     else:
         raise LLRPError('missing or invalid LLRPStatus parameter')
     return msg
+
 
 Message_struct['ErrorMessage'] = {
     'type': 100,
@@ -1371,24 +1476,27 @@ Message_struct['ErrorMessage'] = {
 }
 
 # 16.2.4.1 ROSpec Parameter
+
+
 def encode_ROSpec(par):
     msgtype = Message_struct['ROSpec']['type']
     msgid = par['ROSpecID'] & BITMASK(10)
     priority = par['Priority'] & BITMASK(7)
     state = ROSpecState_Name2Type[par['CurrentState']] & BITMASK(7)
-    
+
     msg_header = '!HHIBB'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = encode('ROBoundarySpec')(par['ROBoundarySpec'])
     data += encode('AISpec')(par['AISpec'])
     data += encode('ROReportSpec')(par['ROReportSpec'])
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len,
-            msgid, priority, state) + data
-    
+                       len(data) + msg_header_len,
+                       msgid, priority, state) + data
+
     return data
+
 
 Message_struct['ROSpec'] = {
     'type': 177,
@@ -1406,26 +1514,29 @@ Message_struct['ROSpec'] = {
 }
 
 # 17.2.5.1 AccessSpec
-def encode_AccessSpec (par):
+
+
+def encode_AccessSpec(par):
     msgtype = Message_struct['AccessSpec']['type']
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = struct.pack('!I', int(par['AccessSpecID']))
     data += struct.pack('!H', int(par['AntennaID']))
     data += struct.pack('!B', par['ProtocolID'])
-    data += struct.pack('!B', par['C'] and (1<<7) or 0)
+    data += struct.pack('!B', par['C'] and (1 << 7) or 0)
     data += struct.pack('!I', par['ROSpecID'])
-    
+
     data += encode('AccessSpecStopTrigger')(par['AccessSpecStopTrigger'])
     data += encode('AccessCommand')(par['AccessCommand'])
     if 'AccessReportSpec' in par:
         data += encode('AccessReportSpec')(par['AccessReportSpec'])
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len) + data
-    
+                       len(data) + msg_header_len) + data
+
     return data
+
 
 # 17.2.5.1 AccessSpec
 Message_struct['AccessSpec'] = {
@@ -1445,8 +1556,11 @@ Message_struct['AccessSpec'] = {
 }
 
 # 17.1.21 ADD_ACCESSSPEC
-def encode_AddAccessSpec (msg):
+
+
+def encode_AddAccessSpec(msg):
     return encode('AccessSpec')(msg['AccessSpec'])
+
 
 # 17.1.21 ADD_ACCESSSPEC
 Message_struct['ADD_ACCESSSPEC'] = {
@@ -1459,9 +1573,12 @@ Message_struct['ADD_ACCESSSPEC'] = {
 }
 
 # 17.1.22 ADD_ACCESSSPEC_RESPONSE
-def decode_AddAccessSpecResponse (msg):
+
+
+def decode_AddAccessSpecResponse(msg):
     # just an LLRPStatus wrapper, same format as ADD_ROSPEC_RESPONSE
     return decode_AddROSpecResponse(msg)
+
 
 # 17.1.22 ADD_ACCESSSPEC_RESPONSE
 Message_struct['ADD_ACCESSSPEC_RESPONSE'] = {
@@ -1474,8 +1591,11 @@ Message_struct['ADD_ACCESSSPEC_RESPONSE'] = {
 }
 
 # 17.1.23 DELETE_ACCESSSPEC
-def encode_DeleteAccessSpec (msg):
+
+
+def encode_DeleteAccessSpec(msg):
     return struct.pack('!I', msg['AccessSpecID'])
+
 
 # 17.1.23 DELETE_ACCESSSPEC
 Message_struct['DELETE_ACCESSSPEC'] = {
@@ -1488,9 +1608,12 @@ Message_struct['DELETE_ACCESSSPEC'] = {
 }
 
 # 17.1.24 DELETE_ACCESSSPEC_RESPONSE
-def decode_DeleteAccessSpecResponse (msg):
+
+
+def decode_DeleteAccessSpecResponse(msg):
     # just an LLRPStatus wrapper, same format as ADD_ROSPEC_RESPONSE
     return decode_DeleteROSpecResponse(msg)
+
 
 # 17.1.24 DELETE_ACCESSSPEC_RESPONSE
 Message_struct['DELETE_ACCESSSPEC_RESPONSE'] = {
@@ -1503,8 +1626,11 @@ Message_struct['DELETE_ACCESSSPEC_RESPONSE'] = {
 }
 
 # 17.1.25 ENABLE_ACCESSSPEC
-def encode_EnableAccessSpec (msg):
+
+
+def encode_EnableAccessSpec(msg):
     return struct.pack('!I', msg['AccessSpecID'])
+
 
 # 17.1.25 ENABLE_ACCESSSPEC
 Message_struct['ENABLE_ACCESSSPEC'] = {
@@ -1517,9 +1643,12 @@ Message_struct['ENABLE_ACCESSSPEC'] = {
 }
 
 # 17.1.26 ENABLE_ACCESSSPEC_RESPONSE
-def decode_EnableAccessSpecResponse (msg):
+
+
+def decode_EnableAccessSpecResponse(msg):
     # just an LLRPStatus wrapper, same format as ADD_ROSPEC_RESPONSE
     return decode_EnableROSpecResponse(msg)
+
 
 # 17.1.26 ENABLE_ACCESSSPEC_RESPONSE
 Message_struct['ENABLE_ACCESSSPEC_RESPONSE'] = {
@@ -1532,8 +1661,11 @@ Message_struct['ENABLE_ACCESSSPEC_RESPONSE'] = {
 }
 
 # 17.1.27 DISABLE_ACCESSSPEC
-def encode_DisableAccessSpec (msg):
+
+
+def encode_DisableAccessSpec(msg):
     return struct.pack('!I', msg['AccessSpecID'])
+
 
 # 17.1.27 DISABLE_ACCESSSPEC
 Message_struct['DISABLE_ACCESSSPEC'] = {
@@ -1546,9 +1678,12 @@ Message_struct['DISABLE_ACCESSSPEC'] = {
 }
 
 # 17.1.28 DISABLE_ACCESSSPEC_RESPONSE
-def decode_DisableAccessSpecResponse (msg):
+
+
+def decode_DisableAccessSpecResponse(msg):
     # just an LLRPStatus wrapper, same format as ADD_ROSPEC_RESPONSE
     return decode_DisableROSpecResponse(msg)
+
 
 # 17.1.28 DISABLE_ACCESSSPEC_RESPONSE
 Message_struct['DISABLE_ACCESSSPEC_RESPONSE'] = {
@@ -1560,18 +1695,20 @@ Message_struct['DISABLE_ACCESSSPEC_RESPONSE'] = {
     'decode': decode_DisableAccessSpecResponse
 }
 
-def encode_AccessSpecStopTrigger (par):
+
+def encode_AccessSpecStopTrigger(par):
     msgtype = Message_struct['AccessSpecStopTrigger']['type']
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = struct.pack('!B', int(par['AccessSpecStopTriggerType']))
     data += struct.pack('!H', int(par['OperationCountValue']))
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len) + data
-    
+                       len(data) + msg_header_len) + data
+
     return data
+
 
 Message_struct['AccessSpecStopTrigger'] = {
     'type': 208,
@@ -1583,13 +1720,14 @@ Message_struct['AccessSpecStopTrigger'] = {
     'encode': encode_AccessSpecStopTrigger
 }
 
-def encode_AccessCommand (par):
+
+def encode_AccessCommand(par):
     msgtype = Message_struct['AccessCommand']['type']
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = encode_C1G2TagSpec(par['TagSpecParameter'])
-    
+
     if 'WriteData' in par['OpSpecParameter']:
         if par['OpSpecParameter']['WriteDataWordCount'] > 1:
             data += encode_C1G2BlockWrite(par['OpSpecParameter'])
@@ -1597,11 +1735,12 @@ def encode_AccessCommand (par):
             data += encode_C1G2Write(par['OpSpecParameter'])
     else:
         data += encode_C1G2Read(par['OpSpecParameter'])
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len) + data
-    
+                       len(data) + msg_header_len) + data
+
     return data
+
 
 Message_struct['AccessCommand'] = {
     'type': 209,
@@ -1613,20 +1752,22 @@ Message_struct['AccessCommand'] = {
     'encode': encode_AccessCommand
 }
 
-def encode_C1G2TagSpec (par):
+
+def encode_C1G2TagSpec(par):
     msgtype = Message_struct['C1G2TagSpec']['type']
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     targets = par['C1G2TargetTag']
     if type(targets) != ListType:
         targets = (targets,)
     for target in targets:
         data = encode_C1G2TargetTag(target)
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len) + data
+                       len(data) + msg_header_len) + data
     return data
+
 
 Message_struct['C1G2TagSpec'] = {
     'type': 338,
@@ -1637,34 +1778,37 @@ Message_struct['C1G2TagSpec'] = {
     'encode': encode_C1G2TagSpec
 }
 
-def encode_bitstring (bstr, length_bytes):
-    def B (x):
+
+def encode_bitstring(bstr, length_bytes):
+    def B(x):
         return struct.pack('!B', x)
     Bs = map(B, struct.unpack('>' + 'B'*len(bstr), bstr))
     Bs += ['\x00'] * (length_bytes - len(bstr))
     return ''.join(Bs)
 
-def encode_C1G2TargetTag (par):
+
+def encode_C1G2TargetTag(par):
     msgtype = Message_struct['C1G2TargetTag']['type']
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
-    
-    data = struct.pack('!B', ((int(par['MB']) << 6) | \
-                (par['M'] and (1<<5) or 0)))
+
+    data = struct.pack('!B', ((int(par['MB']) << 6) |
+                              (par['M'] and (1 << 5) or 0)))
     data += struct.pack('!H', int(par['Pointer']))
     data += struct.pack('!H', int(par['MaskBitCount']))
     if int(par['MaskBitCount']):
         numBytes = ((par['MaskBitCount'] - 1) / 8) + 1
         data += encode_bitstring(par['TagMask'], numBytes)
-    
+
     data += struct.pack('!H', int(par['DataBitCount']))
     if int(par['DataBitCount']):
         numBytes = ((par['DataBitCount'] - 1) / 8) + 1
         data += encode_bitstring(par['TagData'], numBytes)
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len) + data
+                       len(data) + msg_header_len) + data
     return data
+
 
 Message_struct['C1G2TargetTag'] = {
     'type': 339,
@@ -1682,7 +1826,9 @@ Message_struct['C1G2TargetTag'] = {
 }
 
 # 16.2.1.3.2.2 C1G2Read
-def encode_C1G2Read (par):
+
+
+def encode_C1G2Read(par):
     msgtype = Message_struct['C1G2Read']['type']
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
@@ -1691,10 +1837,11 @@ def encode_C1G2Read (par):
     data += struct.pack('!B', int(par['MB']) << 6)
     data += struct.pack('!H', int(par['WordPtr']))
     data += struct.pack('!H', int(par['WordCount']))
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len) + data
+                       len(data) + msg_header_len) + data
     return data
+
 
 Message_struct['C1G2Read'] = {
     'type': 341,
@@ -1710,21 +1857,24 @@ Message_struct['C1G2Read'] = {
 }
 
 # 16.2.1.3.2.3 C1G2Write
-def encode_C1G2Write (par):
+
+
+def encode_C1G2Write(par):
     msgtype = Message_struct['C1G2Write']['type']
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = struct.pack('!H', int(par['OpSpecID']))
     data += struct.pack('!I', int(par['AccessPassword']))
     data += struct.pack('!B', int(par['MB']) << 6)
     data += struct.pack('!H', int(par['WordPtr']))
     data += struct.pack('!H', int(par['WriteDataWordCount']))
     data += par['WriteData']
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len) + data
+                       len(data) + msg_header_len) + data
     return data
+
 
 Message_struct['C1G2Write'] = {
     'type': 342,
@@ -1741,21 +1891,24 @@ Message_struct['C1G2Write'] = {
 }
 
 # 16.2.1.3.2.7 C1G2BlockWrite
-def encode_C1G2BlockWrite (par):
+
+
+def encode_C1G2BlockWrite(par):
     msgtype = Message_struct['C1G2BlockWrite']['type']
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = struct.pack('!H', int(par['OpSpecID']))
     data += struct.pack('!I', int(par['AccessPassword']))
     data += struct.pack('!B', int(par['MB']) << 6)
     data += struct.pack('!H', int(par['WordPtr']))
     data += struct.pack('!H', int(par['WriteDataWordCount']))
     data += par['WriteData']
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len) + data
+                       len(data) + msg_header_len) + data
     return data
+
 
 Message_struct['C1G2BlockWrite'] = {
     'type': 347,
@@ -1771,17 +1924,19 @@ Message_struct['C1G2BlockWrite'] = {
     'encode': encode_C1G2Write
 }
 
-def encode_AccessReportSpec (par):
+
+def encode_AccessReportSpec(par):
     msgtype = Message_struct['AccessReportSpec']['type']
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = struct.pack('!B', par['AccessReportTrigger'])
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len) + data
-    
+                       len(data) + msg_header_len) + data
+
     return data
+
 
 Message_struct['AccessReportSpec'] = {
     'type': 239,
@@ -1793,19 +1948,22 @@ Message_struct['AccessReportSpec'] = {
 }
 
 # 16.2.4.1.1 ROBoundarySpec Parameter
+
+
 def encode_ROBoundarySpec(par):
     msgtype = Message_struct['ROBoundarySpec']['type']
-    
+
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = encode('ROSpecStartTrigger')(par['ROSpecStartTrigger'])
     data += encode('ROSpecStopTrigger')(par['ROSpecStopTrigger'])
-    
+
     data = struct.pack(msg_header, msgtype,
-                                len(data) + msg_header_len) + data
-    
+                       len(data) + msg_header_len) + data
+
     return data
+
 
 Message_struct['ROBoundarySpec'] = {
     'type': 178,
@@ -1818,22 +1976,25 @@ Message_struct['ROBoundarySpec'] = {
 }
 
 # 16.2.4.1.1.1 ROSpecStartTrigger Parameter
+
+
 def encode_ROSpecStartTrigger(par):
     msgtype = Message_struct['ROSpecStartTrigger']['type']
     t_type = StartTrigger_Name2Type[par['ROSpecStartTriggerType']]
-    
+
     msg_header = '!HHB'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = ''
-    
-    if t_type == 2: # Periodic
+
+    if t_type == 2:  # Periodic
         data += encode_PeriodicTriggerValue(par)
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len, t_type) + data
-    
+                       len(data) + msg_header_len, t_type) + data
+
     return data
+
 
 Message_struct['ROSpecStartTrigger'] = {
     'type': 179,
@@ -1847,21 +2008,24 @@ Message_struct['ROSpecStartTrigger'] = {
 }
 
 # mongan 7/19/16 16.2.4.1.1.1.1 PeriodicTriggerValue Parameter
+
+
 def encode_PeriodicTriggerValue(par):
     msgtype = Message_struct['PeriodicTriggerValue']['type']
-    
+
     msg_header = '!HHII'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     offset = 0
 
     # utc timestamp parameter after the periodic trigger value is optional and so is omitted; so that the first time is the first message receipt plus the offset which we assume to be 0 so that the first message is delivered right away to start
     data = ''
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len, offset, par['PeriodicTriggerValue']) + data
-    
+                       len(data) + msg_header_len, offset, par['PeriodicTriggerValue']) + data
+
     return data
-    
+
+
 Message_struct['PeriodicTriggerValue'] = {
     'type': 180,
     'fields': [
@@ -1876,21 +2040,24 @@ Message_struct['PeriodicTriggerValue'] = {
 }
 
 # 16.2.4.1.1.2 ROSpecStopTrigger Parameter
+
+
 def encode_ROSpecStopTrigger(par):
     msgtype = Message_struct['ROSpecStopTrigger']['type']
     t_type = StopTrigger_Name2Type[par['ROSpecStopTriggerType']]
     duration = par['DurationTriggerValue']
-    
+
     msg_header = '!HHBI'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = ''
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len,
-            t_type, duration) + data
-    
+                       len(data) + msg_header_len,
+                       t_type, duration) + data
+
     return data
+
 
 Message_struct['ROSpecStopTrigger'] = {
     'type': 182,
@@ -1904,13 +2071,15 @@ Message_struct['ROSpecStopTrigger'] = {
 }
 
 # 16.2.4.2 AISpec Parameter
+
+
 def encode_AISpec(par):
     msgtype = Message_struct['AISpec']['type']
-    
+
     msg_header = '!HHH'
     msg_header_len = struct.calcsize(msg_header)
     data = ''
-    
+
     antid = par['AntennaIDs']
     antennas = []
     if type(antid) is str:
@@ -1919,14 +2088,15 @@ def encode_AISpec(par):
         antennas.extend(antid)
     for a in antennas:
         data += struct.pack('!H', int(a))
-    
+
     data += encode('AISpecStopTrigger')(par['AISpecStopTrigger'])
     data += encode('InventoryParameterSpec')(par['InventoryParameterSpec'])
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len, len(antennas)) + data
-    
+                       len(data) + msg_header_len, len(antennas)) + data
+
     return data
+
 
 Message_struct['AISpec'] = {
     'type': 183,
@@ -1941,21 +2111,24 @@ Message_struct['AISpec'] = {
 }
 
 # 16.2.4.2.1 AISpecStopTrigger Parameter
+
+
 def encode_AISpecStopTrigger(par):
     msgtype = Message_struct['AISpecStopTrigger']['type']
     t_type = StopTrigger_Name2Type[par['AISpecStopTriggerType']]
     duration = int(par['DurationTriggerValue'])
-    
+
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = struct.pack('!B', t_type)
     data += struct.pack('!I', int(duration))
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len) + data
-    
+                       len(data) + msg_header_len) + data
+
     return data
+
 
 Message_struct['AISpecStopTrigger'] = {
     'type': 184,
@@ -1970,22 +2143,25 @@ Message_struct['AISpecStopTrigger'] = {
 }
 
 # 16.2.4.2.2 InventoryParameterSpec Parameter
+
+
 def encode_InventoryParameterSpec(par):
     msgtype = Message_struct['InventoryParameterSpec']['type']
-    
+
     msg_header = '!HH'
     msg_header_len = struct.calcsize(msg_header)
     data = struct.pack('!H', par['InventoryParameterSpecID'])
     data += struct.pack('!B', par['ProtocolID'])
-    
+
     for antconf in par['AntennaConfiguration']:
         logger.debug('encoding AntennaConfiguration: {}'.format(antconf))
         data += encode('AntennaConfiguration')(antconf)
-    
+
     data = struct.pack(msg_header, msgtype,
-            struct.calcsize(msg_header) + len(data)) + data
-    
+                       struct.calcsize(msg_header) + len(data)) + data
+
     return data
+
 
 Message_struct['InventoryParameterSpec'] = {
     'type': 186,
@@ -1999,6 +2175,8 @@ Message_struct['InventoryParameterSpec'] = {
 }
 
 # 16.2.6.6 AntennaConfiguration Parameter
+
+
 def encode_AntennaConfiguration(par):
     msgtype = Message_struct['AntennaConfiguration']['type']
     msg_header = '!HH'
@@ -2010,8 +2188,9 @@ def encode_AntennaConfiguration(par):
     if 'C1G2InventoryCommand' in par:
         data += encode('C1G2InventoryCommand')(par['C1G2InventoryCommand'])
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
+                       len(data) + struct.calcsize(msg_header)) + data
     return data
+
 
 Message_struct['AntennaConfiguration'] = {
     'type': 222,
@@ -2028,13 +2207,16 @@ Message_struct['AntennaConfiguration'] = {
 }
 
 # 16.2.6.7 RFReceiver Parameter
-def encode_RFReceiver (par):
+
+
+def encode_RFReceiver(par):
     msgtype = Message_struct['RFReceiver']['type']
     msg_header = '!HH'
     data = struct.pack('!H', par['ReceiverSensitivity'])
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
+                       len(data) + struct.calcsize(msg_header)) + data
     return data
+
 
 Message_struct['RFReceiver'] = {
     'type': 223,
@@ -2046,15 +2228,18 @@ Message_struct['RFReceiver'] = {
 }
 
 # 16.2.6.8 RFTransmitter Parameter
-def encode_RFTransmitter (par):
+
+
+def encode_RFTransmitter(par):
     msgtype = Message_struct['RFTransmitter']['type']
     msg_header = '!HH'
     data = struct.pack('!H', par['HopTableId'])
     data += struct.pack('!H', par['ChannelIndex'])
     data += struct.pack('!H', par['TransmitPower'])
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
+                       len(data) + struct.calcsize(msg_header)) + data
     return data
+
 
 Message_struct['RFTransmitter'] = {
     'type': 224,
@@ -2068,7 +2253,9 @@ Message_struct['RFTransmitter'] = {
 }
 
 # 16.3.1.2.1 C1G2InventoryCommand Parameter
-def encode_C1G2InventoryCommand (par):
+
+
+def encode_C1G2InventoryCommand(par):
     msgtype = Message_struct['C1G2InventoryCommand']['type']
     msg_header = '!HH'
     data = struct.pack('!B', (par['TagInventoryStateAware'] and 1 or 0) << 7)
@@ -2081,11 +2268,13 @@ def encode_C1G2InventoryCommand (par):
     # XXX custom parameters
     # mongan 6/6/2016
     if 'ImpinjFixedFrequencyMode' in par:
-        data += encode('ImpinjFixedFrequencyMode')(par['ImpinjFixedFrequencyMode'])
-    
+        data += encode('ImpinjFixedFrequencyMode')(
+            par['ImpinjFixedFrequencyMode'])
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
+                       len(data) + struct.calcsize(msg_header)) + data
     return data
+
 
 Message_struct['C1G2InventoryCommand'] = {
     'type': 330,
@@ -2101,26 +2290,32 @@ Message_struct['C1G2InventoryCommand'] = {
 }
 
 # 16.3.1.2.1.1 C1G2Filter Parameter
-def encode_C1G2Filter (par):
+
+
+def encode_C1G2Filter(par):
     raise NotImplementedError
+
 
 Message_struct['C1G2Filter'] = {
     'type': 331,
 }
 
 # 16.3.1.2.1.2 C1G2RFControl Parameter
-def encode_C1G2RFControl (par):
-# 'C1G2RFControl': {
-#     'ModeIndex': 1,
-#     'Tari': 0,
-# },
+
+
+def encode_C1G2RFControl(par):
+    # 'C1G2RFControl': {
+    #     'ModeIndex': 1,
+    #     'Tari': 0,
+    # },
     msgtype = Message_struct['C1G2RFControl']['type']
     msg_header = '!HH'
     data = struct.pack('!H', par['ModeIndex'])
     data += struct.pack('!H', par['Tari'])
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
+                       len(data) + struct.calcsize(msg_header)) + data
     return data
+
 
 Message_struct['C1G2RFControl'] = {
     'type': 335,
@@ -2132,15 +2327,18 @@ Message_struct['C1G2RFControl'] = {
 }
 
 # 16.3.1.2.1.3 C1G2SingulationControl Parameter
-def encode_C1G2SingulationControl (par):
+
+
+def encode_C1G2SingulationControl(par):
     msgtype = Message_struct['C1G2SingulationControl']['type']
     msg_header = '!HH'
     data = struct.pack('!B', par['Session'] << 6)
     data += struct.pack('!H', par['TagPopulation'])
     data += struct.pack('!I', par['TagTransitTime'])
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
+                       len(data) + struct.calcsize(msg_header)) + data
     return data
+
 
 Message_struct['C1G2SingulationControl'] = {
     'type': 336,
@@ -2153,48 +2351,58 @@ Message_struct['C1G2SingulationControl'] = {
 }
 
 # mongan 6/6/2016 Impinj antenna select
+
+
 def encode_ImpinjFixedFrequencyMode(par):
     msgtype = Message_struct['ImpinjFixedFrequencyMode']['type']
-    
+
     msg_header = '!HH'
-    
-    data = struct.pack('!I', Message_struct['ImpinjFixedFrequencyMode']['vendorid'])
-    data += struct.pack('!I', Message_struct['ImpinjFixedFrequencyMode']['subtype'])
-    
+
+    data = struct.pack(
+        '!I', Message_struct['ImpinjFixedFrequencyMode']['vendorid'])
+    data += struct.pack('!I',
+                        Message_struct['ImpinjFixedFrequencyMode']['subtype'])
+
     if 'FixedFrequencyMode' in par and par['FixedFrequencyMode']:
         data += struct.pack('!H', par['FixedFrequencyMode'])
-    data += struct.pack('!H', 0) # reserved
+    data += struct.pack('!H', 0)  # reserved
     if 'ChannelListCount' in par and par['ChannelListCount']:
         data += struct.pack('!H', par['ChannelListCount'])
     if 'ChannelsList' in par and par['ChannelsList']:
         for c in par['ChannelsList']:
             data += struct.pack('!H', c)
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
+                       len(data) + struct.calcsize(msg_header)) + data
 
     return data
-    
+
+
 Message_struct['ImpinjFixedFrequencyMode'] = {
-    'type': 1023, # Custom Parameter
-    'subtype': 26, # FixedFrequencyList
-    'vendorid': 25882, # Impinj
+    'type': 1023,  # Custom Parameter
+    'subtype': 26,  # FixedFrequencyList
+    'vendorid': 25882,  # Impinj
     'id': 0,
     'fields': [
-        'FixedFrequencyMode', #bits 0-16, skip 16-32 as reserved, then
-        'ChannelListCount', # bits 0-16, followed by list of 16-bit channels
-        'ChannelsList' # array of channels to append as 16-bit channels list right after ChannelListCount
+        'FixedFrequencyMode',  # bits 0-16, skip 16-32 as reserved, then
+        'ChannelListCount',  # bits 0-16, followed by list of 16-bit channels
+        'ChannelsList'  # array of channels to append as 16-bit channels list right after ChannelListCount
     ],
     'encode': encode_ImpinjFixedFrequencyMode
 }
 
 # mongan 8/13/2015 Impinj enable extensions; must call before adding ROSpec if using Impinj extensions
-def encode_ImpinjEnableExtensions (par):
-    data = struct.pack('!I', Message_struct['ImpinjEnableExtensions']['vendorid'])
-    data += struct.pack('!B', Message_struct['ImpinjEnableExtensions']['subtype'])
-    data += struct.pack('!I', 0) # reserved space for future use in protocol
-    
+
+
+def encode_ImpinjEnableExtensions(par):
+    data = struct.pack(
+        '!I', Message_struct['ImpinjEnableExtensions']['vendorid'])
+    data += struct.pack('!B',
+                        Message_struct['ImpinjEnableExtensions']['subtype'])
+    data += struct.pack('!I', 0)  # reserved space for future use in protocol
+
     return data
+
 
 Message_struct['ImpinjEnableExtensions'] = {
     'type': 1023,
@@ -2207,23 +2415,28 @@ Message_struct['ImpinjEnableExtensions'] = {
 }
 
 # 16.2.7.1 ROReportSpec Parameter
-def encode_ROReportSpec (par):
+
+
+def encode_ROReportSpec(par):
     msgtype = Message_struct['ROReportSpec']['type']
     n = int(par['N'])
     roReportTrigger = ROReportTrigger_Name2Type[par['ROReportTrigger']]
-    
+
     msg_header = '!HHBH'
     msg_header_len = struct.calcsize(msg_header)
-    
+
     data = encode('TagReportContentSelector')(par['TagReportContentSelector'])
-    if 'ImpinjTagReportContentSelector' in par and par['ImpinjTagReportContentSelector']:	# mongan 8/13/15 if impinj tag selector group given, encode it
-        data += encode('ImpinjTagReportContentSelector')(par['ImpinjTagReportContentSelector'])
-    
+    # mongan 8/13/15 if impinj tag selector group given, encode it
+    if 'ImpinjTagReportContentSelector' in par and par['ImpinjTagReportContentSelector']:
+        data += encode('ImpinjTagReportContentSelector')(
+            par['ImpinjTagReportContentSelector'])
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + msg_header_len,
-            roReportTrigger, n) + data
-    
+                       len(data) + msg_header_len,
+                       roReportTrigger, n) + data
+
     return data
+
 
 Message_struct['ROReportSpec'] = {
     'type': 237,
@@ -2231,36 +2444,43 @@ Message_struct['ROReportSpec'] = {
         'N',
         'ROReportTrigger',
         'TagReportContentSelector',
-        'ImpinjTagReportContentSelector', # mongan 8/8/2015
+        'ImpinjTagReportContentSelector',  # mongan 8/8/2015
     ],
     'encode': encode_ROReportSpec
 }
 
 # https://support.impinj.com/hc/en-us/article_attachments/200774268/SR_AN_IPJ_Speedway_Rev_Low_Level_Data_Support_20130911.pdf
 # mongan 8/8/2015
-def encode_ImpinjTagReportContentSelector (par):
+
+
+def encode_ImpinjTagReportContentSelector(par):
     msgtype = Message_struct['ImpinjTagReportContentSelector']['type']
-    
+
     msg_header = '!HH'
-    
-    data = struct.pack('!I', Message_struct['ImpinjTagReportContentSelector']['vendorid'])
-    data += struct.pack('!I', Message_struct['ImpinjTagReportContentSelector']['subtype'])
-    
+
+    data = struct.pack(
+        '!I', Message_struct['ImpinjTagReportContentSelector']['vendorid'])
+    data += struct.pack('!I',
+                        Message_struct['ImpinjTagReportContentSelector']['subtype'])
+
     if 'ImpinjEnableRFPhaseAngle' in par and par['ImpinjEnableRFPhaseAngle']:
-        data += encode('ImpinjEnableRFPhaseAngle')(par['ImpinjEnableRFPhaseAngle'])
+        data += encode('ImpinjEnableRFPhaseAngle')(
+            par['ImpinjEnableRFPhaseAngle'])
     if 'ImpinjEnableRFDopplerFrequency' in par and par['ImpinjEnableRFDopplerFrequency']:
-        data += encode('ImpinjEnableRFDopplerFrequency')(par['ImpinjEnableRFDopplerFrequency'])
-    
+        data += encode('ImpinjEnableRFDopplerFrequency')(
+            par['ImpinjEnableRFDopplerFrequency'])
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
-    
+                       len(data) + struct.calcsize(msg_header)) + data
+
     return data
+
 
 # mongan 8/8/2015
 Message_struct['ImpinjTagReportContentSelector'] = {
-    'type': 1023, # Custom Parameter
-    'subtype': 50, # Tag Report Content Selector
-    'vendorid': 25882, # Impinj
+    'type': 1023,  # Custom Parameter
+    'subtype': 50,  # Tag Report Content Selector
+    'vendorid': 25882,  # Impinj
     'id': 0,
     'fields': [
         'ImpinjEnableRFPhaseAngle',
@@ -2272,28 +2492,31 @@ Message_struct['ImpinjTagReportContentSelector'] = {
 # mongan 8/17/2015
 # the ENABLE_IMPINJ_EXTENSIONS_RESPONSE type is 1023, a custom parameter, as is the subtypes for doppler and phase, so we'll handle these here as well
 # this is called by llrp deserialize, with ver, etc. already extracted
-def decode_ImpinjCustomParameter (data):
+
+
+def decode_ImpinjCustomParameter(data):
     if len(data) == 0:
         return None, data
-    
+
     msg = {}
     logger.debug('%s' % func())
-    
+
     # Decode parameters
     msg['vendor'] = struct.unpack('!I', data[:struct.calcsize('!I')])[0]
     data = data[struct.calcsize('!I'):]
     msg['subtype'] = struct.unpack('!B', data[:struct.calcsize('!B')])[0]
     data = data[struct.calcsize('!B'):]
-    
+
     # subtype 22 is EXTENSIONS_RESPONSE
     ret, data = decode_LLRPStatus(data)
     msg['LLRPStatus'] = ret
-    
+
     return msg, data
+
 
 # mongan 8/17/2015
 Message_struct['ENABLE_IMPINJ_EXTENSIONS_RESPONSE'] = {
-    'type': 1023, # Custom Parameter
+    'type': 1023,  # Custom Parameter
     'fields': [
         'Ver', 'Type', 'ID',
         'vendor', 'subtype',
@@ -2303,76 +2526,89 @@ Message_struct['ENABLE_IMPINJ_EXTENSIONS_RESPONSE'] = {
 }
 
 # mongan 8/8/2015
-def encode_ImpinjEnableRFPhaseAngle (par):
+
+
+def encode_ImpinjEnableRFPhaseAngle(par):
     msgtype = Message_struct['ImpinjEnableRFPhaseAngle']['type']
-    
+
     msg_header = '!HH'
-    
-    data = struct.pack('!I', Message_struct['ImpinjEnableRFPhaseAngle']['vendorid'])
-    data += struct.pack('!I', Message_struct['ImpinjEnableRFPhaseAngle']['subtype'])
-    
+
+    data = struct.pack(
+        '!I', Message_struct['ImpinjEnableRFPhaseAngle']['vendorid'])
+    data += struct.pack('!I',
+                        Message_struct['ImpinjEnableRFPhaseAngle']['subtype'])
+
     data += struct.pack('!H', 1)
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
-    
+                       len(data) + struct.calcsize(msg_header)) + data
+
     return data
+
 
 # mongan 8/8/2015
 Message_struct['ImpinjEnableRFPhaseAngle'] = {
-    'type': 1023, # Custom Parameter
-    'subtype': 52, # Enable RF Phase Angle
-    'vendorid': 25882, # Impinj
+    'type': 1023,  # Custom Parameter
+    'subtype': 52,  # Enable RF Phase Angle
+    'vendorid': 25882,  # Impinj
     'fields': [
-    
+
     ],
     'encode': encode_ImpinjEnableRFPhaseAngle
 }
 
 # mongan 8/8/2015
-def encode_ImpinjEnableRFDopplerFrequency (par):
+
+
+def encode_ImpinjEnableRFDopplerFrequency(par):
     msgtype = Message_struct['ImpinjEnableRFDopplerFrequency']['type']
-    
+
     msg_header = '!HH'
-    
-    data = struct.pack('!I', Message_struct['ImpinjEnableRFDopplerFrequency']['vendorid'])
-    data += struct.pack('!I', Message_struct['ImpinjEnableRFDopplerFrequency']['subtype'])
+
+    data = struct.pack(
+        '!I', Message_struct['ImpinjEnableRFDopplerFrequency']['vendorid'])
+    data += struct.pack('!I',
+                        Message_struct['ImpinjEnableRFDopplerFrequency']['subtype'])
     data += struct.pack('!H', 1)
-    
+
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
-    
+                       len(data) + struct.calcsize(msg_header)) + data
+
     return data
+
 
 # mongan 8/8/2015
 Message_struct['ImpinjEnableRFDopplerFrequency'] = {
-    'type': 1023, # Custom Parameter
-    'subtype': 67, # Enable RF Doppler Frequency
-    'vendorid': 25882, # Impinj
+    'type': 1023,  # Custom Parameter
+    'subtype': 67,  # Enable RF Doppler Frequency
+    'vendorid': 25882,  # Impinj
     'fields': [
-    
+
     ],
     'encode': encode_ImpinjEnableRFDopplerFrequency
 }
 
 # 16.2.7.1 TagReportContentSelector Parameter
-def encode_TagReportContentSelector (par):
+
+
+def encode_TagReportContentSelector(par):
     msgtype = Message_struct['TagReportContentSelector']['type']
-    
+
     msg_header = '!HH'
-    
+
     flags = 0
     i = 15
     for field in Message_struct['TagReportContentSelector']['fields']:
         if field in par and par[field]:
             flags = flags | (1 << i)
         i = i - 1
-    
+
     data = struct.pack('!H', flags)
     data = struct.pack(msg_header, msgtype,
-            len(data) + struct.calcsize(msg_header)) + data
-    
+                       len(data) + struct.calcsize(msg_header)) + data
+
     return data
+
 
 Message_struct['TagReportContentSelector'] = {
     'type': 238,
@@ -2392,20 +2628,22 @@ Message_struct['TagReportContentSelector'] = {
 }
 
 # 16.2.7.3 TagReportData Parameter
+
+
 def decode_TagReportData(data):
     par = {}
     logger.debug('%s' % func())
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['TagReportData']['type']:
         return (None, data)
-    body = data[par_header_len : length]
-    
+    body = data[par_header_len: length]
+
     # Decode parameters
     ret, body = decode('EPCData')(body)
     if ret:
@@ -2419,7 +2657,7 @@ def decode_TagReportData(data):
             logger.debug('EPC-96: {}'.format(ret['EPC']))
         else:
             raise LLRPError('missing or invalid EPCData parameter')
-    
+
     # grab TV-encoded parameters
     while body:
         ret, nbytes = llrp_decoder.decode_tve_parameter(body)
@@ -2428,12 +2666,12 @@ def decode_TagReportData(data):
             body = body[nbytes:]
         else:
             break
-    
+
     # mongan 8/18/15
     # decode TLV parameters like custom values
     while body:
         tlv_ver_type = struct.unpack('!H', body[:struct.calcsize('!H')])[0]
-        if tlv_ver_type == 1023: # CustomParameter (Impinj)
+        if tlv_ver_type == 1023:  # CustomParameter (Impinj)
             body = body[struct.calcsize('!H'):]
             tlv_length = struct.unpack('!H', body[:struct.calcsize('!H')])[0]
             body = body[struct.calcsize('!H'):]
@@ -2443,7 +2681,7 @@ def decode_TagReportData(data):
             body = body[struct.calcsize('!I'):]
             tlv_value = struct.unpack('!H', body[:struct.calcsize('!H')])[0]
             body = body[struct.calcsize('!H'):]
-            
+
             # 56 is phase angle, 68 is doppler
             if tlv_subtype == 56:
                 par['RFPhaseAngle'] = tlv_value
@@ -2451,15 +2689,16 @@ def decode_TagReportData(data):
                 par['Doppler'] = tlv_value
         else:
             break
-        
+
         #print tlv_ver_type, tlv_length, tlv_vendor, tlv_subtype, tlv_value
-    
+
     ret, body = decode_OpSpecResult(body)
     if ret:
         par['OpSpecResult'] = ret
-    
+
     logger.debug('par={}'.format(par))
-    return par, data[length : ]
+    return par, data[length:]
+
 
 Message_struct['TagReportData'] = {
     'type': 240,
@@ -2481,59 +2720,61 @@ Message_struct['TagReportData'] = {
         'AirProtocolTagData',
         'AccessSpecID',
         'OpSpecResult',
-        'RFPhaseAngle', # mongan 8/18/15
-        'Doppler', # mongan 8/18/15
+        'RFPhaseAngle',  # mongan 8/18/15
+        'Doppler',  # mongan 8/18/15
     ],
     'decode': decode_TagReportData
 }
 
-def decode_OpSpecResult (data):
+
+def decode_OpSpecResult(data):
     # handle any of the C1G2*OpSpecResult types
     par = {}
     logger.debug('%s' % func())
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     c1g2opspecresults = ('C1G2ReadOpSpecResult',
-            'C1G2WriteOpSpecResult',
-            'C1G2KillOpSpecResult',
-            'C1G2RecommissionOpSpecResult',
-            'C1G2LockOpSpecResult',
-            'C1G2BlockEraseOpSpecResult',
-            'C1G2BlockWriteOpSpecResult',
-            'C1G2BlockPermalockOpSpecResult',
-            'C1G2GetBlockPermalockStatusOpSpecResult')
+                         'C1G2WriteOpSpecResult',
+                         'C1G2KillOpSpecResult',
+                         'C1G2RecommissionOpSpecResult',
+                         'C1G2LockOpSpecResult',
+                         'C1G2BlockEraseOpSpecResult',
+                         'C1G2BlockWriteOpSpecResult',
+                         'C1G2BlockPermalockOpSpecResult',
+                         'C1G2GetBlockPermalockStatusOpSpecResult')
     ok_types = (Message_struct[x]['type'] for x in c1g2opspecresults)
     if msgtype not in ok_types:
         return (None, data)
-    body = data[par_header_len : length]
-    
+    body = data[par_header_len: length]
+
     # all OpSpecResults begin with Result and OpSpecID
     par['Result'], par['OpSpecID'] = struct.unpack('!BH', body[:3])
     body = body[3:]
-    
+
     if msgtype == Message_struct['C1G2ReadOpSpecResult']['type']:
         wordcnt = struct.unpack('!H', body[:2])[0]
         par['ReadDataWordCount'] = wordcnt
         end = 2 + (wordcnt*2)
         par['ReadData'] = body[2:end]
-    
+
     elif msgtype in (Message_struct['C1G2WriteOpSpecResult']['type'],
-            Message_struct['C1G2BlockWriteOpSpecResult']['type']):
+                     Message_struct['C1G2BlockWriteOpSpecResult']['type']):
         par['NumWordsWritten'] = struct.unpack('!H', body[:2])[0]
-    
+
     if msgtype == \
-      Message_struct['C1G2GetBlockPermalockStatusOpSpecResult']['type']:
+            Message_struct['C1G2GetBlockPermalockStatusOpSpecResult']['type']:
         wordcnt = struct.unpack('!H', body[:2])[0]
         par['StatusWordCount'] = wordcnt
         end = 2 + (wordcnt*2)
         par['PermalockStatus'] = body[2:end]
-    
+
     return par, data[length:]
+
 
 Message_struct['OpSpecResult'] = {
     'fields': [
@@ -2645,26 +2886,29 @@ Message_struct['C1G2GetBlockPermalockStatusOpSpecResult'] = {
 }
 
 # 16.2.7.3.1 EPCData Parameter
+
+
 def decode_EPCData(data):
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['EPCData']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (par['EPCLengthBits'], ) = struct.unpack('!H',
-                    body[0 : struct.calcsize('!H')])
-    par['EPC'] = body[struct.calcsize('!H') : ].encode('hex')
-    
-    return par, data[length : ]
+                                             body[0: struct.calcsize('!H')])
+    par['EPC'] = body[struct.calcsize('!H'):].encode('hex')
+
+    return par, data[length:]
+
 
 Message_struct['EPCData'] = {
     'type': 241,
@@ -2677,25 +2921,28 @@ Message_struct['EPCData'] = {
 }
 
 # 16.2.7.3.2 EPC-96 Parameter
+
+
 def decode_EPC96(data):
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : tve_header_len]
+
+    header = data[0: tve_header_len]
     (msgtype, ) = struct.unpack(tve_header, header)
     msgtype = msgtype & BITMASK(7)
     if msgtype != Message_struct['EPC-96']['type']:
         return (None, data)
     length = tve_header_len + (96 / 8)
-    body = data[tve_header_len : length]
+    body = data[tve_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     par['EPC'] = body.encode('hex')
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['EPC-96'] = {
     'type': 13,
@@ -2707,24 +2954,27 @@ Message_struct['EPC-96'] = {
 }
 
 # 16.2.7.3.3 ROSpecID Parameter
+
+
 def decode_ROSpecID(data):
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : tve_header_len]
+
+    header = data[0: tve_header_len]
     (msgtype, ), length = struct.unpack(tve_header, header), 1 + 4
     msgtype = msgtype & BITMASK(7)
     if msgtype != Message_struct['ROSpecID']['type']:
         return (None, data)
-    body = data[tve_header_len : length]
+    body = data[tve_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (par['ROSpecID'], ) = struct.unpack('!I', body)
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['ROSpecID'] = {
     'type': 9,
@@ -2736,34 +2986,37 @@ Message_struct['ROSpecID'] = {
 }
 
 # 16.2.7.6 ReaderEventNotificationData Parameter
+
+
 def decode_ReaderEventNotificationData(data):
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode parameters
     ret, body = decode('UTCTimestamp')(body)
     if ret:
         par['UTCTimestamp'] = ret
     else:
         raise LLRPError('missing or invalid UTCTimestamp parameter')
-    
+
     ret, body = decode('ConnectionAttemptEvent')(body)
     if ret:
         par['ConnectionAttemptEvent'] = ret
-    
+
     ret, body = decode('AntennaEvent')(body)
     if ret:
         par['AntennaEvent'] = ret
-    
+
     return par, body
+
 
 Message_struct['ReaderEventNotificationData'] = {
     'type': 246,
@@ -2785,27 +3038,30 @@ Message_struct['ReaderEventNotificationData'] = {
 }
 
 # 16.2.7.6.9 AntennaEvent Parameter
+
+
 def decode_AntennaEvent(data):
     logger.debug(func())
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['AntennaEvent']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (event_type, antenna_id) = struct.unpack('!BH', body)
     par['EventType'] = event_type and 'Connected' or 'Disconnected'
     par['AntennaID'] = antenna_id
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['AntennaEvent'] = {
     'type': 255,
@@ -2818,26 +3074,29 @@ Message_struct['AntennaEvent'] = {
 }
 
 # 16.2.7.6.10 ConnectionAttemptEvent Parameter
+
+
 def decode_ConnectionAttemptEvent(data):
     logger.debug(func())
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['ConnectionAttemptEvent']['type']:
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     (status, ) = struct.unpack('!H', body)
     par['Status'] = ConnEvent_Type2Name[status]
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['ConnectionAttemptEvent'] = {
     'type': 256,
@@ -2849,52 +3108,55 @@ Message_struct['ConnectionAttemptEvent'] = {
 }
 
 # 16.2.8.1 LLRPStatus Parameter
+
+
 def decode_LLRPStatus(data):
     logger.debug(func())
     par = {}
     logger.debug('decode_LLRPStatus: {}'.format(hexlify(data)))
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['LLRPStatus']['type']:
         logger.debug('got msgtype={0}, expected {1}'.format(msgtype,
-                    Message_struct['LLRPStatus']['type']))
+                                                            Message_struct['LLRPStatus']['type']))
         logger.debug('note length={}'.format(length))
         return (None, data)
-    body = data[par_header_len : length]
+    body = data[par_header_len: length]
     logger.debug('%s (type=%d len=%d)' % (func(), msgtype, length))
-    
+
     # Decode fields
     offset = struct.calcsize('!HH')
-    (code, n) = struct.unpack('!HH', body[ : offset])
+    (code, n) = struct.unpack('!HH', body[: offset])
     try:
         par['StatusCode'] = Error_Type2Name[code]
     except KeyError:
         logger.warning('Unknown field code {}'.format(code))
-    par['ErrorDescription'] = body[offset : offset + n]
-    
+    par['ErrorDescription'] = body[offset: offset + n]
+
     # Decode parameters
-    ret, body = decode('FieldError')(body[offset + n : ])
+    ret, body = decode('FieldError')(body[offset + n:])
     if ret:
         par['FieldError'] = ret
     else:
         logging.debug('no FieldError')
-    
+
     ret, body = decode('ParameterError')(body)
     if ret:
         par['ParameterError'] = ret
     else:
         logging.debug('no ParameterError')
-    
+
     # Check the end of the message
     if len(body) > 0:
         raise LLRPError('junk at end of message: ' + bin2dump(body))
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['LLRPStatus'] = {
     'type':   287,
@@ -2909,27 +3171,30 @@ Message_struct['LLRPStatus'] = {
 }
 
 # 16.2.8.1.1 FieldError Parameter
+
+
 def decode_FieldError(data):
     logger.debug(func())
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['FieldError']['type']:
         return (None, data)
-    body = data[par_header_len : length]
-    logger.debug('%s (type=%d len=%d data=%s)' % \
-            (func(), msgtype, length, repr(body)))
-    
+    body = data[par_header_len: length]
+    logger.debug('%s (type=%d len=%d data=%s)' %
+                 (func(), msgtype, length, repr(body)))
+
     # Decode fields
     offset = struct.calcsize('!H')
-    (par['FieldNum'], ) = struct.unpack('!H', body[ : offset])
-    
-    return par, data[length : ]
+    (par['FieldNum'], ) = struct.unpack('!H', body[: offset])
+
+    return par, data[length:]
+
 
 Message_struct['FieldError'] = {
     'type':   288,
@@ -2942,41 +3207,44 @@ Message_struct['FieldError'] = {
 }
 
 # 16.2.8.1.2 ParameterError Parameter
+
+
 def decode_ParameterError(data):
     logger.debug(func())
     par = {}
-    
+
     if len(data) == 0:
         return None, data
-    
-    header = data[0 : par_header_len]
+
+    header = data[0: par_header_len]
     msgtype, length = struct.unpack(par_header, header)
     msgtype = msgtype & BITMASK(10)
     if msgtype != Message_struct['ParameterError']['type']:
         return (None, data)
-    body = data[par_header_len : length]
-    logger.debug('%s (type=%d len=%d data=%s)' % \
-            (func(), msgtype, length, repr(body)))
-    
+    body = data[par_header_len: length]
+    logger.debug('%s (type=%d len=%d data=%s)' %
+                 (func(), msgtype, length, repr(body)))
+
     # Decode fields
     offset = struct.calcsize('!HH')
     (par['ParameterType'], par['ErrorCode']) = \
-            struct.unpack('!HH', body[ : offset])
-    
+        struct.unpack('!HH', body[: offset])
+
     # Decode parameters
-    ret, body = decode('FieldError')(body[offset : ])
+    ret, body = decode('FieldError')(body[offset:])
     if ret:
         par['FieldError'] = ret
-    
+
     ret, body = decode('ParameterError')(body)
     if ret:
         par['ParameterError'] = ret
-    
+
     # Check the end of the message
     if len(body) > 0:
         raise LLRPError('junk at end of message: ' + bin2dump(body))
-    
-    return par, data[length : ]
+
+    return par, data[length:]
+
 
 Message_struct['ParameterError'] = {
     'type':   289,
@@ -2994,19 +3262,20 @@ Message_struct['ParameterError'] = {
 # LLRP Commands
 #
 
+
 def llrp_data2xml(msg):
-    def __llrp_data2xml(msg, name, level = 0):
+    def __llrp_data2xml(msg, name, level=0):
         tabs = '\t' * level
-        
+
         str = tabs + '<%s>\n' % name
-        
-        fields =  Message_struct[name]['fields']
+
+        fields = Message_struct[name]['fields']
         for p in fields:
             try:
                 sub = msg[p]
             except KeyError:
                 continue
-            
+
             if type(sub) == DictionaryType:
                 str += __llrp_data2xml(sub, p, level + 1)
             elif type(sub) == ListType and sub and \
@@ -3015,46 +3284,47 @@ def llrp_data2xml(msg):
                     str += __llrp_data2xml(e, p, level + 1)
             else:
                 str += tabs + '\t<%s>%s</%s>\n' % (p, sub, p)
-        
+
         str += tabs + '</%s>\n' % name
-        
+
         return str
 
-    if msg == None: # mongan 6/23/2016
+    if msg == None:  # mongan 6/23/2016
         return ''
-    
+
     ans = ''
     for p in msg:
         ans += __llrp_data2xml(msg[p], p)
-    return ans[ : -1]
+    return ans[: -1]
+
 
 class LLRPROSpec(dict):
     def __init__(self, llrpcli, msgid, priority=0, state='Disabled',
-            antennas=(1,), tx_power=91, duration_sec=None,
-            report_every_n_tags=None, tag_content_selector={},
-            session=2, tag_population=4, modeidx=-1, channellist=[], periodictrigger=100, ntari=-1): #mongan 6/6/2016 to add channellist, added modeidx 8/7/15, periodictrigger 7/19/16, ntari 9/28/16
+                 antennas=(1,), tx_power=91, duration_sec=None,
+                 report_every_n_tags=None, tag_content_selector={},
+                 session=2, tag_population=4, modeidx=-1, channellist=[], periodictrigger=100, ntari=-1):  # mongan 6/6/2016 to add channellist, added modeidx 8/7/15, periodictrigger 7/19/16, ntari 9/28/16
         # Sanity checks
         if msgid <= 0:
-            raise LLRPError('invalid ROSpec message ID {} (need >0)'.format(\
-                        msgid))
+            raise LLRPError('invalid ROSpec message ID {} (need >0)'.format(
+                msgid))
         if priority < 0 or priority > 7:
-            raise LLRPError('invalid ROSpec priority {} (need [0-7])'.format(\
-                        priority))
+            raise LLRPError('invalid ROSpec priority {} (need [0-7])'.format(
+                priority))
         if not state in ROSpecState_Name2Type:
-            raise LLRPError('invalid ROSpec state {} (need [{}])'.format(\
-                    state, ','.join(ROSpecState_Name2Type.keys())))
-        
+            raise LLRPError('invalid ROSpec state {} (need [{}])'.format(
+                state, ','.join(ROSpecState_Name2Type.keys())))
+
         rmode = llrpcli.reader_mode
         if modeidx == -1:
             mode_index = rmode['ModeIdentifier']
         else:
-            mode_index = modeidx # mongan 8/7/15
-        
+            mode_index = modeidx  # mongan 8/7/15
+
         if ntari == -1:
             tari = rmode['MaxTari']
         else:
             tari = ntari
-        
+
         tagReportContentSelector = {
             'EnableROSpecID': True,
             'EnableSpecIndex': True,
@@ -3069,14 +3339,15 @@ class LLRPROSpec(dict):
         }
         if tag_content_selector:
             tagReportContentSelector.update(tag_content_selector)
-        
+
         self['ROSpec'] = {
             'ROSpecID': msgid,
             'Priority': priority,
             'CurrentState': state,
             'ROBoundarySpec': {
                 'ROSpecStartTrigger': {
-                    'ROSpecStartTriggerType': 'Immediate', # was Immediate, can be Periodic in which case periodic trigger will be used; mongan 7/19/16
+                    # was Immediate, can be Periodic in which case periodic trigger will be used; mongan 7/19/16
+                    'ROSpecStartTriggerType': 'Immediate',
                     'PeriodicTriggerValue': periodictrigger
                 },
                 'ROSpecStopTrigger': {
@@ -3087,7 +3358,7 @@ class LLRPROSpec(dict):
             'AISpec': {
                 'AntennaIDs': ' '.join(map(str, antennas)),
                 'AISpecStopTrigger': {
-                    'AISpecStopTriggerType': 'Null', # was Duration mongan 7/20/16
+                    'AISpecStopTriggerType': 'Null',  # was Duration mongan 7/20/16
                     'DurationTriggerValue': 500,
                 },
                 'InventoryParameterSpec': {
@@ -3100,39 +3371,38 @@ class LLRPROSpec(dict):
                 'ROReportTrigger': 'Upon_N_Tags_Or_End_Of_AISpec',
                 'N': 1,
                 'TagReportContentSelector': tagReportContentSelector,
-                'ImpinjTagReportContentSelector': { # mongan 8/8/2015
-                    'ImpinjEnableRFPhaseAngle': True, # append this so that if using Impinj, this custom parameter will cause it to output doppler and phase by default
+                'ImpinjTagReportContentSelector': {  # mongan 8/8/2015
+                    # append this so that if using Impinj, this custom parameter will cause it to output doppler and phase by default
+                    'ImpinjEnableRFPhaseAngle': True,
                     'ImpinjEnableRFDopplerFrequency': True
                 },
             },
         }
 
-        
         # patch up per-antenna config
         for antid in antennas:
-            self['ROSpec']['AISpec']['InventoryParameterSpec']\
-                ['AntennaConfiguration'].append({
-                    'AntennaID': antid,
-                    'RFTransmitter': {
-                        'HopTableId': 1,
-                        'ChannelIndex': 1,
-                        'TransmitPower': tx_power,
+            self['ROSpec']['AISpec']['InventoryParameterSpec']['AntennaConfiguration'].append({
+                'AntennaID': antid,
+                'RFTransmitter': {
+                    'HopTableId': 1,
+                    'ChannelIndex': 1,
+                    'TransmitPower': tx_power,
+                },
+                'C1G2InventoryCommand': {
+                    'TagInventoryStateAware': False,
+                    'C1G2RFControl': {
+                        'ModeIndex': mode_index,
+                        'Tari': tari,
                     },
-                    'C1G2InventoryCommand': {
-                        'TagInventoryStateAware': False,
-                        'C1G2RFControl': {
-                            'ModeIndex': mode_index,
-                            'Tari': tari,
-                        },
-                        'C1G2SingulationControl': {
-                            'Session': session,
-                            'TagPopulation': tag_population,
-                            'TagTransitTime': 0
-                        }
+                    'C1G2SingulationControl': {
+                        'Session': session,
+                        'TagPopulation': tag_population,
+                        'TagTransitTime': 0
                     }
-                })
-                
-                # mongan 6/6/2016 - parameterize to select frequencies; FCC does not allow a single frequency continuously / without delay
+                }
+            })
+
+            # mongan 6/6/2016 - parameterize to select frequencies; FCC does not allow a single frequency continuously / without delay
             if len(channellist) > 0:
                 for antconfig in self['ROSpec']['AISpec']['InventoryParameterSpec']['AntennaConfiguration']:
                     antconfig['C1G2InventoryCommand']['ImpinjFixedFrequencyMode'] = {
@@ -3140,31 +3410,33 @@ class LLRPROSpec(dict):
                         'ChannelListCount': len(channellist),
                         'ChannelsList': channellist
                     }
-        
+
         if duration_sec is not None:
             self['ROSpec']['ROBoundarySpec']['ROSpecStopTrigger'] = {
                 'ROSpecStopTriggerType': 'Duration',
                 'DurationTriggerValue': duration_sec * 1000,
             }
-        
+
         if report_every_n_tags is not None:
-            logger.debug('will report every ~N={}' \
-                    ' tags'.format(report_every_n_tags))
+            logger.debug('will report every ~N={}'
+                         ' tags'.format(report_every_n_tags))
             self['ROSpec']['ROReportSpec']['N'] = report_every_n_tags
-    
+
     def __repr__(self):
         return llrp_data2xml(self)
+
 
 class LLRPMessageDict(dict):
     def __repr__(self):
         return llrp_data2xml(self)
 
+
 # Reverse dictionary for Message_struct types
-Message_Type2Name = { }
+Message_Type2Name = {}
 for m in Message_struct:
     if 'type' in Message_struct[m]:
         i = Message_struct[m]['type']
         Message_Type2Name[i] = m
     else:
-        logging.debug('Pseudo-warning: Message_struct type {} ' \
-                'lacks "type" field'.format(m))
+        logging.debug('Pseudo-warning: Message_struct type {} '
+                      'lacks "type" field'.format(m))
