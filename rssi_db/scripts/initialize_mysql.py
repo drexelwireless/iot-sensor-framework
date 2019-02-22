@@ -37,7 +37,7 @@ c = db.cursor()
 c.execute("GRANT ALL PRIVILEGES ON " + db.escape_string(db_name) +
           " TO " + db.escape_string(db_user))
 c.execute("GRANT ALL PRIVILEGES ON *.* TO " + db.escape_string(db_user))
-c.execute("SET PASSWORD FOR " + db.escape_string(db_user) + " = PASSWORD('" +
-          db.escape_string(db_user_password) + "')")  # added PASSWORD() to enable clear text password
+c.execute("SET PASSWORD FOR " + db.escape_string(db_user) + " = '" +
+          db.escape_string(db_user_password) + "'")  # add PASSWORD() to enable clear text password
 
 db.close()
