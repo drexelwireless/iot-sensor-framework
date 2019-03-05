@@ -176,7 +176,9 @@ class MysqlDatabase(Database):
         conn = self.log_db
 
         while 1:
+            print 'Getting data from log dispatcher...'  
             row = self.log_queue.get(block=True)
+            print 'Data received from log dispatcher...'
             c = conn.cursor()
             done = False
             while not done:
@@ -232,7 +234,9 @@ class MysqlDatabase(Database):
         while 1:
             queuelist = []
 
+            print 'Getting data from dispatcher...'
             input_dict = self.insertion_queue.get(block=True)
+            print 'Data received from dispatcher...'
             queuelist.append(input_dict)
 
             #print input_dict
