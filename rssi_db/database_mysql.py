@@ -205,6 +205,8 @@ class MysqlDatabase(Database):
                     c = self.log_db.cursor()
             c.close()
 
+            sleep(1)
+
         self.close_db_connection(thread='log')
 
     def db_encrypt(self, s, counter):
