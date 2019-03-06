@@ -32,6 +32,15 @@ class MysqlDatabase(Database):
     def __del__(self):
         self.close_db_connection()
 
+    def get_queue_data(self, q):
+        # q.get(block=True)
+        while 1:
+            try:
+                input_dict = q.get_nowait() 
+            except Queue.Empty:
+                sleep(0.1)
+                continue
+
     def close_db_connection(self, thread='main'):
         sleep(5+2*self.dispatchsleep)  # wait for dispatchers to finish
 
@@ -177,7 +186,7 @@ class MysqlDatabase(Database):
 
         while 1:
             print 'Getting data from log dispatcher...'  
-            row = self.log_queue.get(block=True)
+            row = self.get_queue_data(self.log_queue)
             print 'Data received from log dispatcher...'
             c = conn.cursor()
             done = False
@@ -235,7 +244,7 @@ class MysqlDatabase(Database):
             queuelist = []
 
             print 'Getting data from dispatcher...'
-            input_dict = self.insertion_queue.get(block=True)
+            input_dict = self.get_queue_data(self.insertion_queue)
             print 'Data received from dispatcher...'
             queuelist.append(input_dict)
 
