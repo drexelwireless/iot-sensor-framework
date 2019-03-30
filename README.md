@@ -188,7 +188,7 @@ In the future we may want to use the `--aggressive` option to make
 non-whitespace style changes.
 
 ## License
-Copyright <YEAR> Bill Mongan
+Copyright 2014 Bill Mongan
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
