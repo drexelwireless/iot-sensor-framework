@@ -70,7 +70,7 @@ MySQL v5.5 (Raspberry Pi):
 sudo service mysql start
 ```
 ###### Web Server
-Navigate to `rssi_db/`:
+Navigate to `database/`:
 * Run `./server_mysql.sh` (for use with the interrogator and MySQL) or
 `./server.sh` (for a SQLite instance when running processing modules)
 
@@ -87,7 +87,7 @@ Navigate to `interrogator/` and run either of the following:
 
 #### Export to .db file
 Before running the following, make sure MySQL and webserver are running.
-* Navigate to `rssi_db/`
+* Navigate to `database/`
 * Run `./export_mysql_to_sqlite.sh`
 * This will create a database file named 'out.db1' in the current working
 directory with data from the MySQL database.
@@ -129,9 +129,9 @@ Laptop:
     `cd ~/Desktop/data_dir`.
     3. Run:
     ```
-    scp pi@192.168.0.105:/home/pi/rssi_db/<desired_file> .
+    scp pi@192.168.0.105:/home/pi/database/<desired_file> .
     ```
-    Where `<desired_file>` is either `out.db1` or `out.csv`.
+    Where `<desired_file>` is either `out.db1` or `out.csv`.  Note in prior versions, the database/ directory was called rssi_db.
 7. Rename your data file, for example: `mv out.csv breathing_30.csv`
 8. Copy the file to a USB drive to export to your personal computer.
 
