@@ -4,20 +4,20 @@ import numpy
 import sys
 import traceback
 from database import Database
-import Queue
+import queue
 import threading
 import os
 from time import sleep
 import pycurl
 import json
-import cStringIO
+import io
 
 
 class REDCapDatabase(Database):
     def __init__(self, crypto, db_path='https://localhost', token='', dispatchsleep=0):
         Database.__init__(self, crypto, db_path=db_path, flush=False)
         self.token = token
-        self.insertion_queue = Queue.Queue()
+        self.insertion_queue = queue.Queue()
         self.dispatcher_thread = threading.Thread(
             target=self.dispatcher, args=())
         self.dispatcher_thread.start()
@@ -66,10 +66,10 @@ class REDCapDatabase(Database):
             'data': data,
         }
 
-        buf = cStringIO.StringIO()
+        buf = io.StringIO()
         ch = pycurl.Curl()
         ch.setopt(ch.URL, self.db_path)
-        ch.setopt(ch.HTTPPOST, fields.items())
+        ch.setopt(ch.HTTPPOST, list(fields.items()))
         ch.setopt(ch.WRITEFUNCTION, buf.write)
         ch.setopt(pycurl.SSL_VERIFYPEER, 1)
         ch.setopt(pycurl.SSL_VERIFYHOST, 2)
@@ -99,7 +99,7 @@ class REDCapDatabase(Database):
                 try:
                     input_dict = self.insertion_queue.get_nowait()
                     queuelist.append(input_dict)
-                except Queue.Empty:
+                except queue.Empty:
                     break
 
             self.redcap_dispatch(queuelist)

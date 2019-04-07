@@ -12,15 +12,15 @@ import time
 
 
 def usage(flask_host, db_path, key_path_prefix, password, csvpath):
-    print '%s [<options>]' % sys.argv[0]
-    print 'where <options> are:\n' \
+    print('%s [<options>]' % sys.argv[0])
+    print('where <options> are:\n' \
         '\t-h - show this help message\n' \
         '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
         '\t-b <path> - path to the database: default %s\n' \
         '\t-k <path> - path to tke ssl key: default %s\n' \
         '\t-c <path> - path to tke csv file: default %s\n' \
         '\t-p <password> - database password: default %s\n' % (
-            flask_host, db_path, key_path_prefix, csvpath, password)
+            flask_host, db_path, key_path_prefix, csvpath, password))
     sys.exit(1)
 
 
@@ -86,7 +86,7 @@ def main():
     crypto = MyCrypto(hostname=flask_host, key_path_prefix=key_path_prefix)
     database = SqliteDatabase(crypto=crypto, db_path=db_path)
 
-    csvfile = open(csvpath, 'rb')
+    csvfile = open(csvpath, 'rt')
     conn = database.open_db_connection()
 
     # read all records from csv

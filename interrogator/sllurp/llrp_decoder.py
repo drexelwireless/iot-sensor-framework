@@ -1,6 +1,6 @@
 import struct
 import logging
-from llrp_errors import *
+from .llrp_errors import *
 
 logger = logging.getLogger(__name__)
 

@@ -1,11 +1,10 @@
-import MySQLdb
 import base64
 import os
 import numpy
 import sys
 import traceback
 from database import Database
-import Queue
+import queue
 import threading
 import os
 from time import sleep
@@ -21,11 +20,11 @@ class MysqlDatabase(Database):
         self.db = None
         self.dispatcher_db = None
         self.log_db = None
-        self.insertion_queue = Queue.Queue()
+        self.insertion_queue = queue.Queue()
         self.dispatcher_thread = threading.Thread(
             target=self.dispatcher, args=())
         self.dispatcher_thread.start()
-        self.log_queue = Queue.Queue()
+        self.log_queue = queue.Queue()
         self.log_thread = threading.Thread(target=self.log_dispatcher, args=())
         self.log_thread.start()
 
@@ -37,7 +36,7 @@ class MysqlDatabase(Database):
         while 1:
             try:
                 input_dict = q.get_nowait() 
-            except Queue.Empty:
+            except queue.Empty:
                 sleep(0.1)
                 continue
 
@@ -75,18 +74,16 @@ class MysqlDatabase(Database):
         #    self.db = None
 
         if (self.db is None):
-            self.db = MySQLdb.connect(passwd=self.db_password, db=self.db_name, user=self.db_user,
-                                      host=self.db_path, use_unicode=True, charset='utf8', init_command='SET NAMES UTF8')
+            self.db = pymysql.connect(self.db_path, self.db_user, self.db_password, self.db_name, charset='utf8', use_unicode=True)
+
             self.init_database(self.db)
 
         if (self.dispatcher_db is None):
-            self.dispatcher_db = MySQLdb.connect(passwd=self.db_password, db=self.db_name, user=self.db_user,
-                                                 host=self.db_path, use_unicode=True, charset='utf8', init_command='SET NAMES UTF8')
+            self.dispatcher_db = pymysql.connect(self.db_path, self.db_user, self.db_password, self.db_name, charset='utf8', use_unicode=True)
             self.init_database(self.dispatcher_db)
 
         if (self.log_db is None):
-            self.log_db = MySQLdb.connect(passwd=self.db_password, db=self.db_name, user=self.db_user,
-                                          host=self.db_path, use_unicode=True, charset='utf8', init_command='SET NAMES UTF8')
+            self.log_db = pymysql.connect(self.db_path, self.db_user, self.db_password, self.db_name, charset='utf8', use_unicode=True)
             self.init_database(self.log_db)
 
         return self.db
@@ -112,8 +109,8 @@ class MysqlDatabase(Database):
                 done = True
             except:
                 e = sys.exc_info()[0]
-                print '*** Database error on query ' + \
-                    str(q) + ' from thread ' + thread + ', retrying: %s' % e
+                print('*** Database error on query ' + \
+                    str(q) + ' from thread ' + thread + ', retrying: %s' % e)
                 traceback.print_exception(*(sys.exc_info()))
                 if thread == 'main':
                     self.db.close()
@@ -185,9 +182,9 @@ class MysqlDatabase(Database):
         conn = self.log_db
 
         while 1:
-            print 'Getting data from log dispatcher...'  
+            print('Getting data from log dispatcher...')  
             row = self.get_queue_data(self.log_queue)
-            print 'Data received from log dispatcher...'
+            print('Data received from log dispatcher...')
             c = conn.cursor()
             done = False
             while not done:
@@ -197,7 +194,7 @@ class MysqlDatabase(Database):
                     done = True
                 except:
                     e = sys.exc_info()[0]
-                    print '*** Database error on audit insertion, retrying: %s' % e
+                    print('*** Database error on audit insertion, retrying: %s' % e)
                     traceback.print_exception(*(sys.exc_info()))
                     self.log_db.close()
                     self.log_db = None
@@ -245,9 +242,9 @@ class MysqlDatabase(Database):
         while 1:
             queuelist = []
 
-            print 'Getting data from dispatcher...'
+            print('Getting data from dispatcher...')
             input_dict = self.get_queue_data(self.insertion_queue)
-            print 'Data received from dispatcher...'
+            print('Data received from dispatcher...')
             queuelist.append(input_dict)
 
             #print input_dict
@@ -258,7 +255,7 @@ class MysqlDatabase(Database):
                 try:
                     input_dict = self.insertion_queue.get_nowait()
                     queuelist.append(input_dict)
-                except Queue.Empty:
+                except queue.Empty:
                     break
 
             c = conn.cursor()

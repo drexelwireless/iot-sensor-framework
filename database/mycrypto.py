@@ -2,6 +2,7 @@ from werkzeug.serving import make_ssl_devcert
 import ssl
 from Crypto.Cipher import AES
 from Crypto import Random
+from Crypto.Util import Counter
 import os
 import os.path
 import hashlib
@@ -23,8 +24,8 @@ class MyCrypto:
         # Init SSL
         if not os.path.isfile(self.pkeypath) or not os.path.isfile(self.certpath):
             make_ssl_devcert(key_path_prefix, host=hostname)
-            os.chmod(self.pkeypath, 0600)
-            os.chmod(self.certpath, 0600)
+            os.chmod(self.pkeypath, 0o600)
+            os.chmod(self.certpath, 0o600)
 
         self.context = (self.certpath, self.pkeypath)
 
@@ -54,9 +55,10 @@ class MyCrypto:
 
     def get_db_aes(self, db_password, counter):
         self.db_password = db_password
+        self.db_password = self.db_password.encode('ascii')
         key = hashlib.sha512(self.db_password).hexdigest()[:self.KEY_SIZE]
-        aes = AES.new(key, AES.MODE_CTR,
-                      counter=lambda: self.pad_timer_counter(counter))
+        ctr = Counter.new(128, initial_value=int(counter))
+        aes = AES.new(key, AES.MODE_CTR, counter=ctr)
         return aes
 
     def get_db_key(self, db_password, counter=None):

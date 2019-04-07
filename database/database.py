@@ -116,7 +116,7 @@ class Database:
     def break_into_windows(self, dictlist, width, timecol, valcol):
         data = []
 
-        for i in xrange(0, len(dictlist), width):
+        for i in range(0, len(dictlist), width):
             window = dictlist[i:i+width]
 
             x = dict()

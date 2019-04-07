@@ -3,11 +3,11 @@ from impinj_r420 import *
 import getopt
 import sys
 import os
-
+import time
 
 def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antennas, channellist, dispatchsleep, tagpop):
-    print '%s [<options>]' % sys.argv[0]
-    print 'where <options> are:\n' \
+    print('%s [<options>]' % sys.argv[0])
+    print('where <options> are:\n' \
         '\t-h - show this help message\n' \
         '\t-i <127.0.0.1> - IP address of the interrogator: default %s\n' \
         '\t-o <https://localhost> - host where the database web service resides: default %s\n' \
@@ -19,7 +19,7 @@ def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antenna
         '\t-g <device> - device to use as the interrogator (impinj, r420): default %s\n' \
         '\t-t <pop> - sets tag population (4 good for 1 tag, 16 good for 2 tags): default %s\n' \
         '\t-d - Enable debugging: default %s\n' % (ip_address, db_host, db_password,
-                                                   cert_path, antennas, channellist, dispatchsleep, device, tagpop, do_debug)
+                                                   cert_path, antennas, channellist, dispatchsleep, device, tagpop, do_debug))
     sys.exit(1)
 
 
@@ -81,25 +81,26 @@ def print_stats(rfid):
     if rfid.latest_timestamp - rfid.start_timestamp > 0:
         rate = (rfid.count * 1.0) / \
             (rfid.latest_timestamp - rfid.start_timestamp)
-        print 'Read rate per interrogator unit time:', rate, rfid.count, 'reads over', rfid.latest_timestamp - \
-            rfid.start_timestamp, 'time'
+        print('Read rate per interrogator unit time:', rate, rfid.count, 'reads over', rfid.latest_timestamp - \
+            rfid.start_timestamp, 'time')
 
 # Function to watch CTRL+C keyboard input
 
-
-def prog_quit(rfid):
+def prog_quit(rfid, QUITFILE='quit'):
+    print("Create file " + QUITFILE + " to quit.")
     exiting = False
     while not exiting:
-        user_input = raw_input("Enter q to quit: ")
-        if user_input == "q":
-            print "q has been entered"
-            exiting = True
-            print_stats(rfid)
-            rfid.close_server()
-            # wait for server to terminate gracefully, including waiting for the database to shutdown cleanly which takes 5 seconds
-            sleep(10)
-            # os._exit(0)
-
+        try:
+            if os.path.isfile(QUITFILE):
+                print(QUITFILE + " has been found")
+                exiting = True
+                print_stats(rfid)
+                rfid.close_server()
+                # wait for server to terminate gracefully, including waiting for the database to shutdown cleanly which takes 5 seconds
+                time.sleep(10)
+            time.sleep(1)
+        except:
+            os._exit(0)
 
 if __name__ == "__main__":
     ip_address, db_host, db_password, cert_path, do_debug, device, antennas, channellist, dispatchsleep, tagpop = getopts()

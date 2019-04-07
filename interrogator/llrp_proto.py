@@ -219,7 +219,7 @@ def send_message(connection, msg):
     logger.debug('ENDSEND')
 
     # Sanity checks
-    key = msg.keys()
+    key = list(msg.keys())
     if (len(key) != 1):
         raise LLRPError('invalid message format')
     name = key[0]
@@ -1991,7 +1991,7 @@ class reader_thread(Thread):
                     # return
                     # mongan if it can't unpack the success message from the rfid reader, just quit, else continue
                     # mongan fixed by returning empty msg in recv_message, and checking for len(keys) below
-                    print 'llrp error:', e[1].message
+                    print('llrp error:', e[1].message)
                     # if "string" in e[1].message and "length" in e[1].message:
                     #	print 'breaking'
                     #	return
@@ -2001,13 +2001,13 @@ class reader_thread(Thread):
                 # Before returning data to the caller we should check
                 # for remote server's events
                 # mongan - if empty dict was returned, ignore and return; assume end of transmission
-                if len(msg.keys()) > 0:
-                    if msg.keys()[0] in events:
+                if len(list(msg.keys())) > 0:
+                    if list(msg.keys())[0] in events:
                         connection.event_cb(connection, msg)
                     else:
                         break
                 else:
-                    print 'LLRP Ignoring message that contained no data.  Finishing read loop.'
+                    print('LLRP Ignoring message that contained no data.  Finishing read loop.')
                     return
 
             connection.msg_cond.acquire()
@@ -2125,7 +2125,7 @@ class LLRPROSpec(dict):
             raise LLRPError('invalid argument 2 (not in [0-7])')
         if not state in ROSpecState_Name2Type:
             raise LLRPError('invalid argument 3 (not [%s])' %
-                            ROSpecState_Name2Type.keys())
+                            list(ROSpecState_Name2Type.keys()))
 
         self['ROSpec'] = {}
         self['ROSpec']['ROSpecID'] = id
@@ -2184,7 +2184,7 @@ class LLRPMessage(dict):
 
 
 def main():
-    print 'nothing to do...'
+    print('nothing to do...')
 
 
 #

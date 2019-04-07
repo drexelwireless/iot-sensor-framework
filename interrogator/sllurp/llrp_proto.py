@@ -32,9 +32,9 @@ from threading import *
 from types import *
 from socket import *
 import time
-from util import *
-import llrp_decoder
-from llrp_errors import *
+from .util import *
+from . import llrp_decoder
+from .llrp_errors import *
 
 #
 # Define exported symbols
@@ -1404,7 +1404,7 @@ def decode_PerAntennaAirProtocol(data):
     body = body[fmt_len:]
     num = int(par['NumProtocols'])
     id_fmt = '!B'
-    for i in xrange(num):
+    for i in range(num):
         par['ProtocolID{}'.format(i+1)] = struct.unpack(id_fmt, body[i])[0]
 
     return par, data[length:]
@@ -1782,7 +1782,7 @@ Message_struct['C1G2TagSpec'] = {
 def encode_bitstring(bstr, length_bytes):
     def B(x):
         return struct.pack('!B', x)
-    Bs = map(B, struct.unpack('>' + 'B'*len(bstr), bstr))
+    Bs = list(map(B, struct.unpack('>' + 'B'*len(bstr), bstr)))
     Bs += ['\x00'] * (length_bytes - len(bstr))
     return ''.join(Bs)
 
@@ -3312,7 +3312,7 @@ class LLRPROSpec(dict):
                 priority))
         if not state in ROSpecState_Name2Type:
             raise LLRPError('invalid ROSpec state {} (need [{}])'.format(
-                state, ','.join(ROSpecState_Name2Type.keys())))
+                state, ','.join(list(ROSpecState_Name2Type.keys()))))
 
         rmode = llrpcli.reader_mode
         if modeidx == -1:

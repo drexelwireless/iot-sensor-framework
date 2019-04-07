@@ -13,8 +13,8 @@ import time
 
 
 def usage(flask_host, db_path, key_path_prefix, password, mysqldb_path, db_user, db_password):
-    print '%s [<options>]' % sys.argv[0]
-    print 'where <options> are:\n' \
+    print('%s [<options>]' % sys.argv[0])
+    print('where <options> are:\n' \
         '\t-h - show this help message\n' \
         '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
         '\t-b <path> - path to the sqlite database: default %s\n' \
@@ -24,7 +24,7 @@ def usage(flask_host, db_path, key_path_prefix, password, mysqldb_path, db_user,
         '\t-m <mysql host> - path to mysql database hostname: default %s\n' \
         '\t-s <mysql user> - username for mysql database: default %s\n' \
         '\t-w <mysql password> - password for the mysql username: default %s\n' % (
-            flask_host, db_path, key_path_prefix, password, mysqldb_path, db_user, db_password)
+            flask_host, db_path, key_path_prefix, password, mysqldb_path, db_user, db_password))
     sys.exit(1)
 
 
