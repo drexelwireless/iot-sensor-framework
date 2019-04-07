@@ -1,12 +1,12 @@
 version: '3'
 services:
-  rssi_db:
-    build: ./rssi_db
+  database:
+    build: ./database
     volumes:
-      - ./rssi_db:/rssi_db
+      - ./database:/database
     ports:
       - 5000:3306
-    working_dir: /rssi_db
+    working_dir: /database
 
   interrogator:
     build: ./interrogator

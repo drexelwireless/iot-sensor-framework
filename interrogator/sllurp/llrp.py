@@ -1,22 +1,22 @@
-from __future__ import print_function
+
 from collections import defaultdict
 import time
 import socket
 import logging
 import pprint
 import struct
-from llrp_proto import LLRPROSpec, LLRPError, Message_struct, \
+from .llrp_proto import LLRPROSpec, LLRPError, Message_struct, \
     Message_Type2Name, Capability_Name2Type, AirProtocol, \
     llrp_data2xml, LLRPMessageDict, ModeIndex_Name2Type, \
     Modulation_Name2Type, DEFAULT_MODULATION
 import copy
-from util import *
+from .util import *
 from twisted.internet import reactor, task, defer
 from twisted.internet.protocol import ClientFactory
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.error import ReactorAlreadyRunning, ReactorNotRunning
 import threading  # mongan 8/22/16
-import Queue  # mongan 8/22/16
+import queue  # mongan 8/22/16
 
 LLRP_PORT = 5084
 
@@ -48,7 +48,7 @@ class LLRPMessage:
     def serialize(self):
         if self.msgdict is None:
             raise LLRPError('No message dict to serialize.')
-        name = self.msgdict.keys()[0]
+        name = list(self.msgdict.keys())[0]
         logger.debug('serializing {} command'.format(name))
         ver = self.msgdict[name]['Ver'] & BITMASK(3)
         msgtype = self.msgdict[name]['Type'] & BITMASK(10)
@@ -127,7 +127,7 @@ class LLRPMessage:
     def getName(self):
         if not self.msgdict:
             return None
-        return self.msgdict.keys()[0]
+        return list(self.msgdict.keys())[0]
 
     def __repr__(self):
         try:
@@ -222,7 +222,7 @@ class LLRPClient (LineReceiver):
         self.rospec = None
 
         # mongan 8/22/16
-        self.dataqueue = Queue.Queue()
+        self.dataqueue = queue.Queue()
         self.exiting = False
         self.datathread = threading.Thread(target=self.datahandler, args=())
         self.datathread.start()
@@ -272,7 +272,7 @@ class LLRPClient (LineReceiver):
         if max(self.antennas) > gdc['MaxNumberOfAntennaSupported']:
             reqd = ','.join(map(str, self.antennas))
             avail = ','.join(map(str,
-                                 range(1, gdc['MaxNumberOfAntennaSupported']+1)))
+                                 list(range(1, gdc['MaxNumberOfAntennaSupported']+1))))
             logger.warn('Invalid antenna set specified: requested={},'
                         ' available={}.\nIgnoring invalid antennas.'.format(reqd, avail))
             self.antennas = [ant for ant in self.antennas
@@ -281,17 +281,17 @@ class LLRPClient (LineReceiver):
         # check requested Tx power
         logger.debug('requested tx_power: {}'.format(self.tx_power))
         bandtbl = capdict['RegulatoryCapabilities']['UHFBandCapabilities']
-        bandtbl = {k: v for k, v in bandtbl.items()
+        bandtbl = {k: v for k, v in list(bandtbl.items())
                    if k.startswith('TransmitPowerLevelTableEntry')}
         self.tx_power_table = [0, ] * (len(bandtbl) + 1)
-        for k, v in bandtbl.items():
+        for k, v in list(bandtbl.items()):
             idx = v['Index']
             self.tx_power_table[idx] = int(v['TransmitPowerValue']) / 100.0
         logger.debug('tx_power_table: {}'.format(self.tx_power_table))
         if self.tx_power == 0:
             # tx_power = 0 means max power
             self.tx_power = find_p(max, self.tx_power_table)
-        elif self.tx_power not in range(len(self.tx_power_table)):
+        elif self.tx_power not in list(range(len(self.tx_power_table))):
             raise LLRPError('Invalid tx_power: requested={},'
                             ' max_available={}, min_available={}'.format(self.tx_power,
                                                                          find_p(
@@ -304,7 +304,7 @@ class LLRPClient (LineReceiver):
         match = False  # have we matched the user's requested values yet?
         regcap = capdict['RegulatoryCapabilities']
         logger.info('requested modulation: {}'.format(self.modulation))
-        for v in regcap['UHFBandCapabilities']['UHFRFModeTable'].values():
+        for v in list(regcap['UHFBandCapabilities']['UHFRFModeTable'].values()):
             match = v['Mod'] == Modulation_Name2Type[self.modulation]
             if self.tari:
                 match = match and (v['MaxTari'] == self.tari)
@@ -935,12 +935,12 @@ class LLRPClientFactory (ClientFactory):
         self.proto = LLRPClient(factory=self, **self.client_args)
 
         # register state-change callbacks with new client
-        for state, cbs in self._state_callbacks.items():
+        for state, cbs in list(self._state_callbacks.items()):
             for cb in cbs:
                 self.proto.addStateCallback(state, cb)
 
         # register message callbacks with new client
-        for msg_type, cbs in self._message_callbacks.items():
+        for msg_type, cbs in list(self._message_callbacks.items()):
             for cb in cbs:
                 self.proto.addMessageCallback(msg_type, cb)
 

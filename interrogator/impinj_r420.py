@@ -7,7 +7,7 @@ from sllurp import *
 from sllurp.llrp import *
 from twisted.internet import reactor
 import os
-import Queue
+import queue
 from time import sleep
 import collections
 
@@ -106,7 +106,7 @@ class ImpinjR420(Interrogator):
                 try:
                     input_dict = self.tag_dicts_queue.get_nowait()
                     input_dicts.append(input_dict)
-                except Queue.Empty:
+                except queue.Empty:
                     break
 
             resp, content = self.http_obj.request(uri=url, method='PUT', headers={
@@ -124,7 +124,7 @@ class ImpinjR420(Interrogator):
             target=self.handler_thread, args=())
         self.handler_thread.start()
 
-        self.tag_dicts_queue = Queue.Queue()
+        self.tag_dicts_queue = queue.Queue()
         self.communication_thread = threading.Thread(
             target=self.communication_consumer, args=())
         self.communication_thread.start()

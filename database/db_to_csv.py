@@ -146,15 +146,15 @@ def augment(data, timescale=1e6):
 
 
 def usage(flask_host, db_path, key_path_prefix, password):
-    print '%s [<options>]' % sys.argv[0]
-    print 'where <options> are:\n' \
+    print('%s [<options>]' % sys.argv[0])
+    print('where <options> are:\n' \
         '\t-h - show this help message\n' \
         '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
         '\t-b <path> - path to the database: default %s\n' \
         '\t-k <path> - path to tke ssl key: default %s\n' \
         '\t-m - Enable mysql instead of sqlite (also add -s xxx and -w xxx)\n' \
         '\t-p <password> - database password: default %s\n' % (
-            flask_host, db_path, key_path_prefix, password)
+            flask_host, db_path, key_path_prefix, password))
     sys.exit(1)
 
 
@@ -218,16 +218,16 @@ def main():
     myjson = augment(myjson)
 
     if isinstance(myjson[0], dict):
-        for k in myjson[0].keys():
+        for k in list(myjson[0].keys()):
             keys[k] = 1
     elif isinstance(myjson[0], list):
-        for k in myjson[0][0].keys():
+        for k in list(myjson[0][0].keys()):
             keys[k] = 1
 
     #print 'keys', keys
 
     csvfile = open('out.csv', 'wb')
-    mycsv = csv.DictWriter(csvfile, fieldnames=keys.keys(),
+    mycsv = csv.DictWriter(csvfile, fieldnames=list(keys.keys()),
                            quoting=csv.QUOTE_MINIMAL)
 
     mycsv.writeheader()
@@ -242,7 +242,7 @@ def main():
                 #print 'list:', row
                 mycsv.writerow(row)
         else:
-            print 'Error on data (not inserting):', batch
+            print('Error on data (not inserting):', batch)
 
     csvfile.close()
     database.close_db_connection()

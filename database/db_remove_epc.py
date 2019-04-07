@@ -14,8 +14,8 @@ import numpy as np
 
 
 def usage(flask_host, db_path, key_path_prefix, password):
-    print '%s [<options>]' % sys.argv[0]
-    print 'where <options> are:\n' \
+    print('%s [<options>]' % sys.argv[0])
+    print('where <options> are:\n' \
         '\t-h - show this help message\n' \
         '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
         '\t-b <path> - path to the database: default %s\n' \
@@ -23,7 +23,7 @@ def usage(flask_host, db_path, key_path_prefix, password):
         '\t-m - Enable mysql instead of sqlite (also add -s xxx and -w xxx)\n' \
         '\t-g <tag> - The EPC tag to remove\n' \
         '\t-p <password> - database password: default %s\n' % (
-            flask_host, db_path, key_path_prefix, password)
+            flask_host, db_path, key_path_prefix, password))
     sys.exit(1)
 
 
@@ -100,11 +100,11 @@ def process(row, outdb, db_pw, tag=None):
         row)
 
     if tag == epc96 or tag is None:
-        print 'INSERTING', relative_time
+        print('INSERTING', relative_time)
         insert_row(outdb, relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid,
                    channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw)
     else:
-        print 'ELIMINATING', relative_time
+        print('ELIMINATING', relative_time)
 
 
 def main():
@@ -133,10 +133,10 @@ def main():
     #print myjson
 
     if isinstance(myjson[0], dict):
-        for k in myjson[0].keys():
+        for k in list(myjson[0].keys()):
             keys[k] = 1
     elif isinstance(myjson[0], list):
-        for k in myjson[0][0].keys():
+        for k in list(myjson[0][0].keys()):
             keys[k] = 1
 
     #print 'keys', keys
@@ -151,7 +151,7 @@ def main():
                 #print 'list:', row
                 process(row, sqliteoutdb, password, tag=tag)
         else:
-            print 'Error on data (not inserting):', batch
+            print('Error on data (not inserting):', batch)
 
     database.close_db_connection()
     sqliteoutdb.close_db_connection()

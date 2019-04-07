@@ -1,6 +1,6 @@
 import unittest
-import sgtin_96
-import gtin
+from . import sgtin_96
+from . import gtin
 import logging
 
 logLevel = logging.WARNING
@@ -42,7 +42,7 @@ class SGTIN_96_Tests(unittest.TestCase):
         parsed = sgtin_96.parse_sgtin_96(epc)
         full_gtin = gtin.combine_gtin_with_check_digit(
             parsed["company_prefix"])
-        print parsed, full_gtin
+        print(parsed, full_gtin)
 
         self.assertEqual(parsed['serial'], parsed_serial)
         self.assertEqual(parsed['company_prefix'], parsed_company_prefix)

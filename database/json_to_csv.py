@@ -6,10 +6,10 @@ json_data = json.load(sys.stdin)
 myjson = json_data['data']  # assumed to be a json array
 keys = dict()
 
-for k in myjson[0].keys():
+for k in list(myjson[0].keys()):
     keys[k] = 1
 
-mycsv = csv.DictWriter(sys.stdout, fieldnames=keys.keys(),
+mycsv = csv.DictWriter(sys.stdout, fieldnames=list(keys.keys()),
                        quoting=csv.QUOTE_MINIMAL)
 
 mycsv.writeheader()

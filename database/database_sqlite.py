@@ -4,7 +4,7 @@ import os
 import numpy
 from database import Database
 import threading
-import Queue
+import queue
 from time import sleep
 
 
@@ -12,7 +12,7 @@ class SqliteDatabase(Database):
     def __init__(self, crypto, db_path='database.db', flush=False, dispatchsleep=0):
         Database.__init__(self, crypto, db_path=db_path, flush=flush)
         self.dispatchsleep = dispatchsleep
-        self.insertion_queue = Queue.Queue()
+        self.insertion_queue = queue.Queue()
         self.dispatcher_thread = threading.Thread(
             target=self.dispatcher, args=())
         self.dispatcher_thread.start()
@@ -37,7 +37,7 @@ class SqliteDatabase(Database):
                     if not (db_pw in queuelist):
                         queuelist[db_pw] = []
                     queuelist[db_pw].append(row)
-                except Queue.Empty:
+                except queue.Empty:
                     break
 
             for db_pw in queuelist:
@@ -69,8 +69,10 @@ class SqliteDatabase(Database):
     def open_db_connection(self):
         # don't store the connection because each thread requires its own
         conn = sqlite3.connect(self.db_path)
-        os.chmod(self.db_path, 0600)
+        os.chmod(self.db_path, 0o600)
 
+        sqlite3.enable_callback_tracebacks(True) # for user defined function exceptions
+        
         conn.create_function('encrypt', 2, self.db_encrypt)
         conn.create_function('decrypt', 2, self.db_decrypt)
 
@@ -97,12 +99,12 @@ class SqliteDatabase(Database):
 
     def db_decrypt(self, s, counter):
         # counter = int(counter) % 10^16 # counter must be at most 16 digits
-        counter = int(str(counter)[-16:])  # counter must be at most 16 digits
+        counter = int(str(counter)[-16:])  # counter must be at most 16 digits, so take the rightmost 16 characters of the string
 
         aes = self.crypto.get_db_aes(self.db_password, counter)
         b64dec = base64.b64decode(s)
         dec = aes.decrypt(b64dec)
-        unpaddec = self.crypto.unpad(dec)
+        unpaddec = self.crypto.unpad(str(dec))
         return unpaddec
 
     def init_database(self, conn):

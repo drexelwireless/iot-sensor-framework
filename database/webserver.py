@@ -210,7 +210,7 @@ def ws_add_data():
     global ws_database
 
     if ws_do_debug:
-        print request.json
+        print(request.json)
 
     if not request.json:
         abort(400)
@@ -271,7 +271,7 @@ def ws_start(crypto, database, flask_host='0.0.0.0', flask_port=5000, do_debug=F
     ws_do_debug = do_debug
 
     context = ws_crypto.get_ssl_context()
-
+		
     app.run(debug=ws_do_debug, port=ws_flask_port, host=ws_flask_host, ssl_context=context, threaded=False,
             use_reloader=use_reloader)  # multithreaded web server cannot share database connection
 

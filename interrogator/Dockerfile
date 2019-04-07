@@ -13,6 +13,6 @@ RUN pip install --upgrade pip
 RUN apt-get -y install mysql-server-5.7
 RUN apt-get -y install libmysqlclient-dev
 
-RUN pip install MySQL-python
-RUN pip install httplib2
-RUN pip install twisted
+RUN pip3 install pymysql
+RUN pip3 install httplib2
+RUN pip3 install twisted

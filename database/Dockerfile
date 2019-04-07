@@ -12,18 +12,18 @@ RUN apt-get -y install libmysqlclient-dev
 RUN apt-get -y install python2.7
 RUN apt-get -y install python-pip
 RUN apt-get -y install python-dev
-RUN pip install --upgrade pip
+RUN pip3 install --upgrade pip
 
 RUN apt-get -y install libcurl4-openssl-dev
 RUN apt-get -y install libffi-dev
 RUN apt-get -y install libssl-dev
 ENV PYCURL_SSL_LIBRARY=openssl
 
-RUN pip install flask
-RUN pip install MySQL-python
-RUN pip install numpy
-RUN pip install pycurl --global-option="--with-openssl"
-RUN pip install pycrypto
-RUN pip install python-dateutil
+RUN pip3 install flask
+RUN pip3 install pymysql
+RUN pip3 install numpy
+RUN pip3 install pycurl --global-option="--with-openssl"
+RUN pip3 install pycrypto
+RUN pip3 install python-dateutil
 
 EXPOSE 3306

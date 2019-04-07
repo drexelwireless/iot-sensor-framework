@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import argparse
 import logging
 import pprint
@@ -108,7 +108,7 @@ def main():
             logger.info('selected recommended Tari of {} for {}'.format(args.tari,
                                                                         args.modulation))
 
-    enabled_antennas = map(lambda x: int(x.strip()), args.antennas.split(','))
+    enabled_antennas = [int(x.strip()) for x in args.antennas.split(',')]
 
     # d.callback will be called when all connections have terminated normally.
     # use d.addCallback(<callable>) to define end-of-program behavior.
