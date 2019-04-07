@@ -256,15 +256,20 @@ class Impinj(Interrogator):
         self.out("Adding tag %s with RSSI %s and timestamp %s and ID %s on antenna %s" % (
             str(self.count), str(peak_rssi), str(first_seen_timestamp), str(epc), str(antenna)))
 
+        freeform = {}
+        freeform['rssi'] = peak_rssi
+        freeform['epc96'] = epc96
+        freeform['antenna'] = antenna
+        
+        freeformjson = json.dumps(freeform)
+        
         input_dict = dict()
         input_dict['data'] = dict()
         input_dict['data']['db_password'] = self.db_password
-        input_dict['data']['rssi'] = peak_rssi
+        input_dict['data']['freeform'] = freeformjson
         input_dict['data']['relative_time'] = first_seen_timestamp - \
             start_timestamp
         input_dict['data']['interrogator_time'] = first_seen_timestamp
-        input_dict['data']['epc96'] = epc
-        input_dict['data']['antenna'] = antenna
 
         self.tag_dicts_queue.put(input_dict)  # read by the consumer
 

@@ -11,7 +11,7 @@ from time import sleep
 
 
 class MysqlDatabase(Database):
-    def __init__(self, crypto, db_path='localhost', db_name='rssidb', db_password='abc123', db_user='rssi', flush=False, dispatchsleep=0):
+    def __init__(self, crypto, db_path='localhost', db_name='database', db_password='abc123', db_user='dbuser', flush=False, dispatchsleep=0):
         Database.__init__(self, crypto, db_path=db_path, flush=flush)
         self.dispatchsleep = dispatchsleep
         self.db_name = db_name
@@ -140,16 +140,16 @@ class MysqlDatabase(Database):
         c.execute("SET CHARACTER SET utf8mb4;")  # same as above
         c.execute("SET character_set_connection=utf8mb4;")  # same as above
 
-        c.execute('''CREATE TABLE IF NOT EXISTS RSSI(id INTEGER PRIMARY KEY AUTO_INCREMENT, absolute_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, relative_timestamp BIGINT, interrogator_timestamp BIGINT, rssi VARBINARY(255), epc96 VARBINARY(255), doppler VARBINARY(255), phase VARBINARY(255), antenna INT, rospecid INT, channelindex INT, tagseencount INT, accessspecid INT, inventoryparameterspecid INT, lastseentimestamp BIGINT)''')  # absolute_timestamp was DATETIME for more recent mysql
+        c.execute('''CREATE TABLE IF NOT EXISTS IOTD(id INTEGER PRIMARY KEY AUTO_INCREMENT, absolute_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, relative_timestamp BIGINT, interrogator_timestamp BIGINT, freeform VARBINARY(65535)''')  # absolute_timestamp was DATETIME for more recent mysql
         c.execute('''CREATE TABLE IF NOT EXISTS AUDIT(id INTEGER PRIMARY KEY AUTO_INCREMENT, absolute_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, log TEXT)''')  # absolute_timestamp was DATETIME for more recent mysql
 
         conn.commit()
 
     def flush_database(self, conn):
         c = conn.cursor()
-        c.execute('''DROP TABLE IF EXISTS RSSI''')
+        c.execute('''DROP TABLE IF EXISTS IOTD''')
         conn.commit()
-        self.db_log('DROP RSSI')
+        self.db_log('DROP IOTD')
 
     def flush_audit(self, conn):
         c = conn.cursor()
@@ -167,7 +167,7 @@ class MysqlDatabase(Database):
 
         data = []
 
-        result = self.query(c, "SELECT MAX(relative_timestamp) FROM RSSI")
+        result = self.query(c, "SELECT MAX(relative_timestamp) FROM IOTD")
         for row in c:
             d = dict()
             d['max_relative_timestamp'] = row[0]
@@ -266,27 +266,15 @@ class MysqlDatabase(Database):
                 # the additional interrogatortime entries are for the encryption function which requires a counter to synchronize stream encryption and decryption; this time should be to the microsecond (6 places after the decimal for seconds) to ensure uniqueness, but can be less precise if the interrogator resolution is lower.  relative_time is expected in microseconds, and both relativetime and interrogatortime are assumed to be whole numbers (i.e. epoch time)
                 relativetime = input_dict['relativetime']
                 interrogatortime = input_dict['interrogatortime']
-                rssi = input_dict['rssi']
-                epc96 = input_dict['epc96']
-                db_pw = input_dict['db_pw']
-                doppler = input_dict['doppler']
-                phase = input_dict['phase']
-                antenna = input_dict['antenna']
-                rospecid = input_dict['rospecid']
-                channelindex = input_dict['channelindex']
-                tagseencount = input_dict['tagseencount']
-                accessspecid = input_dict['accessspecid']
-                inventoryparameterspecid = input_dict['inventoryparameterspecid']
-                lastseentimestamp = input_dict['lastseentimestamp']
+                freeform = input_dict['freeform']
 
                 self.db_password = db_pw
 
-                row = (relativetime, interrogatortime, self.db_encrypt(rssi, interrogatortime), self.db_encrypt(epc96, interrogatortime), self.db_encrypt(
-                    doppler, interrogatortime), self.db_encrypt(phase, interrogatortime), antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp)
+                row = (relativetime, interrogatortime, self.db_encrypt(freeform, interrogatortime))
 
                 rowlist.append(row)
 
-            result = self.query(c, 'INSERT INTO RSSI (relative_timestamp, interrogator_timestamp, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', rowlist, thread='dispatcher', executemany=True)
+            result = self.query(c, 'INSERT INTO IOTD (relative_timestamp, interrogator_timestamp, freeform) VALUES (%s,%s,%s)', rowlist, thread='dispatcher', executemany=True)
             c.close()
             conn.commit()
 
@@ -297,22 +285,11 @@ class MysqlDatabase(Database):
         self.close_db_connection(thread='dispatcher')
 
     # just insert into a queue for the dispatcher to insert in the background
-    def insert_row(self, relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=''):
+    def insert_row(self, relativetime, interrogatortime, freeform, db_pw=''):
         input_dict = dict()  # read by the consumer dispatcher
         input_dict['relativetime'] = relativetime
         input_dict['interrogatortime'] = interrogatortime
-        input_dict['rssi'] = rssi
-        input_dict['epc96'] = epc96
-        input_dict['db_pw'] = db_pw
-        input_dict['doppler'] = doppler
-        input_dict['phase'] = phase
-        input_dict['antenna'] = antenna
-        input_dict['rospecid'] = rospecid
-        input_dict['channelindex'] = channelindex
-        input_dict['tagseencount'] = tagseencount
-        input_dict['accessspecid'] = accessspecid
-        input_dict['inventoryparameterspecid'] = inventoryparameterspecid
-        input_dict['lastseentimestamp'] = lastseentimestamp
+        input_dict['freeform'] = freeform
 
         self.insertion_queue.put(input_dict)
 
@@ -323,7 +300,7 @@ class MysqlDatabase(Database):
         data = []
         conn = self.open_db_connection()
         c = conn.cursor()
-        result = self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp FROM RSSI ORDER BY interrogator_timestamp ASC")
+        result = self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, freeform FROM IOTD ORDER BY interrogator_timestamp ASC")
         for row in c:
             self.db_log('FETCH ' + str(row[0]))
 
@@ -332,17 +309,7 @@ class MysqlDatabase(Database):
             d['absolute_timestamp'] = row[1]
             d['relative_timestamp'] = row[2]
             d['interrogator_timestamp'] = row[3]
-            d['rssi'] = self.db_decrypt(row[4], row[3])
-            d['epc96'] = self.db_decrypt(row[5], row[3])
-            d['doppler'] = self.db_decrypt(row[6], row[3])
-            d['phase'] = self.db_decrypt(row[7], row[3])
-            d['antenna'] = row[8]
-            d['rospecid'] = row[9]
-            d['channelindex'] = row[10]
-            d['tagseencount'] = row[11]
-            d['accessspecid'] = row[12]
-            d['inventoryparameterspecid'] = row[13]
-            d['lastseentimestamp'] = row[14]
+            d['freeform'] = self.db_decrypt(row[4], row[3])
             data.append(d)
 
         c.close()
@@ -357,7 +324,7 @@ class MysqlDatabase(Database):
         conn = self.open_db_connection()
         c = conn.cursor()
         input = (windowsize, )
-        result = self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp FROM RSSI ORDER BY interrogator_timestamp ASC LIMIT %s", input)
+        result = self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, freeform FROM IOTD ORDER BY interrogator_timestamp ASC LIMIT %s", input)
         for row in c:
             self.db_log('FETCH ' + str(row[0]))
 
@@ -366,17 +333,7 @@ class MysqlDatabase(Database):
             d['absolute_timestamp'] = row[1]
             d['relative_timestamp'] = row[2]
             d['interrogator_timestamp'] = row[3]
-            d['rssi'] = self.db_decrypt(row[4], row[3])
-            d['epc96'] = self.db_decrypt(row[5], row[3])
-            d['doppler'] = self.db_decrypt(row[6], row[3])
-            d['phase'] = self.db_decrypt(row[7], row[3])
-            d['antenna'] = row[8]
-            d['rospecid'] = row[9]
-            d['channelindex'] = row[10]
-            d['tagseencount'] = row[11]
-            d['accessspecid'] = row[12]
-            d['inventoryparameterspecid'] = row[13]
-            d['lastseentimestamp'] = row[14]
+            d['freeform'] = self.db_decrypt(row[4], row[3])
             data.append(d)
 
         c.close()
@@ -391,7 +348,7 @@ class MysqlDatabase(Database):
         conn = self.open_db_connection()
         c = conn.cursor()
         input = (since,)
-        result = self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp FROM RSSI WHERE relative_timestamp >= %s ORDER BY interrogator_timestamp ASC", input)
+        result = self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, freeform FROM IOTD WHERE relative_timestamp >= %s ORDER BY interrogator_timestamp ASC", input)
         for row in c:
             self.db_log('FETCH ' + str(row[0]))
 
@@ -400,17 +357,7 @@ class MysqlDatabase(Database):
             d['absolute_timestamp'] = row[1]
             d['relative_timestamp'] = row[2]
             d['interrogator_timestamp'] = row[3]
-            d['rssi'] = self.db_decrypt(row[4], row[3])
-            d['epc96'] = self.db_decrypt(row[5], row[3])
-            d['doppler'] = self.db_decrypt(row[6], row[3])
-            d['phase'] = self.db_decrypt(row[7], row[3])
-            d['antenna'] = row[8]
-            d['rospecid'] = row[9]
-            d['channelindex'] = row[10]
-            d['tagseencount'] = row[11]
-            d['accessspecid'] = row[12]
-            d['inventoryparameterspecid'] = row[13]
-            d['lastseentimestamp'] = row[14]
+            d['freeform'] = self.db_decrypt(row[4], row[3])
             data.append(d)
 
         c.close()
@@ -425,7 +372,7 @@ class MysqlDatabase(Database):
         conn = self.open_db_connection()
         c = conn.cursor()
         input = (start, end)
-        result = self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp FROM RSSI WHERE relative_timestamp >= %s AND relative_timestamp <= %s ORDER BY interrogator_timestamp ASC", input)
+        result = self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, freeform FROM IOTD WHERE relative_timestamp >= %s AND relative_timestamp <= %s ORDER BY interrogator_timestamp ASC", input)
         for row in c:
             self.db_log('FETCH ' + str(row[0]))
 
@@ -434,17 +381,7 @@ class MysqlDatabase(Database):
             d['absolute_timestamp'] = row[1]
             d['relative_timestamp'] = row[2]
             d['interrogator_timestamp'] = row[3]
-            d['rssi'] = self.db_decrypt(row[4], row[3])
-            d['epc96'] = self.db_decrypt(row[5], row[3])
-            d['doppler'] = self.db_decrypt(row[6], row[3])
-            d['phase'] = self.db_decrypt(row[7], row[3])
-            d['antenna'] = row[8]
-            d['rospecid'] = row[9]
-            d['channelindex'] = row[10]
-            d['tagseencount'] = row[11]
-            d['accessspecid'] = row[12]
-            d['inventoryparameterspecid'] = row[13]
-            d['lastseentimestamp'] = row[14]
+            d['freeform'] = self.db_decrypt(row[4], row[3])
             data.append(d)
 
         c.close()
@@ -458,7 +395,7 @@ class MysqlDatabase(Database):
         data = []
         conn = self.open_db_connection()
         c = conn.cursor()
-        self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp FROM RSSI WHERE absolute_timestamp >= NOW() - INTERVAL %s SECOND ORDER BY interrogator_timestamp ASC", (n,))
+        self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, freeform FROM IOTD WHERE absolute_timestamp >= NOW() - INTERVAL %s SECOND ORDER BY interrogator_timestamp ASC", (n,))
         for row in c:
             self.db_log('FETCH ' + str(row[0]))
 
@@ -467,17 +404,7 @@ class MysqlDatabase(Database):
             d['absolute_timestamp'] = row[1]
             d['relative_timestamp'] = row[2]
             d['interrogator_timestamp'] = row[3]
-            d['rssi'] = self.db_decrypt(row[4], row[3])
-            d['epc96'] = self.db_decrypt(row[5], row[3])
-            d['doppler'] = self.db_decrypt(row[6], row[3])
-            d['phase'] = self.db_decrypt(row[7], row[3])
-            d['antenna'] = row[8]
-            d['rospecid'] = row[9]
-            d['channelindex'] = row[10]
-            d['tagseencount'] = row[11]
-            d['accessspecid'] = row[12]
-            d['inventoryparameterspecid'] = row[13]
-            d['lastseentimestamp'] = row[14]
+            d['freeform'] = self.db_decrypt(row[4], row[3])
             data.append(d)
 
         c.close()

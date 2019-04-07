@@ -51,7 +51,7 @@ class SqliteDatabase(Database):
                     #print row
 
                 # the additional interrogatortime entries are for the encryption function which requires a counter to synchronize stream encryption and decryption; this time should be to the microsecond (6 places after the decimal for seconds) to ensure uniqueness, but can be less precise if the interrogator resolution is lower.  relative_time is expected in microseconds, and both relativetime and interrogatortime are assumed to be whole numbers (i.e. epoch time)
-                c.executemany('INSERT INTO RSSI (relative_timestamp, interrogator_timestamp, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp) VALUES (?,?,encrypt(?,?),encrypt(?,?),encrypt(?,?),encrypt(?,?),?,?,?,?,?,?,?)', rowlist)
+                c.executemany('INSERT INTO IOTD (relative_timestamp, interrogator_timestamp, freeform) VALUES (?,?,encrypt(?,?))', rowlist)
             conn.commit()
 
             if self.dispatchsleep > 0:
@@ -114,12 +114,12 @@ class SqliteDatabase(Database):
             self.flush_database(conn)
 
         c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS RSSI(id INTEGER PRIMARY KEY, absolute_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, relative_timestamp BIGINT, interrogator_timestamp BIGINT, rssi TEXT, epc96 TEXT, doppler TEXT, phase TEXT, antenna TEXT, rospecid TEXT, channelindex TEXT, tagseencount TEXT, accessspecid TEXT, inventoryparameterspecid TEXT, lastseentimestamp TEXT)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS IOTD(id INTEGER PRIMARY KEY, absolute_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, relative_timestamp BIGINT, interrogator_timestamp BIGINT, freeform TEXT)''')
         conn.commit()
 
     def flush_database(self, conn):
         c = conn.cursor()
-        c.execute('''DROP TABLE IF EXISTS RSSI''')
+        c.execute('''DROP TABLE IF EXISTS IOTD''')
         conn.commit()
 
     # get max data time in the db
@@ -129,7 +129,7 @@ class SqliteDatabase(Database):
 
         data = []
 
-        for row in c.execute("SELECT MAX(relative_timestamp) FROM RSSI"):
+        for row in c.execute("SELECT MAX(relative_timestamp) FROM IOTD"):
             d = dict()
             d['max_relative_timestamp'] = row[0]
             data.append(d)
@@ -138,10 +138,10 @@ class SqliteDatabase(Database):
 
         return data
 
-    def insert_row(self, relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=''):
+    def insert_row(self, relativetime, interrogatortime, freeform, db_pw=''):
         # the additional interrogatortime entries are for the encryption function which requires a counter to synchronize stream encryption and decryption; this time should be to the microsecond (6 places after the decimal for seconds) to ensure uniqueness, but can be less precise if the interrogator resolution is lower.  relative_time is expected in microseconds, and both relativetime and interrogatortime are assumed to be whole numbers (i.e. epoch time)
-        row = (relativetime, interrogatortime, rssi, interrogatortime, epc96, interrogatortime, doppler, interrogatortime, phase,
-               interrogatortime, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp)
+        # counter entries (i.e., interrogatortime) go after the field being entered into the row tuple
+        row = (relativetime, interrogatortime, freeform, interrogatortime)
 
         self.insertion_queue.put((row, db_pw))  # to be read by dispatcher
 
@@ -151,24 +151,14 @@ class SqliteDatabase(Database):
         data = []
         conn = self.open_db_connection()
         c = conn.cursor()
-        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(rssi, interrogator_timestamp), decrypt(epc96, interrogator_timestamp), decrypt(doppler, interrogator_timestamp), decrypt(phase, interrogator_timestamp), antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp FROM RSSI ORDER BY interrogator_timestamp ASC"):
+        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(freeform, interrogator_timestamp) FROM IOTD ORDER BY interrogator_timestamp ASC"):
 
             d = dict()
             d['id'] = row[0]
             d['absolute_timestamp'] = row[1]
             d['relative_timestamp'] = row[2]
             d['interrogator_timestamp'] = row[3]
-            d['rssi'] = row[4]
-            d['epc96'] = row[5]
-            d['doppler'] = row[6]
-            d['phase'] = row[7]
-            d['antenna'] = row[8]
-            d['rospecid'] = row[9]
-            d['channelindex'] = row[10]
-            d['tagseencount'] = row[11]
-            d['accessspecid'] = row[12]
-            d['inventoryparameterspecid'] = row[13]
-            d['lastseentimestamp'] = row[14]
+            d['freeform'] = row[4]
             data.append(d)
             
         conn.commit()
@@ -183,23 +173,13 @@ class SqliteDatabase(Database):
         conn = self.open_db_connection()
         c = conn.cursor()
         input = (windowsize, )
-        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(rssi, interrogator_timestamp), decrypt(epc96, interrogator_timestamp), decrypt(doppler, interrogator_timestamp), decrypt(phase, interrogator_timestamp), antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp FROM RSSI ORDER BY interrogator_timestamp ASC LIMIT ?", input):
+        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(freeform, interrogator_timestamp) FROM IOTD ORDER BY interrogator_timestamp ASC LIMIT ?", input):
             d = dict()
             d['id'] = row[0]
             d['absolute_timestamp'] = row[1]
             d['relative_timestamp'] = row[2]
             d['interrogator_timestamp'] = row[3]
-            d['rssi'] = row[4]
-            d['epc96'] = row[5]
-            d['doppler'] = row[6]
-            d['phase'] = row[7]
-            d['antenna'] = row[8]
-            d['rospecid'] = row[9]
-            d['channelindex'] = row[10]
-            d['tagseencount'] = row[11]
-            d['accessspecid'] = row[12]
-            d['inventoryparameterspecid'] = row[13]
-            d['lastseentimestamp'] = row[14]
+            d['freeform'] = row[4]
             data.append(d)
         conn.commit()
         conn.close()
@@ -213,23 +193,13 @@ class SqliteDatabase(Database):
         conn = self.open_db_connection()
         c = conn.cursor()
         input = (since,)
-        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(rssi, interrogator_timestamp), decrypt(epc96, interrogator_timestamp), decrypt(doppler, interrogator_timestamp), decrypt(phase, interrogator_timestamp), antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp FROM RSSI WHERE relative_timestamp >= ? ORDER BY interrogator_timestamp ASC", input):
+        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(freeform, interrogator_timestamp) FROM IOTD WHERE relative_timestamp >= ? ORDER BY interrogator_timestamp ASC", input):
             d = dict()
             d['id'] = row[0]
             d['absolute_timestamp'] = row[1]
             d['relative_timestamp'] = row[2]
             d['interrogator_timestamp'] = row[3]
-            d['rssi'] = row[4]
-            d['epc96'] = row[5]
-            d['doppler'] = row[6]
-            d['phase'] = row[7]
-            d['antenna'] = row[8]
-            d['rospecid'] = row[9]
-            d['channelindex'] = row[10]
-            d['tagseencount'] = row[11]
-            d['accessspecid'] = row[12]
-            d['inventoryparameterspecid'] = row[13]
-            d['lastseentimestamp'] = row[14]
+            d['freeform'] = row[4]
             data.append(d)
         conn.commit()
         conn.close()
@@ -243,23 +213,13 @@ class SqliteDatabase(Database):
         conn = self.open_db_connection()
         c = conn.cursor()
         input = (start, end)
-        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(rssi, interrogator_timestamp), decrypt(epc96, interrogator_timestamp), decrypt(doppler, interrogator_timestamp), decrypt(phase, interrogator_timestamp), antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp FROM RSSI WHERE relative_timestamp >= ? AND relative_timestamp <= ? ORDER BY interrogator_timestamp ASC", input):
+        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(freeform, interrogator_timestamp) FROM IOTD WHERE relative_timestamp >= ? AND relative_timestamp <= ? ORDER BY interrogator_timestamp ASC", input):
             d = dict()
             d['id'] = row[0]
             d['absolute_timestamp'] = row[1]
             d['relative_timestamp'] = row[2]
             d['interrogator_timestamp'] = row[3]
-            d['rssi'] = row[4]
-            d['epc96'] = row[5]
-            d['doppler'] = row[6]
-            d['phase'] = row[7]
-            d['antenna'] = row[8]
-            d['rospecid'] = row[9]
-            d['channelindex'] = row[10]
-            d['tagseencount'] = row[11]
-            d['accessspecid'] = row[12]
-            d['inventoryparameterspecid'] = row[13]
-            d['lastseentimestamp'] = row[14]
+            d['freeform'] = row[4]
             data.append(d)
         conn.commit()
         conn.close()
@@ -272,23 +232,13 @@ class SqliteDatabase(Database):
         data = []
         conn = self.open_db_connection()
         c = conn.cursor()
-        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(rssi, interrogator_timestamp), decrypt(epc96, interrogator_timestamp), decrypt(doppler, interrogator_timestamp), decrypt(phase, interrogator_timestamp), antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp FROM RSSI WHERE absolute_timestamp >= datetime(?, ?) ORDER BY interrogator_timestamp ASC", ('now', '-' + str(n) + ' seconds')):
+        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(freeform, interrogator_timestamp) FROM IOTD WHERE absolute_timestamp >= datetime(?, ?) ORDER BY interrogator_timestamp ASC", ('now', '-' + str(n) + ' seconds')):
             d = dict()
             d['id'] = row[0]
             d['absolute_timestamp'] = row[1]
             d['relative_timestamp'] = row[2]
             d['interrogator_timestamp'] = row[3]
-            d['rssi'] = row[4]
-            d['epc96'] = row[5]
-            d['doppler'] = row[6]
-            d['phase'] = row[7]
-            d['antenna'] = row[8]
-            d['rospecid'] = row[9]
-            d['channelindex'] = row[10]
-            d['tagseencount'] = row[11]
-            d['accessspecid'] = row[12]
-            d['inventoryparameterspecid'] = row[13]
-            d['lastseentimestamp'] = row[14]
+            d['freeform'] = row[4]
             data.append(d)
         conn.commit()
         conn.close()

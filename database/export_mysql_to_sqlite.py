@@ -92,20 +92,10 @@ def main():
 
     for row in myjson:
         #print row
-        rssi = getdict(row, 'rssi', '')
+        freeformjson = getdict(row, 'freeform', '')
+
         relative_time = getdict(row, 'relative_timestamp', '')
         interrogator_time = getdict(row, 'interrogator_timestamp', '')
-        epc96 = getdict(row, 'epc96', '')
-        doppler = getdict(row, 'doppler', '-1')
-        phase = getdict(row, 'phase', '-1')
-        antenna = getdict(row, 'antenna', '-1')
-        rospecid = getdict(row, 'rospecid', '-1')
-        channelindex = getdict(row, 'channelindex', '-1')
-        tagseencount = getdict(row, 'tagseencount', '-1')
-        accessspecid = getdict(row, 'accessspecid', '-1')
-        inventoryparameterspecid = getdict(
-            row, 'inventoryparameterspecid', '-1')
-        lastseentimestamp = getdict(row, 'lastseentimestamp', '-1')
 
         if relative_time == 0 or rows == 0 or sqlitedb is None:
             db_runs = db_runs + 1
@@ -117,9 +107,7 @@ def main():
 
         rows = rows + 1
 
-        #print 'Adding row', rssi, relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, 'with password', db_password
-        sqlitedb.insert_row(relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid,
-                            channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_password)
+        sqlitedb.insert_row(relative_time, interrogator_time, freeform, db_password)
 
     time.sleep(10)
 

@@ -2,8 +2,8 @@ import MySQLdb
 import sys
 
 root_db_password = sys.argv[1]  # bellyband
-db_name = sys.argv[2]  # rssidb
-db_user = sys.argv[3]  # rssi
+db_name = sys.argv[2]  # rssidb or dbuser
+db_user = sys.argv[3]  # rssi or iotd
 db_user_password = sys.argv[4]  # abc123
 db_path = sys.argv[5]  # localhost
 
