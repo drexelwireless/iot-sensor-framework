@@ -35,6 +35,18 @@ class MyCrypto:
         # No database password yet, we'll set this on the first web call from the user and on each subsequent call ensure that it is the same as what was stored (else regenerate the key)
         self.db_password = None
 
+    def raw_time_counter_to_epoch(self, counter):
+        # use this in the counter lambda defining the AES object if counter is an absolute datetime sensitive to microseconds (must be globally unique)
+        timestamp = parser.parse(counter)
+        delta = timestamp - datetime.datetime(1970, 1, 1)
+        micros = '%d' % (delta.total_seconds() * 100 + delta.microseconds)
+        return self.pad_timer_counter(micros)
+
+    def pad_timer_counter(self, micros):
+        micros_str = str(micros)
+        padded = self.pad(micros_str)
+        return padded
+        
     # https://github.com/dlitz/pycrypto/blob/master/lib/Crypto/Util/Padding.py
     def pycryptopad(self, data_to_pad, block_size, style='pkcs7'):
         """Apply standard padding.
