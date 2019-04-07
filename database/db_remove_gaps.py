@@ -155,7 +155,7 @@ def main():
     # Read in gaps, if any
     gaplist = []
     if not (gapfile is None):
-        gapcsvfile = open(gapfile, 'rb')
+        gapcsvfile = open(gapfile, 'rt')
         gapcsvreader = csv.DictReader(gapcsvfile)
         for gaprow in gapcsvreader:
             gaplist.append(gaprow)

@@ -208,7 +208,7 @@ class MysqlDatabase(Database):
 
     def db_encrypt(self, s, counter):
         # counter = int(counter) % 10^16 # counter must be at most 16 digits
-        counter = int(str(counter)[-16:])  # counter must be at most 16 digits
+        counter = int(str(counter)[-self.crypto.MAX_COUNTER_DIGITS:])  # counter must be at most 16 digits, take rightmost 16 characters
 
         if type(s) is int:
             val = str(s)
@@ -225,12 +225,13 @@ class MysqlDatabase(Database):
 
     def db_decrypt(self, s, counter):
         # counter = int(counter) % 10^16 # counter must be at most 16 digits
-        counter = int(str(counter)[-16:])  # counter must be at most 16 digits
+        counter = int(str(counter)[-self.crypto.MAX_COUNTER_DIGITS:])  # counter must be at most 16 digits, take rightmost 16 characters
 
         aes = self.crypto.get_db_aes(self.db_password, counter)
         b64dec = base64.b64decode(s)
         dec = aes.decrypt(b64dec)
         unpaddec = self.crypto.unpad(dec)
+        unpaddec = unpaddec.decode()
         return unpaddec
 
     # dispatch insertions from the queue so that the webserver can continue receiving requests

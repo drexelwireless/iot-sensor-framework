@@ -31,6 +31,8 @@ RUN pip3 install filterpy
 RUN pip3 install httplib2
 RUN pip3 install werkzeug
 RUN pip3 install hashlib
+RUN pip3 install sklearn
+RUN pip3 install git+git://github.com/statsmodels/statsmodels
 
 EXPOSE 3306
 EXPOSE 5000
