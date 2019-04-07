@@ -26,12 +26,17 @@ RUN pip3 install pycurl --global-option="--with-openssl"
 RUN pip3 install pycrypto
 RUN pip3 install python-dateutil
 
+# Packages needed by common ML/DSP systems that depend on the IOT Sensor Framework
 RUN pip3 install pandas
 RUN pip3 install filterpy
 RUN pip3 install httplib2
 RUN pip3 install werkzeug
 RUN pip3 install hashlib
 RUN pip3 install sklearn
+RUN pip3 install pykalman
+RUN pip3 install scikit-image
+RUN pip3 install peakutils
+RUN pip3 install hmmlearn
 RUN pip3 install git+git://github.com/statsmodels/statsmodels
 
 EXPOSE 3306
