@@ -82,7 +82,7 @@ class SqliteDatabase(Database):
 
     def db_encrypt(self, s, counter):
         # counter = int(counter) % 10^16 # counter must be at most 16 digits
-        counter = int(str(counter)[-16:])  # counter must be at most 16 digits
+        counter = int(str(counter)[-self.crypto.MAX_COUNTER_DIGITS:])  # counter must be at most 16 digits, take rightmost 16 characters
 
         if type(s) is int:
             val = str(s)
@@ -99,12 +99,13 @@ class SqliteDatabase(Database):
 
     def db_decrypt(self, s, counter):
         # counter = int(counter) % 10^16 # counter must be at most 16 digits
-        counter = int(str(counter)[-16:])  # counter must be at most 16 digits, so take the rightmost 16 characters of the string
+        counter = int(str(counter)[-self.crypto.MAX_COUNTER_DIGITS:])  # counter must be at most 16 digits, so take the rightmost 16 characters of the string
 
         aes = self.crypto.get_db_aes(self.db_password, counter)
         b64dec = base64.b64decode(s)
         dec = aes.decrypt(b64dec)
-        unpaddec = self.crypto.unpad(str(dec))
+        unpaddec = self.crypto.unpad(dec)
+        unpaddec = unpaddec.decode()
         return unpaddec
 
     def init_database(self, conn):
@@ -168,6 +169,7 @@ class SqliteDatabase(Database):
             d['inventoryparameterspecid'] = row[13]
             d['lastseentimestamp'] = row[14]
             data.append(d)
+            
         conn.commit()
         conn.close()
 

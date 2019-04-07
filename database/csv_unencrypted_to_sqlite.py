@@ -114,7 +114,7 @@ def main():
         #print row
         #print '*****'
         #print relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp
-
+        
         # insert each into sqlite database
         database.insert_row(relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid,
                             channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=password)

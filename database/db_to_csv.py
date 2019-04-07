@@ -9,6 +9,7 @@ import json
 import os
 import math
 import numpy as np
+import time
 
 # UTIL HELPERS
 cspeed = 2.99792458e8
@@ -226,7 +227,7 @@ def main():
 
     #print 'keys', keys
 
-    csvfile = open('out.csv', 'wb')
+    csvfile = open('out.csv', 'wt')
     mycsv = csv.DictWriter(csvfile, fieldnames=list(keys.keys()),
                            quoting=csv.QUOTE_MINIMAL)
 
@@ -244,6 +245,8 @@ def main():
         else:
             print('Error on data (not inserting):', batch)
 
+    time.sleep(5)
+    
     csvfile.close()
     database.close_db_connection()
     os._exit(0)

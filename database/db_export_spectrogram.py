@@ -217,7 +217,7 @@ def main():
 
     #print myjson
 
-    csvfile = open('out.csv', 'wb')
+    csvfile = open('out.csv', 'wt')
     mycsv = csv.DictWriter(csvfile, fieldnames=list(keys.keys()),
                            quoting=csv.QUOTE_MINIMAL)
 

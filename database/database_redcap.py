@@ -23,9 +23,10 @@ class REDCapDatabase(Database):
         self.dispatcher_thread.start()
         self.dispatchsleep = dispatchsleep
 
+    # no db_decrypt because you can export from REDCap to CSV and then create a db from that
     def db_encrypt(self, s, counter):
         # counter = int(counter) % 10^16 # counter must be at most 16 digits
-        counter = int(str(counter)[-16:])  # counter must be at most 16 digits
+        counter = int(str(counter)[-self.crypto.MAX_COUNTER_DIGITS:])  # counter must be at most 16 digits, take rightmost 16 characters
 
         if type(s) is int:
             val = str(s)
