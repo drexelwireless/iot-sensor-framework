@@ -92,6 +92,8 @@ def main():
     # read all records from csv
     reader = csv.DictReader(csvfile)
 
+    rows = 0
+    
     for row in reader:
         interrogatortime = getfield(
             row, ['interrogatortime', 'interrogator_timestamp'])
@@ -118,9 +120,13 @@ def main():
         # insert each into sqlite database
         database.insert_row(relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid,
                             channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=password)
+                            
+        rows = rows + 1
 
+    #print(rows)
+    database.close_db_connection()
+    time.sleep(10)  # allow the database to write
     csvfile.close()
-    time.sleep(5)  # allow the database to write
     os._exit(0)
 
 
