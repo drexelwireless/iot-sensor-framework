@@ -26,4 +26,11 @@ RUN pip3 install pycurl --global-option="--with-openssl"
 RUN pip3 install pycrypto
 RUN pip3 install python-dateutil
 
+RUN pip3 install pandas
+RUN pip3 install filterpy
+RUN pip3 install httplib2
+RUN pip3 install werkzeug
+RUN pip3 install hashlib
+
 EXPOSE 3306
+EXPOSE 5000
