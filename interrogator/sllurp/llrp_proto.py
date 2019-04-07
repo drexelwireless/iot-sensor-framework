@@ -25,7 +25,7 @@
 
 import logging
 import struct
-import exceptions
+#import exceptions
 from collections import defaultdict
 import traceback
 from threading import *

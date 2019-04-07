@@ -23,7 +23,7 @@
 import logging
 import inspect
 import struct
-import exceptions
+#import exceptions
 from threading import *
 from types import *
 from socket import *
