@@ -234,10 +234,24 @@ class ImpinjR420(Interrogator):
                         self.start_timestamp = first_seen_timestamp
 
                     self.latest_timestamp = first_seen_timestamp
+                    
+                    freeform = {}
+                    freeform['rssi'] = rssi
+                    freeform['epc96'] = epc96
+                    freeform['doppler'] = doppler
+                    freeform['phase'] = phase
+                    freeform['antenna'] = antenna
+                    freeform['rospecid'] = rospecid
+                    freeform['channelindex'] = channelindex
+                    freeform['tagseencount'] = tagseencount
+                    freeform['accessspecid'] = accessspecid
+                    freeform['inventoryparameterspecid'] = inventoryparameterspecid
+                    freeform['lastseentimestamp'] = lastseentimestamp
+                    
+                    freeformjson = json.dumps(freeform)
 
                     # call self.insert_tag to insert into database
-                    self.insert_tag(epc96, antenna, rssi, doppler, phase, first_seen_timestamp, rospecid, channelindex,
-                                    tagseencount, lastseentimestamp, accessspecid, inventoryparameterspecid, self.start_timestamp)
+                    self.insert_tag(first_seen_timestamp, freeformjson, self.start_timestamp)
 
     def close_server(self):
         self.exiting = True
@@ -249,30 +263,28 @@ class ImpinjR420(Interrogator):
     def __del__(self):
         self.close_server()
 
-    def insert_tag(self, epc, antenna, peak_rssi, doppler, phase, first_seen_timestamp, rospecid, channelindex, tagseencount, lastseentimestamp, accessspecid, inventoryparameterspecid, start_timestamp):
+    def insert_tag(self, first_seen_timestamp, freeformjson, start_timestamp):
+        freeform = json.loads(freeformjson)
+        
+        peak_rssi = freeform['rssi']
         if peak_rssi >= 128:  # convert to signed
             peak_rssi = peak_rssi - 256
-
+        freeform['rssi'] = peak_rssi
+        
+        epc = freeform['epc96']
+        antenna = freeform['antenna']
+        phase = freeform['phase']
+        channelindex = freeform['channelindex']
         self.out("Adding tag %s with RSSI %s and timestamp %s and ID %s on antenna %s with Phase %s and Doppler %s and Channel %s" % (
             str(self.count), str(peak_rssi), str(first_seen_timestamp), str(epc), str(antenna), str(doppler), str(phase), str(channelindex)))
 
         input_dict = dict()
         input_dict['data'] = dict()
         input_dict['data']['db_password'] = self.db_password
-        input_dict['data']['rssi'] = peak_rssi
+        input_dict['data']['freeform'] = freeform
         input_dict['data']['relative_time'] = first_seen_timestamp - \
             start_timestamp
         input_dict['data']['interrogator_time'] = first_seen_timestamp
-        input_dict['data']['epc96'] = epc
-        input_dict['data']['antenna'] = antenna
-        input_dict['data']['doppler'] = doppler
-        input_dict['data']['phase'] = phase
-        input_dict['data']['rospecid'] = rospecid
-        input_dict['data']['channelindex'] = channelindex
-        input_dict['data']['tagseencount'] = tagseencount
-        input_dict['data']['lastseentimestamp'] = lastseentimestamp
-        input_dict['data']['accessspecid'] = accessspecid
-        input_dict['data']['inventoryparameterspecid'] = inventoryparameterspecid
 
         self.tag_dicts_queue.put(input_dict)  # read by the consumer
 

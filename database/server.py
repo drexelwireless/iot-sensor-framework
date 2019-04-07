@@ -4,7 +4,7 @@ from webserver import ws_start
 from database import Database
 from database_sqlite import SqliteDatabase
 from database_mysql import MysqlDatabase
-from database_redcap import REDCapDatabase
+from database_redcaprssi import REDCapRSSIDatabase
 from mycrypto import MyCrypto
 import os
 import threading
@@ -38,7 +38,7 @@ def getopts():
     key_path_prefix = 'key'
     mysql = False
     redcap = False
-    db_user = 'rssi'
+    db_user = 'dbuser'
     db_password = 'abc123'
     flush = False
     dispatchsleep = 0
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     # Start up the database module and the database AES / web server SSL module
     crypto = MyCrypto(hostname=flask_host, key_path_prefix=key_path_prefix)
     if redcap == True:
-        database = REDCapDatabase(
+        database = REDCapRSSIDatabase(
             crypto=crypto, db_path=db_path, token=redcap_token, dispatchsleep=dispatchsleep)
     elif mysql == True:
         database = MysqlDatabase(crypto=crypto, db_path=db_path, db_password=db_password,

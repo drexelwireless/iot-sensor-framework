@@ -96,32 +96,17 @@ def main():
         interrogatortime = getfield(
             row, ['interrogatortime', 'interrogator_timestamp'])
         relativetime = getfield(row, ['relativetime', 'relative_timestamp'])
-        rssi = getfield(row, 'rssi')
-        epc96 = getfield(row, 'epc96')
-        doppler = getfield(row, 'doppler')
-        phase = getfield(row, 'phase')
-        antenna = getfield(row, 'antenna')
-        channelindex = getfield(row, 'channelindex')
-        rospecid = getfield(row, 'rospecid')
-        tagseencount = getfield(row, 'tagseencount')
-        accessspecid = getfield(row, 'accessspecid')
-        inventoryparameterspecid = getfield(row, 'inventoryparameterspecid')
-        lastseentimestamp = getfield(row, 'lastseentimestamp')
+        freeform = getfield(row, 'freeform')
 
         # decrypt each according to the password
-        rssi = db_decrypt(rssi, interrogatortime, password, crypto)
-        epc96 = db_decrypt(doppler, interrogatortime, password, crypto)
-        doppler = db_decrypt(doppler, interrogatortime, password, crypto)
-        phase = db_decrypt(phase, interrogatortime, password, crypto)
+        freeform = db_decrypt(freeform, interrogatortime, password, crypto)
 
         #print '*****'
         #print row
         #print '*****'
-        #print relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp
-
+        
         # insert each into sqlite database
-        database.insert_row(relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid,
-                            channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=password)
+        database.insert_row(relativetime, interrogatortime, freeform, db_pw=password)
 
     database.close_db_connection()
     time.sleep(10)  # allow the database to write
