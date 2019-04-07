@@ -123,8 +123,9 @@ def main():
         database.insert_row(relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid,
                             channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=password)
 
+    database.close_db_connection()
+    time.sleep(10)  # allow the database to write
     csvfile.close()
-    time.sleep(5)  # allow the database to write
     os._exit(0)
 
 

@@ -61,7 +61,8 @@ class SqliteDatabase(Database):
         conn.close()
 
     def close_db_connection(self, thread='main'):
-        sleep(5+2*self.dispatchsleep)  # wait for dispatchers to finish
+        while self.insertion_queue.qsize() > 0:
+            sleep(5+2*self.dispatchsleep)  # wait for dispatchers to finish
 
     def __del__(self):
         self.close_db_connection()
