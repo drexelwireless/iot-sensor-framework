@@ -1,14 +1,13 @@
-# RFID Data Collection & Visualization Software
+# IoT Data Collection & Visualization Software
 
-This software suite contains scripts to collect and visualize RFID tag
-information using an Impinj Speedway RFID reader.
+This software suite contains scripts to collect and visualize IoT sensors, such as RFID tag information using an Impinj Speedway RFID reader.
 
 *Note: These instructions assume that the web server, interrogation and
 visualizer will be run on the same machine (IP addresses in all shell scripts
 have been set to `localhost`).
 
 ### Requirements
-The following software packages need to be installed before running RFID
+The following software packages need to be installed before running 
 data collection. You will have to use the same install method (such as
 `pip install` or `easy_install`) listed here. Also, alternatives to using
 `sudo` for `pip install` are  `sudo -H pip install <package-name>` or
@@ -74,7 +73,7 @@ Navigate to `database/`:
 * Run `./server_mysql.sh` (for use with the interrogator and MySQL) or
 `./server.sh` (for a SQLite instance when running processing modules)
 
-###### RFID Interrogator
+###### IoT Sensor Device, i.e., RFID Interrogator
 Navigate to `interrogator/` and run either of the following:
 * `client_r1000.sh` to use the Impinj Speedway R1000 RFID Reader
 * `client_r420.sh` to use Impinj Speedway R420 RFID Reader
@@ -140,7 +139,7 @@ If you are done with data collection, close all terminal windows on the
 Bellyband laptop by typing `exit` and pressing enter (for Raspberry Pi
 terminals, you will need to do this twice for terminal window to close).
 Shutdown the laptop by clicking the gear icon on the top right and selecting
-shutdown. Finally, power down all devices at the RFID setup.
+shutdown. Finally, power down all devices at the IoT setup.
 
 ## Troubleshooting
 * **Interrogator script hangs**: If the interrogator script hangs after quitting
