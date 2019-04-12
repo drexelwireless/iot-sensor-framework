@@ -1,9 +1,9 @@
-# IoT Data Collection & Visualization Software
+# IoT Data Collection and Storage Software
 
 This software suite contains scripts to collect and store IoT sensor data, such as RFID tag information using an Impinj Speedway RFID reader.
 
-*Note: These instructions assume that the web server, interrogation and
-visualizer will be run on the same machine (IP addresses in all shell scripts
+*Note: These instructions assume that the web server and interrogation 
+software will be run on the same machine (IP addresses in all shell scripts
 have been set to `localhost`).
 
 ### Requirements
@@ -79,11 +79,10 @@ Navigate to `interrogator/` and run either of the following:
 * `client_r420.sh` to use Impinj Speedway R420 RFID Reader
 
 #### Shutdown
-1. In the directory running the visualizer, create a file called 'quit'.
-2. Create a file called 'quit' in the directory running the server to terminate the web server.
-3. Create a file called 'quit' in the directory running the interrogator to terminate the interrogator.
-4. Run `killall mysqld` to terminate MySQL.
-5. Remove any 'quit' files before running the software again.
+1. Create a file called 'quit' in the directory running the server to terminate the web server.
+2. Create a file called 'quit' in the directory running the interrogator to terminate the interrogator.
+3. Run `killall mysqld` to terminate MySQL.
+4. Remove any 'quit' files before running the software again.
 
 #### Export to .db file
 Before running the following, make sure MySQL and webserver are running.
@@ -104,13 +103,6 @@ tag data.
 #### Remove collected data from MySQL database and re-initialize database
 * Run: `./destroy_mysql.sh`. When prompted for a password, press enter.
 * Run: `./initialize_mysql.sh`.
-
-#### Run a processing module
-* Change into the `fusionframework_v1` directory (or `fusionframework_v2` or
-other processing unit as appropriate)
-* Run `./simulate.sh sensor_test.TestSensor` (replace with
-`sensor_your.YourSensor` for a YourSensor class written into the sensor_your.py
-file)
 
 ## Data Export Instructions
 Following instructions below to export the collected data. Ensure shutdown steps
