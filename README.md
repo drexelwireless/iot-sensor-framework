@@ -80,10 +80,11 @@ Navigate to `interrogator/` and run either of the following:
 * `client_r420.sh` to use Impinj Speedway R420 RFID Reader
 
 #### Shutdown
-1. In the command window running the visualizer, type 'q' and press enter.
-1. Type 'q' and press enter to terminate the web server.
-1. Type 'q' and press enter to terminate the interrogator.
-1. Run `killall mysqld` to terminate MySQL.
+1. In the directory running the visualizer, create a file called 'quit'.
+2. Create a file called 'quit' in the directory running the server to terminate the web server.
+3. Create a file called 'quit' in the directory running the interrogator to terminate the interrogator.
+4. Run `killall mysqld` to terminate MySQL.
+5. Remove any 'quit' files before running the software again.
 
 #### Export to .db file
 Before running the following, make sure MySQL and webserver are running.
