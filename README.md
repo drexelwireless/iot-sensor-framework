@@ -122,9 +122,8 @@ would like to export db files, proceed to step 6.
 3. Rename db file: `mv out.db1 database.db`
 4. Convert db file to csv: `./retrieve_wholedb_json.sh`.
 5. You will now have a csv file named `out.csv` in your working directory.
-6. Copy your desired file (either `out.db1` or `out.csv`) from the server
-Raspberry Pi to the Bellyband laptop by running the following on the Bellyband
-Laptop:
+6. If running the server on a remote computer such as a Raspberry Pi, copy your desired file (either `out.db1` or `out.csv`) from the server
+Raspberry Pi to the Bellyband laptop by running the following on the computer being copied to:
     1. Open a terminal window.
     2. Navigate to your desired directory. For example, a folder on the Desktop:
     `cd ~/Desktop/data_dir`.
