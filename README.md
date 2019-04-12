@@ -1,6 +1,6 @@
 # IoT Data Collection & Visualization Software
 
-This software suite contains scripts to collect and visualize IoT sensors, such as RFID tag information using an Impinj Speedway RFID reader.
+This software suite contains scripts to collect and store IoT sensor data, such as RFID tag information using an Impinj Speedway RFID reader.
 
 *Note: These instructions assume that the web server, interrogation and
 visualizer will be run on the same machine (IP addresses in all shell scripts
