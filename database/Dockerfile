@@ -9,7 +9,7 @@ RUN echo 'mysql-server mysql-server/root_password_again password bellyband' | de
 RUN apt-get -y install mysql-server-5.7
 RUN apt-get -y install libmysqlclient-dev
 
-RUN apt-get -y install python2.7
+RUN apt-get -y install python3.6
 RUN apt-get -y install python-pip
 RUN apt-get -y install python-dev
 RUN pip3 install --upgrade pip

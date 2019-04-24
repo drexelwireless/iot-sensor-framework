@@ -5,7 +5,7 @@ RUN apt-get update
 
 RUN apt-get -y install git
 
-RUN apt-get -y install python2.7
+RUN apt-get -y install python3.6
 RUN apt-get -y install python-pip
 RUN apt-get -y install python-dev
 RUN pip install --upgrade pip
