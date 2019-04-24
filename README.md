@@ -20,7 +20,7 @@ sudo mysql_secure_installation
 sudo mysqld --initialize #was mysql_install_db, may need to make an empty /var/lib/mysql directory and chown mysql:mysql with full permissions
 ```
 
-Other packages:
+Other packages (see the Dockerfile of the package you wish to install, and follow those instructions accordingly):
 ```
 sudo apt-get install libmysqlclient-dev
 sudo apt-get install python-dev
