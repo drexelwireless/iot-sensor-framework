@@ -34,7 +34,7 @@ export PYCURL_SSL_LIBRARY=openssl
 sudo pip install pycurl --global-option="--with-openssl"
 sudo pip install pycrypto
 sudo pip install python-dateutil
-sudo pip install httplib2
+sudo pip install httplib2 # may need to manually remove and then upgrade to fix a bug in httplib2 regarding verifying SSL certificates
 sudo pip install twisted
 sudo pip install mysqlclient
 sudo pip install pymysql
