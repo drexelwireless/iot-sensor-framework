@@ -12,6 +12,7 @@ RUN apt-get -y install libmysqlclient-dev
 RUN apt-get -y install python3.6
 RUN apt-get -y install python-pip
 RUN apt-get -y install python-dev
+RUN apt-get -y install python3-dev
 RUN pip3 install --upgrade pip
 
 RUN apt-get -y install libcurl4-openssl-dev

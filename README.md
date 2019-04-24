@@ -24,6 +24,7 @@ Other packages:
 ```
 sudo apt-get install libmysqlclient-dev
 sudo apt-get install python-dev
+sudo apt-get install python3-dev
 sudo pip install flask
 sudo pip install MySQL-python
 sudo apt-get install libcurl4-openssl-dev
@@ -35,6 +36,8 @@ sudo pip install pycrypto
 sudo pip install python-dateutil
 sudo pip install httplib2
 sudo pip install twisted
+sudo pip install mysqlclient
+sudo pip install pymysql
 sudo pip install service_identity
 sudo apt-get install python-matplotlib
 sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
