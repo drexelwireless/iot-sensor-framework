@@ -53,6 +53,9 @@ sudo apt-get install libfreetype6-dev libpng3
 sudo pip install --upgrade pip
 sudo pip install --upgrade filterpy # this upgrades numpy / scipy stack
 sudo pip install git+https://github.com/ajmendez/PyMix.git
+
+# generate a web server key
+openssl req -newkey rsa:2048 -nodes -keyout key.key -x509 -days 365 -out key.crt
 ```
 
 ### Instructions (Running framework on localhost for testing/development)
