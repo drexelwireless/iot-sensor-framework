@@ -15,7 +15,7 @@ data collection. You will have to use the same install method (such as
 
 MySQL:
 ```
-sudo apt-get install mysql-server-5.5
+sudo apt-get install mysql-server #-5.5
 sudo mysql_secure_installation
 sudo mysql_install_db
 ```

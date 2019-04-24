@@ -6,7 +6,7 @@ RUN apt-get update
 # Install mysql-5.7 & use the root password 'bellyband'.
 RUN echo 'mysql-server mysql-server/root_password password bellyband' | debconf-set-selections
 RUN echo 'mysql-server mysql-server/root_password_again password bellyband' | debconf-set-selections
-RUN apt-get -y install mysql-server-5.7
+RUN apt-get -y install mysql-server #-5.7
 RUN apt-get -y install libmysqlclient-dev
 
 RUN apt-get -y install python3.6
