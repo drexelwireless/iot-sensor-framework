@@ -17,7 +17,7 @@ MySQL:
 ```
 sudo apt-get install mysql-server #-5.5
 sudo mysql_secure_installation
-sudo mysql_install_db
+sudo mysqld --initialize #was mysql_install_db, may need to make an empty /var/lib/mysql directory and chown mysql:mysql with full permissions
 ```
 
 Other packages:
