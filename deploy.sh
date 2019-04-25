@@ -49,7 +49,18 @@ sudo pip3 install MySQL-python
 sudo pip3 install pycurl --global-option="--with-openssl"
 sudo pip3 install pycrypto
 sudo pip3 install python-dateutil
+
+PKGDIRS=`python -c "import site; p=site.getsitepackages(); print('\n'.join(str(x) for x in p))"`
+for P in PKGDIRS
+do
+	for D in `ls $P/*httplib2*`
+	do
+		mkdir -p /tmp/$P$D
+		mv $P/$D /tmp/$P$D/
+	done
+done
 sudo pip3 install httplib2 # may need to manually remove and then upgrade to fix a bug in httplib2 regarding verifying SSL certificates
+
 sudo pip3 install twisted
 sudo pip3 install mysqlclient
 sudo pip3 install pymysql
@@ -64,4 +75,9 @@ sudo apt-get install libfreetype6-dev libpng3
 sudo pip3 install --upgrade pip
 sudo pip3 install --upgrade filterpy # this upgrades numpy / scipy stack
 
-sudo pip3 install git+https://github.com/ajmendez/PyMix.git
+sudo apt-get install libgsl0-dev
+sudo apt-get install libgsl0ldbl
+#sudo pip install git+https://github.com/ajmendez/PyMix.git
+git clone https://github.com/ajmendez/PyMix.git
+sed 's/from distutils.core import setup, Extension,DistutilsExecError/#from distutils.core import setup, Extension,DistutilsExecError\nfrom distutils.core import setup, Extension' PyMix/setup.py
+python PyMix/setup.py install
