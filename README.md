@@ -13,48 +13,12 @@ data collection. You will have to use the same install method (such as
 `sudo` for `pip install` are  `sudo -H pip install <package-name>` or
 `pip install --user <package-name>`.
 
-MySQL:
 ```
-sudo apt-get install mysql-server #-5.5
-sudo mysql_secure_installation
-sudo mysqld --initialize #was mysql_install_db, may need to make an empty /var/lib/mysql directory and chown mysql:mysql with full permissions
+./deploy.sh
 ```
-
-Other packages:
-```
-sudo apt-get install libmysqlclient-dev
-sudo apt-get install python-dev
-sudo apt-get install python3-dev
-sudo pip install flask
-sudo pip install MySQL-python
-sudo apt-get install libcurl4-openssl-dev
-sudo apt-get install libssl-dev
-sudo apt-get install libffi-dev
-export PYCURL_SSL_LIBRARY=openssl
-sudo pip install pycurl --global-option="--with-openssl"
-sudo pip install pycrypto
-sudo pip install python-dateutil
-sudo pip install httplib2 # may need to manually remove and then upgrade to fix a bug in httplib2 regarding verifying SSL certificates
-sudo pip install twisted
-sudo pip install mysqlclient
-sudo pip install pymysql
-sudo pip install service_identity
-sudo apt-get install python-matplotlib
-sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
-pip install scipy
-
-# for client packages
-sudo pip install pandas
-sudo easy_install pykalman
-sudo easy_install filterpy
-sudo pip install statsmodels
-sudo pip install scikit-learn
-sudo apt-get install libfreetype6-dev libpng3
-sudo pip install --upgrade pip
-sudo pip install --upgrade filterpy # this upgrades numpy / scipy stack
-sudo pip install git+https://github.com/ajmendez/PyMix.git
 
 # generate a web server key
+```
 openssl req -newkey rsa:2048 -nodes -keyout key.key -x509 -days 365 -out key.crt
 ```
 
