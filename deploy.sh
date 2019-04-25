@@ -14,7 +14,6 @@ sudo mysql_secure_installation
 sudo mysqld --initialize #was mysql_install_db, may need to make an empty /var/lib/mysql directory and chown mysql:mysql with full permissions
 
 sudo pip3 install pymysql
-sudo pip3 install httplib2
 sudo pip3 install twisted
 
 # Install mysql-5.7 & use the root password 'bellyband'.
@@ -36,7 +35,6 @@ sudo pip3 install python-dateutil
 # Packages needed by common ML/DSP systems that depend on the IOT Sensor Framework
 sudo pip3 install pandas
 sudo pip3 install filterpy
-sudo pip3 install httplib2
 sudo pip3 install werkzeug
 sudo pip3 install hashlib
 sudo pip3 install sklearn
