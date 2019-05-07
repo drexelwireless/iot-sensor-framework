@@ -116,6 +116,10 @@ or during data collection, do the following to kill the interrogator process:
 ** License information can be found in llrp_proto.py
 * The Impinj R420 driver uses a previously modified sllurp installation, and with sllurp updates is now compatible with a vanilla checkout.
 ** License information can be found in sllrp/LICENSE.txt
+
+## Limitations
+* The Impinj interrogates between 30-120 per second, by observation, depending on the Mode and Tag Population parameters selected in the client driver file.
+* The MySQL database freeform (i.e., json) record entry is limited to approximately 64K per entry after encryption and base64 encoding.
 ----
 
 ## Containerization
