@@ -1,7 +1,8 @@
 FROM ubuntu:16.04
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update
+RUN sudo apt-get update
+RUN sudo apt-get -y install git
 
 # Install mysql-5.7 & use the root password ''.
 RUN echo "mysql-server mysql-server/root_password password ''" | debconf-set-selections
