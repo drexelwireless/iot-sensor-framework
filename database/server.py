@@ -4,17 +4,17 @@ from webserver import ws_start
 from database import Database
 from database_sqlite import SqliteDatabase
 from database_mysql import MysqlDatabase
-from database_redcap import REDCapDatabase
+from database_redcaprssi import REDCapRSSIDatabase
 from mycrypto import MyCrypto
 import os
 import threading
+import time
 
 # OPTIONS
 
-
 def usage(flask_port, flask_host, do_debug, db_path, flush, key_path_prefix, dispatchsleep):
-    print '%s [<options>]' % sys.argv[0]
-    print 'where <options> are:\n' \
+    print('%s [<options>]' % sys.argv[0])
+    print('where <options> are:\n' \
         '\t-h - show this help message\n' \
         '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
         '\t-p <port> - port on which the server should run: default %d\n' \
@@ -25,7 +25,7 @@ def usage(flask_port, flask_host, do_debug, db_path, flush, key_path_prefix, dis
         '\t-l - flush the database on run: default %s\n' \
         '\t-e <time in seconds> - length of time to sleep the dispatcher in between transmissions of data to the database, to allow new messages to queue up from the client for efficiency: default %s\n' \
         '\t-k <path> - path to tke ssl key: default %s\n' % (
-            flask_host, flask_port, do_debug, db_path, flush, dispatchsleep, key_path_prefix)
+            flask_host, flask_port, do_debug, db_path, flush, dispatchsleep, key_path_prefix))
     sys.exit(1)
 
 
@@ -38,7 +38,7 @@ def getopts():
     key_path_prefix = 'key'
     mysql = False
     redcap = False
-    db_user = 'rssi'
+    db_user = 'dbuser'
     db_password = 'abc123'
     flush = False
     dispatchsleep = 0
@@ -76,24 +76,24 @@ def getopts():
             redcap_token = opt[1]
 
     if do_debug:
-        print 'Parameters: [flask host = %s, flask port = %d, debug = %s, database = %s, key = %s, mysql = %d, db_user = %s, db_password = %s, flush = %s, dispatchsleep = %s, redcap = %s, redcap_token = %s]' % (
-            flask_host, flask_port, do_debug, db_path, key_path_prefix, mysql, db_user, db_password, flush, dispatchsleep, redcap, redcap_token)
+        print('Parameters: [flask host = %s, flask port = %d, debug = %s, database = %s, key = %s, mysql = %d, db_user = %s, db_password = %s, flush = %s, dispatchsleep = %s, redcap = %s, redcap_token = %s]' % (
+            flask_host, flask_port, do_debug, db_path, key_path_prefix, mysql, db_user, db_password, flush, dispatchsleep, redcap, redcap_token))
 
     return flask_port, flask_host, do_debug, db_path, key_path_prefix, mysql, db_user, db_password, flush, dispatchsleep, redcap, redcap_token
 
 # Function to watch CTRL+C keyboard input
 
 
-def prog_quit():
+def prog_quit(QUITFILE='quit'):
+    print("Create file " + QUITFILE + " to quit.")
     while 1:
         try:
-            user_input = raw_input("Enter q to quit: ")
-            if user_input == "q":
-                print "q has been entered"
+            if os.path.isfile(QUITFILE):
+                print(QUITFILE + " has been found")
                 os._exit(0)
+            time.sleep(1)
         except:
             os._exit(0)
-
 
 def start_wserver(crypto, database, flask_host, flask_port, do_debug):
     ws_start(crypto, database, flask_host=flask_host,
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     # Start up the database module and the database AES / web server SSL module
     crypto = MyCrypto(hostname=flask_host, key_path_prefix=key_path_prefix)
     if redcap == True:
-        database = REDCapDatabase(
+        database = REDCapRSSIDatabase(
             crypto=crypto, db_path=db_path, token=redcap_token, dispatchsleep=dispatchsleep)
     elif mysql == True:
         database = MysqlDatabase(crypto=crypto, db_path=db_path, db_password=db_password,

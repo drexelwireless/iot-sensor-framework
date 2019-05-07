@@ -12,15 +12,15 @@ import time
 
 
 def usage(flask_host, db_path, key_path_prefix, password, csvpath):
-    print '%s [<options>]' % sys.argv[0]
-    print 'where <options> are:\n' \
+    print('%s [<options>]' % sys.argv[0])
+    print('where <options> are:\n' \
         '\t-h - show this help message\n' \
         '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
         '\t-b <path> - path to the database: default %s\n' \
         '\t-k <path> - path to tke ssl key: default %s\n' \
         '\t-c <path> - path to tke csv file: default %s\n' \
         '\t-p <password> - database password: default %s\n' % (
-            flask_host, db_path, key_path_prefix, csvpath, password)
+            flask_host, db_path, key_path_prefix, csvpath, password))
     sys.exit(1)
 
 
@@ -86,41 +86,35 @@ def main():
     crypto = MyCrypto(hostname=flask_host, key_path_prefix=key_path_prefix)
     database = SqliteDatabase(crypto=crypto, db_path=db_path)
 
-    csvfile = open(csvpath, 'rb')
+    csvfile = open(csvpath, 'rt')
     conn = database.open_db_connection()
 
     # read all records from csv
     reader = csv.DictReader(csvfile)
 
+    rows = 0
+    
     for row in reader:
         interrogatortime = getfield(
             row, ['interrogatortime', 'interrogator_timestamp'])
         relativetime = getfield(row, ['relativetime', 'relative_timestamp'])
-        rssi = getfield(row, 'rssi')
-        epc96 = getfield(row, 'epc96')
-        doppler = getfield(row, 'doppler')
-        phase = getfield(row, 'phase')
-        antenna = getfield(row, 'antenna')
-        channelindex = getfield(row, 'channelindex')
-        rospecid = getfield(row, 'rospecid')
-        tagseencount = getfield(row, 'tagseencount')
-        accessspecid = getfield(row, 'accessspecid')
-        inventoryparameterspecid = getfield(row, 'inventoryparameterspecid')
-        lastseentimestamp = getfield(row, 'lastseentimestamp')
+        freeform = getfield(row, 'freeform')
 
         # no need to decrypt these values; we assume they are decrypted, but we will encrypt according to the password given
 
         #print '*****'
         #print row
         #print '*****'
-        #print relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp
-
+        
         # insert each into sqlite database
-        database.insert_row(relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid,
-                            channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=password)
+        database.insert_row(relativetime, interrogatortime, freeform, db_pw=password)
+                            
+        rows = rows + 1
 
+    #print(rows)
+    database.close_db_connection()
+    time.sleep(10)  # allow the database to write
     csvfile.close()
-    time.sleep(5)  # allow the database to write
     os._exit(0)
 
 

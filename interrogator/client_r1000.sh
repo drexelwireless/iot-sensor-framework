@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python client.py -i rfidreader.local -p abc123 -d
+python3 client.py -i rfidreader.local -p abc123 -d

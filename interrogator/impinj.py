@@ -2,7 +2,7 @@ from interrogator import *
 import threading
 import json
 import sys
-import Queue
+import queue
 import os
 from httplib2 import Http
 from llrp_proto import *
@@ -51,7 +51,7 @@ class Impinj(Interrogator):
         try:
             self.server = LLRPdConnection(
                 self.ip_address, event_cb=self.handle_event)
-        except LLRPResponseError, ret:
+        except LLRPResponseError as ret:
             self.out('fail: %s' % ret)
             sys.exit(1)
 
@@ -59,7 +59,7 @@ class Impinj(Interrogator):
         self.out('asking for reader capabilities... ')
         try:
             self.cap = self.server.get_capabilities('LLRP Capabilities')
-        except LLRPResponseError, ret:
+        except LLRPResponseError as ret:
             self.out('fail: %s' % ret)
             sys.exit(1)
 
@@ -67,7 +67,7 @@ class Impinj(Interrogator):
         self.out('deleting all existing ROSpecs... ')
         try:
             self.server.delete_all_rospec()
-        except LLRPResponseError, ret:
+        except LLRPResponseError as ret:
             self.out('fail: %s' % ret)
             sys.exit(1)
 
@@ -82,7 +82,7 @@ class Impinj(Interrogator):
         self.out('enabling ROSpec... ')
         try:
             self.rospec.enable(self.server)
-        except LLRPResponseError, ret:
+        except LLRPResponseError as ret:
             self.out('fail: %s' % ret)
             sys.exit(1)
 
@@ -90,7 +90,7 @@ class Impinj(Interrogator):
         self.out('starting ROSpec... ')
         try:
             self.rospec.start(self.server)
-        except LLRPResponseError, ret:
+        except LLRPResponseError as ret:
             self.out('fail: %s' % ret)
             sys.exit(1)
 
@@ -103,7 +103,7 @@ class Impinj(Interrogator):
             self.out('stopping ROSpec... ')
             try:
                 self.rospec.stop(self.server)
-            except LLRPResponseError, ret:
+            except LLRPResponseError as ret:
                 self.out('fail: %s' % ret)
                 os._exit(1)
 
@@ -111,7 +111,7 @@ class Impinj(Interrogator):
             self.out('disabling ROSpec... ')
             try:
                 self.rospec.disable(self.server)
-            except LLRPResponseError, ret:
+            except LLRPResponseError as ret:
                 self.out('fail: %s' % ret)
                 os._exit(1)
 
@@ -119,7 +119,7 @@ class Impinj(Interrogator):
             self.out('deleting ROSpec... ')
             try:
                 self.rospec.delete(self.server)
-            except LLRPResponseError, ret:
+            except LLRPResponseError as ret:
                 self.out('fail: %s' % ret)
                 os._exit(1)
 
@@ -148,7 +148,7 @@ class Impinj(Interrogator):
                 try:
                     input_dict = self.tag_dicts_queue.get_nowait()
                     input_dicts.append(input_dict)
-                except Queue.Empty:
+                except queue.Empty:
                     break
 
             resp, content = self.http_obj.request(uri=url, method='PUT', headers={
@@ -159,12 +159,12 @@ class Impinj(Interrogator):
                 sleep(self.dispatchsleep)
 
     def start(self):
-        self.handler_queue = Queue.Queue()
+        self.handler_queue = queue.Queue()
         self.handler_thread = threading.Thread(
             target=self.handler_thread, args=())
         self.handler_thread.start()
 
-        self.tag_dicts_queue = Queue.Queue()
+        self.tag_dicts_queue = queue.Queue()
         self.client_thread = threading.Thread(
             target=self.start_server, args=())
         self.client_thread.start()
@@ -189,7 +189,7 @@ class Impinj(Interrogator):
                 try:
                     input_msgs = self.handler_queue.get_nowait()
                     input_msgs.append(input_msg)
-                except Queue.Empty:
+                except queue.Empty:
                     break
 
             # <RO_ACCESS_REPORT>
@@ -217,7 +217,7 @@ class Impinj(Interrogator):
                     'RO_ACCESS_REPORT',
                 ]
 
-                if msg.keys()[0] in repevents:
+                if list(msg.keys())[0] in repevents:
                     try:  # sanity check that a message was received with a TagReportData
                         innermsg = msg['RO_ACCESS_REPORT']['TagReportData'][0]
                         if 'EPC-96' in innermsg:
@@ -256,15 +256,20 @@ class Impinj(Interrogator):
         self.out("Adding tag %s with RSSI %s and timestamp %s and ID %s on antenna %s" % (
             str(self.count), str(peak_rssi), str(first_seen_timestamp), str(epc), str(antenna)))
 
+        freeform = {}
+        freeform['rssi'] = peak_rssi
+        freeform['epc96'] = epc96
+        freeform['antenna'] = antenna
+        
+        freeformjson = json.dumps(freeform)
+        
         input_dict = dict()
         input_dict['data'] = dict()
         input_dict['data']['db_password'] = self.db_password
-        input_dict['data']['rssi'] = peak_rssi
+        input_dict['data']['freeform'] = freeformjson
         input_dict['data']['relative_time'] = first_seen_timestamp - \
             start_timestamp
         input_dict['data']['interrogator_time'] = first_seen_timestamp
-        input_dict['data']['epc96'] = epc
-        input_dict['data']['antenna'] = antenna
 
         self.tag_dicts_queue.put(input_dict)  # read by the consumer
 

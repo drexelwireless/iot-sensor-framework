@@ -32,136 +32,14 @@ def ws_web_audit():
 
 @app.route('/api/rssi/maxtime', methods=['GET'])
 # GET
-def ws_web_max_rel_time():
+def ws_rssi_web_max_rel_time():
     global ws_database
 
     data = ws_database.get_max_rel_time()
 
     return make_response(jsonify({'data': data}), 200)
 
-
-@app.route('/api/rssi/stats/window', methods=['POST'])
-@app.route('/api/rssi/stats/window/<int:window>', methods=['POST'])
-# POST (acting as a GET with a body):
-# Content-Type: 'application/json'
-# { "data": { "db_password": 'str'} }
-def ws_web_stats_window(window=128):
-    global ws_database
-
-    if request.json and 'data' in request.json:
-        db_pw = request.json['data'].get('db_password', "")
-    else:
-        db_pw = ''
-
-    data = ws_database.fetch_last_window(window, db_pw)
-
-    stats = ws_database.dict_list_stats_by_tag(data, 'epc96', 'rssi')
-    return make_response(jsonify({'data': data, 'stats': stats}), 200)
-
-
-@app.route('/api/rssi/stats/relativetime/<int:start>/<int:end>', methods=['POST'])
-# POST (acting as a GET with a body):
-# Content-Type: 'application/json'
-# { "data": { "db_password": 'str'} }
-def ws_web_stats_between(start, end):
-    global ws_database
-
-    if request.json and 'data' in request.json:
-        db_pw = request.json['data'].get('db_password', "")
-    else:
-        db_pw = ''
-
-    data = ws_database.fetch_between_window(start, end, db_pw)
-
-    stats = ws_database.dict_list_stats_by_tag(data, 'epc96', 'rssi')
-    return make_response(jsonify({'data': data, 'stats': stats}), 200)
-
-
-@app.route('/api/rssi/stats/seconds', methods=['POST'])
-@app.route('/api/rssi/stats/seconds/<int:time>', methods=['POST'])
-# POST (acting as a GET with a body):
-# Content-Type: 'application/json'
-# { "data": { "db_password": 'str'} }
-def ws_web_stats_time(time=4):
-    global ws_database
-
-    if request.json and 'data' in request.json:
-        db_pw = request.json['data'].get('db_password', "")
-    else:
-        db_pw = ''
-
-    data = ws_database.fetch_last_n_sec(time, db_pw)
-
-    stats = ws_database.dict_list_stats_by_tag(data, 'epc96', 'rssi')
-
-    if len(data) > 0:
-        latesttimestamp = data[-1]['relative_timestamp']
-    else:
-        latesttimestamp = 0
-
-    return make_response(jsonify({'data': data, 'stats': stats, 'latest_timestamp': latesttimestamp}), 200)
-
-
-@app.route('/api/rssi/stats/relativetimewindows/<int:start>/<int:end>/<int:time>', methods=['POST'])
-# POST (acting as a GET with a body):
-# Content-Type: 'application/json'
-# { "data": { "db_password": 'str'} }
-def ws_web_stats_relativetimewindows(start, end, time=4):
-    global ws_database
-
-    if request.json and 'data' in request.json:
-        db_pw = request.json['data'].get('db_password', "")
-    else:
-        db_pw = ''
-
-    data = ws_database.fetch_between_window(start, end, db_pw)
-    data = ws_database.break_into_timewindows(
-        data, time, 'relative_timestamp', 'rssi')
-
-    stats = []
-    for d in data:
-        stat = ws_database.dict_list_stats_by_tag(d['window'], 'epc96', 'rssi')
-
-        s = dict()
-        s['start'] = d['start']
-        s['end'] = d['end']
-        s['stat'] = stat
-
-        stats.append(s)
-
-    return make_response(jsonify({'data': data, 'stats': stats}), 200)
-
-
-@app.route('/api/rssi/stats/windows/<int:start>/<int:end>/<int:size>', methods=['POST'])
-# POST (acting as a GET with a body):
-# Content-Type: 'application/json'
-# { "data": { "db_password": 'str'} }
-def ws_web_stats_windows(start, end, size=128):
-    global ws_database
-
-    if request.json and 'data' in request.json:
-        db_pw = request.json['data'].get('db_password', "")
-    else:
-        db_pw = ''
-
-    data = ws_database.fetch_between_window(start, end, db_pw)
-    data = ws_database.break_into_windows(
-        data, size, 'relative_timestamp', 'rssi')
-
-    stats = []
-    for d in data:
-        stat = ws_database.dict_list_stats_by_tag(d['window'], 'epc96', 'rssi')
-
-        s = dict()
-        s['start'] = d['start']
-        s['end'] = d['end']
-        s['stat'] = stat
-
-        stats.append(s)
-
-    return make_response(jsonify({'data': data, 'stats': stats}), 200)
-
-
+@app.route('/api/rssi/seconds/<int:lastnsec>', methods=['POST'])
 @app.route('/api/rssi/<int:starttime>/<int:endtime>', methods=['POST'])
 @app.route('/api/rssi/<int:starttime>', methods=['POST'])
 @app.route('/api/rssi', methods=['POST', 'PUT'])
@@ -171,16 +49,15 @@ def ws_web_stats_windows(start, end, size=128):
 # POST (acting as a GET with a body):
 # Content-Type: 'application/json'
 # { "data": { "db_password": 'str'} }
-def ws_web_rssi(starttime=-1, endtime=-1):
+def ws_rssi_web(starttime=-1, endtime=-1, lastnsec=-1):
     if request.method == 'PUT':
-        return ws_add_data()
+        return ws_rssi_add_data()
     elif request.method == 'POST':
-        return ws_get_all_data(starttime, endtime)
+        return ws_rssi_get_all_data(starttime, endtime, lastnsec) 
     else:
-        abort(400)
+        abort(400)       
 
-
-def ws_get_all_data(starttime=-1, endtime=-1):
+def ws_rssi_get_all_data(starttime=-1, endtime=-1, lastnsec=-1):
     global ws_database
 
     if request.json and 'data' in request.json:
@@ -188,15 +65,17 @@ def ws_get_all_data(starttime=-1, endtime=-1):
     else:
         db_pw = ''
 
-    if starttime == -1 and endtime == -1:
-        data = ws_database.fetch_all(db_pw=db_pw)
-    elif endtime == -1:
-        data = ws_database.fetch_since(starttime, db_pw)
+    if lastnsec == -1:
+        if starttime == -1 and endtime == -1:
+            data = ws_database.fetch_all(db_pw=db_pw)
+        elif endtime == -1:
+            data = ws_database.fetch_since(starttime, db_pw)
+        else:
+            data = ws_database.fetch_between_window(starttime, endtime, db_pw)
     else:
-        data = ws_database.fetch_between_window(starttime, endtime, db_pw)
+        data = ws_database.fetch_last_n_sec(lastnsec, db_pw)
 
     return make_response(jsonify({'data': data}), 200)
-
 
 def getwithdefault(d, key, default):
     result = default
@@ -205,12 +84,12 @@ def getwithdefault(d, key, default):
     return result
 
 
-def ws_add_data():
+def ws_rssi_add_data():
     global ws_do_debug
     global ws_database
 
     if ws_do_debug:
-        print request.json
+        print(request.json)
 
     if not request.json:
         abort(400)
@@ -231,28 +110,15 @@ def ws_add_data():
 
     for row in insert_list:
         db_pw = getwithdefault(row['data'], 'db_password', "")
-        rssi = getwithdefault(row['data'], 'rssi', "-65536")
+        freeform = getwithdefault(row['data'], 'freeform', "")
         relative_time = getwithdefault(row['data'], 'relative_time', "-1")
         interrogator_time = getwithdefault(
             row['data'], 'interrogator_time', "-1")
-        epc96 = getwithdefault(row['data'], 'epc96', "-1")
-        doppler = getwithdefault(row['data'], 'doppler', "-65536")
-        phase = getwithdefault(row['data'], 'phase', "-65536")
-        antenna = getwithdefault(row['data'], 'antenna', "-1")
-        rospecid = getwithdefault(row['data'], 'rospecid', "-1")
-        channelindex = getwithdefault(row['data'], 'channelindex', "-1")
-        tagseencount = getwithdefault(row['data'], 'tagseencount', "-1")
-        accessspecid = getwithdefault(row['data'], 'accessspecid', "-1")
-        inventoryparameterspecid = getwithdefault(
-            row['data'], 'inventoryparameterspecid', "-1")
-        lastseentimestamp = getwithdefault(
-            row['data'], 'lastseentimestamp', "-1")
 
         relative_time = int(relative_time)
         interrogator_time = int(interrogator_time)
 
-        ws_database.insert_row(relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid,
-                               channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=db_pw)
+        ws_database.insert_row(relative_time, interrogator_time, freeform, db_pw=db_pw)
 
     return make_response(jsonify({'success': str(len(insert_list)) + ' object(s) created'}), 201)
 
@@ -271,7 +137,7 @@ def ws_start(crypto, database, flask_host='0.0.0.0', flask_port=5000, do_debug=F
     ws_do_debug = do_debug
 
     context = ws_crypto.get_ssl_context()
-
+		
     app.run(debug=ws_do_debug, port=ws_flask_port, host=ws_flask_host, ssl_context=context, threaded=False,
             use_reloader=use_reloader)  # multithreaded web server cannot share database connection
 

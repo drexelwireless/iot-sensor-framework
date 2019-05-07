@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python server.py -d -e 0.75
+python3 server.py -d -e 0.75

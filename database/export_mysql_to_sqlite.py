@@ -13,8 +13,8 @@ import time
 
 
 def usage(flask_host, db_path, key_path_prefix, password, mysqldb_path, db_user, db_password):
-    print '%s [<options>]' % sys.argv[0]
-    print 'where <options> are:\n' \
+    print('%s [<options>]' % sys.argv[0])
+    print('where <options> are:\n' \
         '\t-h - show this help message\n' \
         '\t-f <0.0.0.0> - IP address (127.0.0.1) on which the server should run: default %s\n' \
         '\t-b <path> - path to the sqlite database: default %s\n' \
@@ -24,7 +24,7 @@ def usage(flask_host, db_path, key_path_prefix, password, mysqldb_path, db_user,
         '\t-m <mysql host> - path to mysql database hostname: default %s\n' \
         '\t-s <mysql user> - username for mysql database: default %s\n' \
         '\t-w <mysql password> - password for the mysql username: default %s\n' % (
-            flask_host, db_path, key_path_prefix, password, mysqldb_path, db_user, db_password)
+            flask_host, db_path, key_path_prefix, password, mysqldb_path, db_user, db_password))
     sys.exit(1)
 
 
@@ -92,20 +92,10 @@ def main():
 
     for row in myjson:
         #print row
-        rssi = getdict(row, 'rssi', '')
+        freeformjson = getdict(row, 'freeform', '')
+
         relative_time = getdict(row, 'relative_timestamp', '')
         interrogator_time = getdict(row, 'interrogator_timestamp', '')
-        epc96 = getdict(row, 'epc96', '')
-        doppler = getdict(row, 'doppler', '-1')
-        phase = getdict(row, 'phase', '-1')
-        antenna = getdict(row, 'antenna', '-1')
-        rospecid = getdict(row, 'rospecid', '-1')
-        channelindex = getdict(row, 'channelindex', '-1')
-        tagseencount = getdict(row, 'tagseencount', '-1')
-        accessspecid = getdict(row, 'accessspecid', '-1')
-        inventoryparameterspecid = getdict(
-            row, 'inventoryparameterspecid', '-1')
-        lastseentimestamp = getdict(row, 'lastseentimestamp', '-1')
 
         if relative_time == 0 or rows == 0 or sqlitedb is None:
             db_runs = db_runs + 1
@@ -117,9 +107,7 @@ def main():
 
         rows = rows + 1
 
-        #print 'Adding row', rssi, relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, 'with password', db_password
-        sqlitedb.insert_row(relative_time, interrogator_time, rssi, epc96, doppler, phase, antenna, rospecid,
-                            channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_password)
+        sqlitedb.insert_row(relative_time, interrogator_time, freeform, db_password)
 
     time.sleep(10)
 
