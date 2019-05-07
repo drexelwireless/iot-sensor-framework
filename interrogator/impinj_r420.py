@@ -78,7 +78,7 @@ class ImpinjR420(Interrogator):
                                          'EnablePeakRSSI': True,
                                          'EnableRFPhaseAngle': True,
                                          'EnableRFDopplerFrequency': True
-                                     })
+                                     }) # set mode_identifier=number in constructor to specify a C1G2 configuration including tari and modulation
 
         self.fac.addTagReportCallback(self.handle_event)
 
