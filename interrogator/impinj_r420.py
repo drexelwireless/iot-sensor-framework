@@ -57,31 +57,28 @@ class ImpinjR420(Interrogator):
         self.out('Starting Impinj R420 interrogator client')
 
         # Create Clients and set them to connect
-        self.fac = LLRPClientFactory(report_every_n_tags=1,  # report every N>1 tags so that it reports more slowly to avoid lag; note this results in packets not sampled by the Impinj and only every 2 tags are reported, which it notes in TagSeenCount and the difference between FirstSeenTimestamp and LastSeenTimestamp; set PeriodicTriggerValue to something like 50 to group transmissions (will have to loop over messages received here), and set ROSpecStartTriggerType to 2 == Periodic
-                                     # 0 = all antennae but might not get configured by ROSpec unless explicitly enumerated
+        self.fac = LLRPClientFactory(report_every_n_tags=1,  
                                      antennas=self.antennas,
                                      tx_power=81,  # was 0, 81 is 30 dbm, 91 is max 32.5 dbm
-                                     modulation='M4',  # FM0 max throughput, M8/M4 alternative
-                                     ntari=0,
-                                     session=2,  # was 2
+                                     session=2,  
                                      start_inventory=True,
                                      tag_population=self.tagpop,  # The interrogator can only handle 90 reads per second over ethernet; if the read rate is greater than this, only 90 per second will be processed, up to 5000 per minute.  If 5000 tags is reached before one minute's time, lag will be introduced as a shorter amount of time will be obtained.  Setting to tag population of 16 enables 2 tags; tag population of 4 is best for 1 tag.  Best to parameterize this
-                                     mode_index=2,  # 0 = max throughput, could do hybrid mode 1 or maxmiller 4, dense 8 == 3, dense 4 == 2
-                                     channellist=self.channellist,
-                                     # convert to integer milliseconds
-                                     periodictrigger=int(
-                                         self.dispatchsleep * 1000),
                                      tag_content_selector={
                                          'EnableROSpecID': True,
                                          'EnableSpecIndex': True,
                                          'EnableInventoryParameterSpecID': True,
                                          'EnableAntennaID': True,
                                          'EnableChannelIndex': True,
-                                         'EnablePeakRRSI': True,  # does not appear to be a typo
+                                         'EnablePeakRSSI': True,  
                                          'EnableFirstSeenTimestamp': True,
                                          'EnableLastSeenTimestamp': True,
                                          'EnableTagSeenCount': True,
                                          'EnableAccessSpecID': True,
+                                     },
+                                     impinj_tag_content_selector={
+                                         'EnablePeakRSSI': True,
+                                         'EnableRFPhaseAngle': True,
+                                         'EnableRFDopplerFrequency': True
                                      })
 
         self.fac.addTagReportCallback(self.handle_event)
@@ -163,8 +160,8 @@ class ImpinjR420(Interrogator):
             #        </RSSI>
             # .... also a Timestamp here
             #   and now, with impinj extensions and sllurp
-            #    <RFPhaseAngle>1744</RFPhaseAngle>
-            #    <Doppler>234</Doppler>
+            #    <ImpinjPhase>1744</ImpinjPhase>
+            #    <RFDopplerFrequency>234</RFDopplerFrequency>
             #    </TagReportData>
             # </RO_ACCESS_REPORT>
 
@@ -178,7 +175,7 @@ class ImpinjR420(Interrogator):
                 for tag in tags:
                     if 'FirstSeenTimestampUTC' in tag and 'EPC-96' in tag and 'AntennaID' in tag and 'PeakRSSI' in tag:
                         first_seen_timestamp = tag['FirstSeenTimestampUTC'][0]
-                        epc96 = tag['EPC-96']
+                        epc96 = tag['EPC-96'].decode("utf-8")
                         antenna = tag['AntennaID'][0]
                         rssi = tag['PeakRSSI'][0]
                     else:
@@ -187,13 +184,13 @@ class ImpinjR420(Interrogator):
                         continue
 
                     # Optional parameters from sllurp library for Impinj
-                    if 'Doppler' in tag:
-                        doppler = tag['Doppler']
+                    if 'RFDopplerFrequency' in tag:
+                        doppler = tag['RFDopplerFrequency']
                     else:
                         doppler = "-65536"
 
-                    if 'RFPhaseAngle' in tag:
-                        phase = tag['RFPhaseAngle']
+                    if 'ImpinjPhase' in tag:
+                        phase = tag['ImpinjPhase']
                     else:
                         phase = "-65536"
 
@@ -275,6 +272,7 @@ class ImpinjR420(Interrogator):
         antenna = freeform['antenna']
         phase = freeform['phase']
         channelindex = freeform['channelindex']
+        doppler = freeform['doppler']
         self.out("Adding tag %s with RSSI %s and timestamp %s and ID %s on antenna %s with Phase %s and Doppler %s and Channel %s" % (
             str(self.count), str(peak_rssi), str(first_seen_timestamp), str(epc), str(antenna), str(doppler), str(phase), str(channelindex)))
 

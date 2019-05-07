@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "DROP DATABASE IF EXISTS database; DROP USER IF EXISTS 'dbuser@localhost';" | mysql -u root -p
+echo "DROP DATABASE IF EXISTS iotdatabase; DROP USER IF EXISTS 'dbuser@localhost';" | mysql -u root -p

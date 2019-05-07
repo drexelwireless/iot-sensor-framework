@@ -6,7 +6,7 @@ from database import Database
 import threading
 import queue
 from time import sleep
-
+import json
 
 class SqliteDatabase(Database):
     def __init__(self, crypto, db_path='database.db', flush=False, dispatchsleep=0):
@@ -48,7 +48,7 @@ class SqliteDatabase(Database):
                 for row in queuelist[db_pw]:
                     rowlist.append(row)
 
-                    #print row
+                    #print(row)
 
                 # the additional interrogatortime entries are for the encryption function which requires a counter to synchronize stream encryption and decryption; this time should be to the microsecond (6 places after the decimal for seconds) to ensure uniqueness, but can be less precise if the interrogator resolution is lower.  relative_time is expected in microseconds, and both relativetime and interrogatortime are assumed to be whole numbers (i.e. epoch time)
                 c.executemany('INSERT INTO IOTD (relative_timestamp, interrogator_timestamp, freeform) VALUES (?,?,encrypt(?,?))', rowlist)
@@ -141,7 +141,8 @@ class SqliteDatabase(Database):
     def insert_row(self, relativetime, interrogatortime, freeform, db_pw=''):
         # the additional interrogatortime entries are for the encryption function which requires a counter to synchronize stream encryption and decryption; this time should be to the microsecond (6 places after the decimal for seconds) to ensure uniqueness, but can be less precise if the interrogator resolution is lower.  relative_time is expected in microseconds, and both relativetime and interrogatortime are assumed to be whole numbers (i.e. epoch time)
         # counter entries (i.e., interrogatortime) go after the field being entered into the row tuple
-        row = (relativetime, interrogatortime, freeform, interrogatortime)
+        freeformjson = json.dumps(freeform)
+        row = (relativetime, interrogatortime, freeformjson, interrogatortime)
 
         self.insertion_queue.put((row, db_pw))  # to be read by dispatcher
 
