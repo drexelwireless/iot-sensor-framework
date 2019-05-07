@@ -7,7 +7,7 @@ from sllurp import *
 from sllurp.llrp import *
 from twisted.internet import reactor
 import os
-import Queue
+import queue
 from time import sleep
 import collections
 
@@ -30,7 +30,7 @@ import collections
 
 
 class ImpinjR420(Interrogator):
-    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _channellist=[], _tagpop=16):
+    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _tagpop=16):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
         self.exiting = False
@@ -39,7 +39,6 @@ class ImpinjR420(Interrogator):
             self.antennas = _antennas
         else:
             self.antennas = [1, 2, 3, 4]
-        self.channellist = _channellist  # empty channel list defaults to all channels
         self.tagpop = _tagpop
 
         if self.cert_path != 'NONE':
@@ -57,31 +56,28 @@ class ImpinjR420(Interrogator):
         self.out('Starting Impinj R420 interrogator client')
 
         # Create Clients and set them to connect
-        self.fac = LLRPClientFactory(report_every_n_tags=1,  # report every N>1 tags so that it reports more slowly to avoid lag; note this results in packets not sampled by the Impinj and only every 2 tags are reported, which it notes in TagSeenCount and the difference between FirstSeenTimestamp and LastSeenTimestamp; set PeriodicTriggerValue to something like 50 to group transmissions (will have to loop over messages received here), and set ROSpecStartTriggerType to 2 == Periodic
-                                     # 0 = all antennae but might not get configured by ROSpec unless explicitly enumerated
+        self.fac = LLRPClientFactory(report_every_n_tags=1,  
                                      antennas=self.antennas,
                                      tx_power=81,  # was 0, 81 is 30 dbm, 91 is max 32.5 dbm
-                                     modulation='M4',  # FM0 max throughput, M8/M4 alternative
-                                     ntari=0,
-                                     session=2,  # was 2
+                                     session=2,  
                                      start_inventory=True,
                                      tag_population=self.tagpop,  # The interrogator can only handle 90 reads per second over ethernet; if the read rate is greater than this, only 90 per second will be processed, up to 5000 per minute.  If 5000 tags is reached before one minute's time, lag will be introduced as a shorter amount of time will be obtained.  Setting to tag population of 16 enables 2 tags; tag population of 4 is best for 1 tag.  Best to parameterize this
-                                     mode_index=2,  # 0 = max throughput, could do hybrid mode 1 or maxmiller 4, dense 8 == 3, dense 4 == 2
-                                     channellist=self.channellist,
-                                     # convert to integer milliseconds
-                                     periodictrigger=int(
-                                         self.dispatchsleep * 1000),
                                      tag_content_selector={
                                          'EnableROSpecID': True,
                                          'EnableSpecIndex': True,
                                          'EnableInventoryParameterSpecID': True,
                                          'EnableAntennaID': True,
                                          'EnableChannelIndex': True,
-                                         'EnablePeakRRSI': True,  # does not appear to be a typo
+                                         'EnablePeakRSSI': True,  
                                          'EnableFirstSeenTimestamp': True,
                                          'EnableLastSeenTimestamp': True,
                                          'EnableTagSeenCount': True,
                                          'EnableAccessSpecID': True,
+                                     },
+                                     impinj_tag_content_selector={
+                                         'EnablePeakRSSI': True,
+                                         'EnableRFPhaseAngle': True,
+                                         'EnableRFDopplerFrequency': True
                                      })
 
         self.fac.addTagReportCallback(self.handle_event)
@@ -106,7 +102,7 @@ class ImpinjR420(Interrogator):
                 try:
                     input_dict = self.tag_dicts_queue.get_nowait()
                     input_dicts.append(input_dict)
-                except Queue.Empty:
+                except queue.Empty:
                     break
 
             resp, content = self.http_obj.request(uri=url, method='PUT', headers={
@@ -124,7 +120,7 @@ class ImpinjR420(Interrogator):
             target=self.handler_thread, args=())
         self.handler_thread.start()
 
-        self.tag_dicts_queue = Queue.Queue()
+        self.tag_dicts_queue = queue.Queue()
         self.communication_thread = threading.Thread(
             target=self.communication_consumer, args=())
         self.communication_thread.start()
@@ -163,8 +159,8 @@ class ImpinjR420(Interrogator):
             #        </RSSI>
             # .... also a Timestamp here
             #   and now, with impinj extensions and sllurp
-            #    <RFPhaseAngle>1744</RFPhaseAngle>
-            #    <Doppler>234</Doppler>
+            #    <ImpinjPhase>1744</ImpinjPhase>
+            #    <RFDopplerFrequency>234</RFDopplerFrequency>
             #    </TagReportData>
             # </RO_ACCESS_REPORT>
 
@@ -178,7 +174,7 @@ class ImpinjR420(Interrogator):
                 for tag in tags:
                     if 'FirstSeenTimestampUTC' in tag and 'EPC-96' in tag and 'AntennaID' in tag and 'PeakRSSI' in tag:
                         first_seen_timestamp = tag['FirstSeenTimestampUTC'][0]
-                        epc96 = tag['EPC-96']
+                        epc96 = tag['EPC-96'].decode("utf-8")
                         antenna = tag['AntennaID'][0]
                         rssi = tag['PeakRSSI'][0]
                     else:
@@ -187,13 +183,13 @@ class ImpinjR420(Interrogator):
                         continue
 
                     # Optional parameters from sllurp library for Impinj
-                    if 'Doppler' in tag:
-                        doppler = tag['Doppler']
+                    if 'RFDopplerFrequency' in tag:
+                        doppler = tag['RFDopplerFrequency']
                     else:
                         doppler = "-65536"
 
-                    if 'RFPhaseAngle' in tag:
-                        phase = tag['RFPhaseAngle']
+                    if 'ImpinjPhase' in tag:
+                        phase = tag['ImpinjPhase']
                     else:
                         phase = "-65536"
 
@@ -234,10 +230,24 @@ class ImpinjR420(Interrogator):
                         self.start_timestamp = first_seen_timestamp
 
                     self.latest_timestamp = first_seen_timestamp
+                    
+                    freeform = {}
+                    freeform['rssi'] = rssi
+                    freeform['epc96'] = epc96
+                    freeform['doppler'] = doppler
+                    freeform['phase'] = phase
+                    freeform['antenna'] = antenna
+                    freeform['rospecid'] = rospecid
+                    freeform['channelindex'] = channelindex
+                    freeform['tagseencount'] = tagseencount
+                    freeform['accessspecid'] = accessspecid
+                    freeform['inventoryparameterspecid'] = inventoryparameterspecid
+                    freeform['lastseentimestamp'] = lastseentimestamp
+                    
+                    freeformjson = json.dumps(freeform)
 
                     # call self.insert_tag to insert into database
-                    self.insert_tag(epc96, antenna, rssi, doppler, phase, first_seen_timestamp, rospecid, channelindex,
-                                    tagseencount, lastseentimestamp, accessspecid, inventoryparameterspecid, self.start_timestamp)
+                    self.insert_tag(first_seen_timestamp, freeformjson, self.start_timestamp)
 
     def close_server(self):
         self.exiting = True
@@ -249,30 +259,29 @@ class ImpinjR420(Interrogator):
     def __del__(self):
         self.close_server()
 
-    def insert_tag(self, epc, antenna, peak_rssi, doppler, phase, first_seen_timestamp, rospecid, channelindex, tagseencount, lastseentimestamp, accessspecid, inventoryparameterspecid, start_timestamp):
+    def insert_tag(self, first_seen_timestamp, freeformjson, start_timestamp):
+        freeform = json.loads(freeformjson)
+        
+        peak_rssi = freeform['rssi']
         if peak_rssi >= 128:  # convert to signed
             peak_rssi = peak_rssi - 256
-
+        freeform['rssi'] = peak_rssi
+        
+        epc = freeform['epc96']
+        antenna = freeform['antenna']
+        phase = freeform['phase']
+        channelindex = freeform['channelindex']
+        doppler = freeform['doppler']
         self.out("Adding tag %s with RSSI %s and timestamp %s and ID %s on antenna %s with Phase %s and Doppler %s and Channel %s" % (
             str(self.count), str(peak_rssi), str(first_seen_timestamp), str(epc), str(antenna), str(doppler), str(phase), str(channelindex)))
 
         input_dict = dict()
         input_dict['data'] = dict()
         input_dict['data']['db_password'] = self.db_password
-        input_dict['data']['rssi'] = peak_rssi
+        input_dict['data']['freeform'] = freeform
         input_dict['data']['relative_time'] = first_seen_timestamp - \
             start_timestamp
         input_dict['data']['interrogator_time'] = first_seen_timestamp
-        input_dict['data']['epc96'] = epc
-        input_dict['data']['antenna'] = antenna
-        input_dict['data']['doppler'] = doppler
-        input_dict['data']['phase'] = phase
-        input_dict['data']['rospecid'] = rospecid
-        input_dict['data']['channelindex'] = channelindex
-        input_dict['data']['tagseencount'] = tagseencount
-        input_dict['data']['lastseentimestamp'] = lastseentimestamp
-        input_dict['data']['accessspecid'] = accessspecid
-        input_dict['data']['inventoryparameterspecid'] = inventoryparameterspecid
 
         self.tag_dicts_queue.put(input_dict)  # read by the consumer
 
