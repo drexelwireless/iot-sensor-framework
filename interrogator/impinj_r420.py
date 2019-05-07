@@ -30,7 +30,7 @@ import collections
 
 
 class ImpinjR420(Interrogator):
-    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _channellist=[], _tagpop=16):
+    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _tagpop=16):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
         self.exiting = False
@@ -39,7 +39,6 @@ class ImpinjR420(Interrogator):
             self.antennas = _antennas
         else:
             self.antennas = [1, 2, 3, 4]
-        self.channellist = _channellist  # empty channel list defaults to all channels
         self.tagpop = _tagpop
 
         if self.cert_path != 'NONE':

@@ -5,7 +5,7 @@ import sys
 import os
 import time
 
-def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antennas, channellist, dispatchsleep, tagpop):
+def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop):
     print('%s [<options>]' % sys.argv[0])
     print('where <options> are:\n' \
         '\t-h - show this help message\n' \
@@ -14,12 +14,11 @@ def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antenna
         '\t-p <password> - password to the database web service: default %s\n' \
         '\t-c <certfile> - path to the certificate file for verifying SSL certificate or NONE to bypass: default %s\n' \
         '\t-a <antenna number> - antenna number to interrogate (can specify more than once), if supported by the interrogator: default %s\n' \
-        '\t-n <channel number> - channel number to interrogate (can specify more than once), if supported by the interrogator: default %s (empty list means all available channels)\n' \
         '\t-l <time in seconds> - length of time to sleep the dispatcher in between transmissions of data to the server, to allow new messages to queue up for efficiency: default %s\n' \
         '\t-g <device> - device to use as the interrogator (impinj, r420): default %s\n' \
         '\t-t <pop> - sets tag population (4 good for 1 tag, 16 good for 2 tags): default %s\n' \
         '\t-d - Enable debugging: default %s\n' % (ip_address, db_host, db_password,
-                                                   cert_path, antennas, channellist, dispatchsleep, device, tagpop, do_debug))
+                                                   cert_path, antennas, dispatchsleep, device, tagpop, do_debug))
     sys.exit(1)
 
 
@@ -32,9 +31,7 @@ def getopts():
     cert_path = "NONE"
     device = "Impinj"
     antennas = [1, 2, 3, 4]
-    channellist = []
     userantennas = []
-    userchannellist = []
     dispatchsleep = 0.5
     tagpop = 4
 
@@ -44,7 +41,7 @@ def getopts():
     for opt in optlist:
         if opt[0] == '-h':
             usage(ip_address, db_host, db_password, cert_path, do_debug,
-                  device, antennas, channellist, dispatchsleep, tagpop)
+                  device, antennas, dispatchsleep, tagpop)
         if opt[0] == '-i':
             ip_address = opt[1]
         if opt[0] == '-o':
@@ -57,8 +54,6 @@ def getopts():
             cert_path = opt[1]
         if opt[0] == '-g':
             device = opt[1]
-        if opt[0] == '-n':
-            userchannellist.append(int(opt[1]))
         if opt[0] == '-a':
             userantennas.append(int(opt[1]))
         if opt[0] == '-l':
@@ -66,15 +61,12 @@ def getopts():
         if opt[0] == '-t':
             tagpop = int(opt[1])
 
-    if len(userchannellist) > 0:
-        channellist = userchannellist
-
     if len(userantennas) > 0:
         antennas = userantennas
 
-    #print ip_address, db_host, db_password, cert_path, do_debug, device, antennas, channellist, dispatchsleep
+    #print ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep
 
-    return ip_address, db_host, db_password, cert_path, do_debug, device, antennas, channellist, dispatchsleep, tagpop
+    return ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop
 
 
 def print_stats(rfid):
@@ -103,7 +95,7 @@ def prog_quit(rfid, QUITFILE='quit'):
             os._exit(0)
 
 if __name__ == "__main__":
-    ip_address, db_host, db_password, cert_path, do_debug, device, antennas, channellist, dispatchsleep, tagpop = getopts()
+    ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop = getopts()
 
     if device.lower() == "impinj":
         rfid = Impinj(ip_address, db_host, db_password, cert_path,
@@ -113,7 +105,7 @@ if __name__ == "__main__":
         rfid.start()
     elif device.lower() == "r420":
         rfid = ImpinjR420(ip_address, db_host, db_password, cert_path, do_debug,
-                          _dispatchsleep=dispatchsleep, _antennas=antennas, _channellist=channellist, _tagpop=tagpop)
+                          _dispatchsleep=dispatchsleep, _antennas=antennas, _tagpop=tagpop)
         t2 = threading.Thread(target=prog_quit, args=(rfid,))
         t2.start()
         rfid.start()
