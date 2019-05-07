@@ -111,6 +111,11 @@ or during data collection, do the following to kill the interrogator process:
     `kill -9 <process_id>` (where `<process_id>` is the process ID you
     determined in the previous step without the angular brackets).
 
+## Dependencies
+* The Impinj R1000 driver uses a modified llrp_proto.py from the LLRPyC package, included in the interrogator directory.
+** License information can be found in llrp_proto.py
+* The Impinj R420 driver uses a previously modified sllurp installation, and with sllurp updates is now compatible with a vanilla checkout.
+** License information can be found in sllrp/LICENSE.txt
 ----
 
 ## Containerization
