@@ -4,7 +4,7 @@ This software suite contains scripts to collect and store IoT sensor data, such 
 
 *Note: These instructions assume that the web server and interrogation 
 software will be run on the same machine (IP addresses in all shell scripts
-have been set to `localhost`).
+have been set to `localhost`).  The host, port, keys, and other parameters can be set when running the scripts in the instructions.  
 
 ### Requirements
 The following software packages need to be installed before running 
