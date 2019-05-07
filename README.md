@@ -113,9 +113,9 @@ or during data collection, do the following to kill the interrogator process:
 
 ## Dependencies
 * The Impinj R1000 driver uses a modified llrp_proto.py from the LLRPyC package, included in the interrogator directory.
-** License information can be found in llrp_proto.py
+    * License information can be found in llrp_proto.py
 * The Impinj R420 driver uses a previously modified sllurp installation, and with sllurp updates is now compatible with a vanilla checkout.
-** License information can be found in sllrp/LICENSE.txt
+    * License information can be found in sllrp/LICENSE.txt
 
 ## Limitations
 * The Impinj interrogates between 30-120 per second, by observation, depending on the Mode and Tag Population parameters selected in the client driver file.
