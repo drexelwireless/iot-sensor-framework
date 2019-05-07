@@ -120,6 +120,7 @@ or during data collection, do the following to kill the interrogator process:
 ## Limitations
 * The Impinj interrogates between 30-120 per second, by observation, depending on the Mode and Tag Population parameters selected in the client driver file.
 * The MySQL database freeform (i.e., json) record entry is limited to approximately 64K per entry after encryption and base64 encoding.
+* The database module contains a test key and certificate for the server: do not use these in production, as they are made publicly available.  See the instructions above to generate your own web server certificate and key.  The interrogator client transmits SSL encrypted data based on this key, and the server in-turn uses the key as part of its at-rest encryption.
 ----
 
 ## Containerization
