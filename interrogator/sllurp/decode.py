@@ -1,3 +1,4 @@
+
 import binascii
 import argparse
 import logging
@@ -10,8 +11,7 @@ args = None
 
 def parse_args():
     global args
-    parser = argparse.ArgumentParser(
-        description='Decode a single LLRP message')
+    parser = argparse.ArgumentParser(description='Decode an LLRP message')
     parser.add_argument('msg', help='message in hexadecimal encoding')
     parser.add_argument('-d', '--debug', action='store_true')
     args = parser.parse_args()
@@ -26,7 +26,7 @@ def init_logging():
 
     root = logging.getLogger()
     root.setLevel(logLevel)
-    root.handlers = [stderr, ]
+    root.handlers = [stderr]
 
 
 if __name__ == '__main__':
