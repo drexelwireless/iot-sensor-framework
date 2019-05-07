@@ -110,21 +110,21 @@ class REDCapRSSIDatabase(Database):
                 sleep(self.dispatchsleep)
 
     # just insert into a queue for the dispatcher to insert in the background
-    def insert_row(self, relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, rospecid, channelindex, tagseencount, accessspecid, inventoryparameterspecid, lastseentimestamp, db_pw=''):
+    def insert_row(self, relativetime, interrogatortime, freeform, db_pw=''):
         input_dict = dict()  # read by the consumer dispatcher
         input_dict['relativetime'] = relativetime
         input_dict['interrogatortime'] = interrogatortime
-        input_dict['rssi'] = rssi
-        input_dict['epc96'] = epc96
-        input_dict['doppler'] = doppler
-        input_dict['phase'] = phase
-        input_dict['antenna'] = antenna
-        input_dict['rospecid'] = rospecid
-        input_dict['channelindex'] = channelindex
-        input_dict['tagseencount'] = tagseencount
-        input_dict['accessspecid'] = accessspecid
-        input_dict['inventoryparameterspecid'] = inventoryparameterspecid
-        input_dict['lastseentimestamp'] = lastseentimestamp
+        input_dict['rssi'] = freeform['rssi']
+        input_dict['epc96'] = freeform['epc96']
+        input_dict['doppler'] = freeform['doppler']
+        input_dict['phase'] = freeform['phase']
+        input_dict['antenna'] = freeform['antenna']
+        input_dict['rospecid'] = freeform['rospecid']
+        input_dict['channelindex'] = freeform['channelindex']
+        input_dict['tagseencount'] = freeform['tagseencount']
+        input_dict['accessspecid'] = freeform['accessspecid']
+        input_dict['inventoryparameterspecid'] = freeform['inventoryparameterspecid']
+        input_dict['lastseentimestamp'] = freeform['lastseentimestamp']
         input_dict['db_pw'] = db_pw
 
         self.insertion_queue.put(input_dict)

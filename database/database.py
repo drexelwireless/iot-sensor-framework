@@ -41,7 +41,7 @@ class Database:
         return -1
 
     # log this request to the Audit
-    def insert_row(self, relativetime, interrogatortime, rssi, epc96, doppler, phase, antenna, db_pw=''):
+    def insert_row(self, relativetime, interrogatortime, freeform, db_pw=''):
         pass
 
     # log this request to the Audit
