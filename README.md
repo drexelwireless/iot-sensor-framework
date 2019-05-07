@@ -13,9 +13,7 @@ data collection. You will have to use the same install method (such as
 `sudo` for `pip install` are  `sudo -H pip install <package-name>` or
 `pip install --user <package-name>`.
 
-```
 See the Dockerfile in each subdirectory for deployment instructions; these can be executed manually for a local installation, or containerized using Docker.
-```
 
 # generate a web server key
 ```
