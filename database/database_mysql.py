@@ -8,10 +8,11 @@ import queue
 import threading
 import os
 from time import sleep
-
+import pymysql
+import json
 
 class MysqlDatabase(Database):
-    def __init__(self, crypto, db_path='localhost', db_name='database', db_password='abc123', db_user='dbuser', flush=False, dispatchsleep=0):
+    def __init__(self, crypto, db_path='localhost', db_name='iotdatabase', db_password='abc123', db_user='dbuser', flush=False, dispatchsleep=0):
         Database.__init__(self, crypto, db_path=db_path, flush=flush)
         self.dispatchsleep = dispatchsleep
         self.db_name = db_name
@@ -36,6 +37,7 @@ class MysqlDatabase(Database):
         while 1:
             try:
                 input_dict = q.get_nowait() 
+                return input_dict
             except queue.Empty:
                 sleep(0.1)
                 continue
@@ -140,7 +142,7 @@ class MysqlDatabase(Database):
         c.execute("SET CHARACTER SET utf8mb4;")  # same as above
         c.execute("SET character_set_connection=utf8mb4;")  # same as above
 
-        c.execute('''CREATE TABLE IF NOT EXISTS IOTD(id INTEGER PRIMARY KEY AUTO_INCREMENT, absolute_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, relative_timestamp BIGINT, interrogator_timestamp BIGINT, freeform VARBINARY(65535)''')  # absolute_timestamp was DATETIME for more recent mysql
+        c.execute('''CREATE TABLE IF NOT EXISTS IOTD(id INTEGER PRIMARY KEY AUTO_INCREMENT, absolute_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, relative_timestamp BIGINT, interrogator_timestamp BIGINT, freeform VARBINARY(64535))''')  # absolute_timestamp was DATETIME for more recent mysql
         c.execute('''CREATE TABLE IF NOT EXISTS AUDIT(id INTEGER PRIMARY KEY AUTO_INCREMENT, absolute_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, log TEXT)''')  # absolute_timestamp was DATETIME for more recent mysql
 
         conn.commit()
@@ -267,10 +269,9 @@ class MysqlDatabase(Database):
                 relativetime = input_dict['relativetime']
                 interrogatortime = input_dict['interrogatortime']
                 freeform = input_dict['freeform']
+                freeformjson = json.dumps(freeform)
 
-                self.db_password = db_pw
-
-                row = (relativetime, interrogatortime, self.db_encrypt(freeform, interrogatortime))
+                row = (relativetime, interrogatortime, self.db_encrypt(freeformjson, interrogatortime))
 
                 rowlist.append(row)
 
