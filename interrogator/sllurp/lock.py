@@ -2,10 +2,13 @@
 import argparse
 import logging
 import pprint
-import time
 from twisted.internet import reactor, defer
 
+from sllurp.util import monotonic
 import sllurp.llrp as llrp
+
+startTime = None
+endTime = None
 
 tagReport = 0
 logger = logging.getLogger('sllurp')
@@ -13,46 +16,40 @@ logger = logging.getLogger('sllurp')
 args = None
 
 
+def startTimeMeasurement():
+    global startTime
+    startTime = monotonic()
+
+
+def stopTimeMeasurement():
+    global endTime
+    endTime = monotonic()
+
+
 def finish(_):
-    logger.info('total # of tags seen: {}'.format(tagReport))
+    # stop runtime measurement to determine rates
+    stopTimeMeasurement()
+    runTime = endTime - startTime
+
+    logger.info('total # of tags seen: %d (%d tags/second)', tagReport,
+                tagReport/runTime)
     if reactor.running:
         reactor.stop()
 
 
 def access(proto):
-    readSpecParam = None
-    if args.read_words:
-        readSpecParam = {
+    lockSpecParam = {
             'OpSpecID': 0,
-            'MB': 3,
-            'WordPtr': 0,
-            'AccessPassword': 0,
-            'WordCount': args.read_words
+            'AccessPassword': args.access_password,
+            'LockPayload': [
+                {
+                    'Privilege': args.privilege,
+                    'DataField': args.data_field,
+                },
+            ]
         }
 
-    writeSpecParam = None
-    if args.write_words:
-        if args.write_words > 1:
-            writeSpecParam = {
-                'OpSpecID': 0,
-                'MB': 3,
-                'WordPtr': 0,
-                'AccessPassword': 0,
-                'WriteDataWordCount': args.write_words,
-                'WriteData': '\xde\xad\xbe\xef',  # XXX allow user-defined pattern
-            }
-        else:
-            writeSpecParam = {
-                'OpSpecID': 0,
-                'MB': 3,
-                'WordPtr': 0,
-                'AccessPassword': 0,
-                'WriteDataWordCount': args.write_words,
-                'WriteData': '\xbe\xef',  # XXX allow user-defined pattern
-            }
-
-    return proto.startAccess(readWords=readSpecParam,
-                             writeWords=writeSpecParam)
+    return proto.startAccess(param=lockSpecParam)
 
 
 def politeShutdown(factory):
@@ -64,45 +61,55 @@ def tagReportCallback(llrpMsg):
     global tagReport
     tags = llrpMsg.msgdict['RO_ACCESS_REPORT']['TagReportData']
     if len(tags):
-        logger.info('saw tag(s): {}'.format(pprint.pformat(tags)))
+        logger.info('saw tag(s): %s', pprint.pformat(tags))
     else:
         logger.info('no tags seen')
         return
     for tag in tags:
         tagReport += tag['TagSeenCount'][0]
+        if "OpSpecResult" in tag:
+            result = tag["OpSpecResult"].get("Result")
+            logger.debug("result: %s", result)
 
 
 def parse_args():
     global args
-    parser = argparse.ArgumentParser(
-        description='Simple RFID Reader Inventory')
+    parser = argparse.ArgumentParser(description='Simple RFID Lock')
     parser.add_argument('host', help='hostname or IP address of RFID reader',
                         nargs='*')
     parser.add_argument('-p', '--port', default=llrp.LLRP_PORT, type=int,
-                        help='port to connect to (default {})'.format(llrp.LLRP_PORT))
+                        help='port (default {})'.format(llrp.LLRP_PORT))
     parser.add_argument('-t', '--time', default=10, type=float,
-                        help='number of seconds for which to inventory (default 10)')
+                        help='number of seconds to inventory (default 10)')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='show debugging output')
     parser.add_argument('-n', '--report-every-n-tags', default=1, type=int,
-                        dest='every_n', metavar='N', help='issue a TagReport every N tags')
+                        dest='every_n', metavar='N',
+                        help='issue a TagReport every N tags')
     parser.add_argument('-X', '--tx-power', default=0, type=int,
-                        dest='tx_power', help='Transmit power (default 0=max power)')
-    parser.add_argument('-M', '--modulation', default='M8',
-                        help='modulation (default M8)')
+                        dest='tx_power',
+                        help='Transmit power (default 0=max power)')
     parser.add_argument('-T', '--tari', default=0, type=int,
                         help='Tari value (default 0=auto)')
     parser.add_argument('-s', '--session', default=2, type=int,
                         help='Gen2 session (default 2)')
     parser.add_argument('-P', '--tag-population', default=4, type=int,
-                        dest='population', help="Tag Population value (default 4)")
+                        dest='population',
+                        help='Tag Population value (default 4)')
 
-    # read or write
-    op = parser.add_mutually_exclusive_group(required=True)
-    op.add_argument('-r', '--read-words', type=int,
-                    help='Number of words to read from MB 0 WordPtr 0')
-    op.add_argument('-w', '--write-words', type=int,
-                    help='Number of words to write to MB 0 WordPtr 0')
+    # C1G2 Lock Payload parameters:
+    parser.add_argument('-priv', '--privilege', default=0, type=int,
+                        help='Access privilege: '
+                             '0 RW, 1 Permalock, 2 Permaunlock, 3 Unlock')
+    parser.add_argument('-df', '--data-field', default=0, type=int,
+                        dest='data_field',
+                        help='Access Data Field: 0 KILL passwd, '
+                             '1 ACCESS passwd, 2 EPC, 3 TID, 4 User memory')
+
+    parser.add_argument('-ap', '--access_password', default=0, type=int,
+                        dest='access_password',
+                        help='Access password for secure state if R/W locked')
+
     parser.add_argument('-l', '--logfile')
 
     args = parser.parse_args()
@@ -117,15 +124,14 @@ def init_logging():
 
     root = logging.getLogger()
     root.setLevel(logLevel)
-    root.handlers = [stderr, ]
+    root.handlers = [stderr]
 
     if args.logfile:
         fHandler = logging.FileHandler(args.logfile)
         fHandler.setFormatter(formatter)
         root.addHandler(fHandler)
 
-    logger.log(logLevel, 'log level: {}'.format(
-        logging.getLevelName(logLevel)))
+    logger.log(logLevel, 'log level: %s', logging.getLevelName(logLevel))
 
 
 def main():
@@ -138,7 +144,6 @@ def main():
 
     fac = llrp.LLRPClientFactory(onFinish=onFinish,
                                  disconnect_when_done=True,
-                                 modulation=args.modulation,
                                  tari=args.tari,
                                  session=args.session,
                                  tag_population=args.population,
@@ -151,11 +156,11 @@ def main():
                                      'EnableInventoryParameterSpecID': False,
                                      'EnableAntennaID': True,
                                      'EnableChannelIndex': False,
-                                     'EnablePeakRRSI': True,
+                                     'EnablePeakRSSI': True,
                                      'EnableFirstSeenTimestamp': False,
                                      'EnableLastSeenTimestamp': True,
                                      'EnableTagSeenCount': True,
-                                     'EnableAccessSpecID': True
+                                     'EnableAccessSpecID': True,
                                  })
 
     # tagReportCallback will be called every time the reader sends a TagReport
@@ -170,6 +175,9 @@ def main():
 
     # catch ctrl-C and stop inventory before disconnecting
     reactor.addSystemEventTrigger('before', 'shutdown', politeShutdown, fac)
+
+    # start runtime measurement to determine rates
+    startTimeMeasurement()
 
     reactor.run()
 
