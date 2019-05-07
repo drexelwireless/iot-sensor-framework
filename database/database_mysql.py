@@ -270,6 +270,8 @@ class MysqlDatabase(Database):
                 interrogatortime = input_dict['interrogatortime']
                 freeform = input_dict['freeform']
                 freeformjson = json.dumps(freeform)
+                db_pw = input_dict['db_pw']
+                self.db_password = db_pw
 
                 row = (relativetime, interrogatortime, self.db_encrypt(freeformjson, interrogatortime))
 
@@ -291,6 +293,7 @@ class MysqlDatabase(Database):
         input_dict['relativetime'] = relativetime
         input_dict['interrogatortime'] = interrogatortime
         input_dict['freeform'] = freeform
+        input_dict['db_pw'] = db_pw
 
         self.insertion_queue.put(input_dict)
 
