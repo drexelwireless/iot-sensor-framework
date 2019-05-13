@@ -3,8 +3,7 @@ import threading
 import json
 import sys
 from httplib2 import Http
-from sllurp import *
-from sllurp.llrp import *
+from sllurp import llrp
 from twisted.internet import reactor
 import os
 import queue
@@ -30,7 +29,7 @@ import collections
 
 
 class ImpinjR420(Interrogator):
-    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _tagpop=16):
+    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _tagpop=4):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
         self.exiting = False
@@ -56,11 +55,12 @@ class ImpinjR420(Interrogator):
         self.out('Starting Impinj R420 interrogator client')
 
         # Create Clients and set them to connect
-        self.fac = LLRPClientFactory(report_every_n_tags=1,  
+        self.fac = llrp.LLRPClientFactory(report_every_n_tags=1,  
                                      antennas=self.antennas,
                                      tx_power=81,  # was 0, 81 is 30 dbm, 91 is max 32.5 dbm
                                      session=2,  
                                      start_inventory=True,
+                                     mode_identifier=0, # sllurp inventory --mode-identifier N interrogator.ip.local
                                      tag_population=self.tagpop,  # The interrogator can only handle 90 reads per second over ethernet; if the read rate is greater than this, only 90 per second will be processed, up to 5000 per minute.  If 5000 tags is reached before one minute's time, lag will be introduced as a shorter amount of time will be obtained.  Setting to tag population of 16 enables 2 tags; tag population of 4 is best for 1 tag.  Best to parameterize this
                                      tag_content_selector={
                                          'EnableROSpecID': True,
@@ -72,13 +72,13 @@ class ImpinjR420(Interrogator):
                                          'EnableFirstSeenTimestamp': True,
                                          'EnableLastSeenTimestamp': True,
                                          'EnableTagSeenCount': True,
-                                         'EnableAccessSpecID': True,
+                                         'EnableAccessSpecID': True
                                      },
                                      impinj_tag_content_selector={
                                          'EnablePeakRSSI': True,
                                          'EnableRFPhaseAngle': True,
                                          'EnableRFDopplerFrequency': True
-                                     }) # set mode_identifier=number in constructor to specify a C1G2 configuration including tari and modulation
+                                     })
 
         self.fac.addTagReportCallback(self.handle_event)
 

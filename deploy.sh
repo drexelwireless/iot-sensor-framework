@@ -68,6 +68,7 @@ sudo pip3 install service_identity
 sudo apt-get install python-matplotlib
 sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
 sudo pip3 install scipy
+sudo pip3 install sllurp
 
 # for client packages
 sudo pip3 install scikit-learn
