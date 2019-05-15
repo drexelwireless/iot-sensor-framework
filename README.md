@@ -40,6 +40,7 @@ sudo service mysql start
 Navigate to `database/`:
 * Run `./server_mysql.sh` (for use with the interrogator and MySQL) or
 `./server.sh` (for a SQLite instance when running processing modules)
+	* Run `service mysql start` as root if using MySQL and starting the MySQL server for the first time, and `destroy_and_initialize.sh` can be used to clear the database and instantiate the tables prior to use
 
 ###### IoT Sensor Device, i.e., RFID Interrogator
 Navigate to `interrogator/` and run either of the following:
