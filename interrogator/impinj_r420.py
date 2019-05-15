@@ -10,24 +10,6 @@ import queue
 from time import sleep
 import collections
 
-# sllurp, llrp_proto GPLv2 statement:
-# Copyright (C) 2009 Rodolfo Giometti <giometti@linux.it>
-# Copyright (C) 2009 CAEN RFID <support.rfid@caen.it>
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-
 class ImpinjR420(Interrogator):
     def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _tagpop=4):
         Interrogator.__init__(self, _db_host, _db_password,
