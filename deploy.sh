@@ -42,7 +42,7 @@ sudo pip3 install pykalman
 sudo pip3 install scikit-image
 sudo pip3 install peakutils
 sudo pip3 install hmmlearn
-sudo pip3 install git+git://github.com/statsmodels/statsmodels
+sudo pip3 install statsmodels 
 
 sudo apt-get install libmysqlclient-dev
 sudo pip3 install MySQL-python
