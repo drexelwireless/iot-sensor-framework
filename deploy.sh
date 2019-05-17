@@ -1,9 +1,16 @@
 #!/bin/bash
 
+if [[ -z `which python3` ]]
+then
+	alias python3="python"
+	alias pip3="pip"
+fi
+
 sudo apt-get update
 
 sudo apt-get -y install python3.6
 sudo apt-get -y install python-pip
+sudo apt-get -y install python3-pip
 sudo apt-get -y install python-dev
 sudo apt-get -y install python3-dev
 pip3 install --upgrade pip
@@ -45,19 +52,16 @@ sudo pip3 install hmmlearn
 sudo pip3 install statsmodels 
 
 sudo apt-get install libmysqlclient-dev
-sudo pip3 install MySQL-python
+#sudo pip3 install MySQL-python # may be incompatible with Python3, switch to pymysql instead
 sudo pip3 install pycurl --global-option="--with-openssl"
 sudo pip3 install pycrypto
 sudo pip3 install python-dateutil
 
+#httplib2 default installation is incompatible with Python 3 when using SSL
 PKGDIRS=`python -c "import site; p=site.getsitepackages(); print('\n'.join(str(x) for x in p))"`
 for P in PKGDIRS
 do
-	for D in `ls $P/*httplib2*`
-	do
-		mkdir -p /tmp/$P$D
-		mv $P/$D /tmp/$P$D/
-	done
+	find $P -iname '*httplib2*' -exec sudo mv {} /tmp
 done
 sudo pip3 install httplib2 # may need to manually remove and then upgrade to fix a bug in httplib2 regarding verifying SSL certificates
 
@@ -78,7 +82,9 @@ sudo pip3 install --upgrade filterpy # this upgrades numpy / scipy stack
 
 sudo apt-get install libgsl0-dev
 sudo apt-get install libgsl0ldbl
+
 #sudo pip install git+https://github.com/ajmendez/PyMix.git
 git clone https://github.com/ajmendez/PyMix.git
+touch PyMix/README.rst
 sed 's/from distutils.core import setup, Extension,DistutilsExecError/#from distutils.core import setup, Extension,DistutilsExecError\nfrom distutils.core import setup, Extension' PyMix/setup.py
 python PyMix/setup.py install
