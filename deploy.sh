@@ -52,7 +52,7 @@ sudo pip3 install hmmlearn
 sudo pip3 install statsmodels 
 
 sudo apt-get install libmysqlclient-dev
-#sudo pip3 install MySQL-python # may be incompatible with Python3, switch to pymysql instead
+#sudo pip3 install MySQL-python # may be incompatible with Python3, switch to pymysql instead.
 sudo pip3 install pycurl --global-option="--with-openssl"
 sudo pip3 install pycrypto
 sudo pip3 install python-dateutil
