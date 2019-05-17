@@ -15,6 +15,8 @@ data collection. You will have to use the same install method (such as
 
 See the Dockerfile in each subdirectory for deployment instructions; these can be executed manually for a local installation, or containerized using Docker.
 
+This package assumes an installation of python3 and pip3.
+
 # generate a web server key
 ```
 openssl req -newkey rsa:2048 -nodes -keyout key.key -x509 -days 365 -out key.crt
