@@ -328,7 +328,7 @@ class MysqlDatabase(Database):
         conn = self.open_db_connection()
         c = conn.cursor()
         input = (windowsize, )
-        result = self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, freeform FROM IOTD ORDER BY interrogator_timestamp ASC LIMIT %s", input)
+        result = self.query(c, "SELECT id, absolute_timestamp, relative_timestamp, freeform FROM IOTD ORDER BY interrogator_timestamp DESC LIMIT %s", input)
         for row in c:
             self.db_log('FETCH ' + str(row[0]))
 
