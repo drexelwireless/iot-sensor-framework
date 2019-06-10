@@ -174,7 +174,7 @@ class SqliteDatabase(Database):
         conn = self.open_db_connection()
         c = conn.cursor()
         input = (windowsize, )
-        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(freeform, interrogator_timestamp) FROM IOTD ORDER BY interrogator_timestamp ASC LIMIT ?", input):
+        for row in c.execute("SELECT id, absolute_timestamp, relative_timestamp, interrogator_timestamp, decrypt(freeform, interrogator_timestamp) FROM IOTD ORDER BY interrogator_timestamp DESC LIMIT ?", input):
             d = dict()
             d['id'] = row[0]
             d['absolute_timestamp'] = row[1]
