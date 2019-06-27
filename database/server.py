@@ -5,6 +5,7 @@ from database import Database
 from database_sqlite import SqliteDatabase
 from database_mysql import MysqlDatabase
 from database_redcaprssi import REDCapRSSIDatabase
+from database_mongo import MongoDatabase
 from mycrypto import MyCrypto
 import os
 import threading
@@ -20,6 +21,7 @@ def usage(flask_port, flask_host, do_debug, db_path, flush, key_path_prefix, dis
         '\t-p <port> - port on which the server should run: default %d\n' \
         '\t-d - Enable debugging: default %s\n' \
         '\t-m - Enable mysql instead of sqlite (also add -s xxx and -w xxx for user and password to the database)\n' \
+        '\t-o - Enable mongodb instead of sqlite\n' \
         '\t-r - Enable redcap instead of sqlite (also add -t xxx for the API token)' \
         '\t-b <path> - path or hostname to the database or API endpoint: default %s\n' \
         '\t-l - flush the database on run: default %s\n' \
@@ -38,6 +40,7 @@ def getopts():
     key_path_prefix = 'key'
     mysql = False
     redcap = False
+    tinymongo = False
     db_user = 'dbuser'
     db_password = 'abc123'
     flush = False
@@ -45,7 +48,7 @@ def getopts():
     redcap_token = ''
 
     # Check command line
-    optlist, list = getopt.getopt(sys.argv[1:], 'hp:f:db:k:ms:w:e:lrt:')
+    optlist, list = getopt.getopt(sys.argv[1:], 'hp:f:db:k:mos:w:e:lrt:')
     for opt in optlist:
         if opt[0] == '-h':
             usage(flask_port, flask_host, do_debug, db_path,
@@ -62,6 +65,8 @@ def getopts():
             key_path_prefix = opt[1]
         if opt[0] == '-m':
             mysql = True
+        if opt[0] == '-o':
+            tinymongo = True
         if opt[0] == '-s':
             db_user = opt[1]
         if opt[0] == '-w':
@@ -76,10 +81,10 @@ def getopts():
             redcap_token = opt[1]
 
     if do_debug:
-        print('Parameters: [flask host = %s, flask port = %d, debug = %s, database = %s, key = %s, mysql = %d, db_user = %s, db_password = %s, flush = %s, dispatchsleep = %s, redcap = %s, redcap_token = %s]' % (
-            flask_host, flask_port, do_debug, db_path, key_path_prefix, mysql, db_user, db_password, flush, dispatchsleep, redcap, redcap_token))
+        print('Parameters: [flask host = %s, flask port = %d, debug = %s, database = %s, key = %s, mysql = %d, mongo = %d, db_user = %s, db_password = %s, flush = %s, dispatchsleep = %s, redcap = %s, redcap_token = %s]' % (
+            flask_host, flask_port, do_debug, db_path, key_path_prefix, mysql, tinymongo, db_user, db_password, flush, dispatchsleep, redcap, redcap_token))
 
-    return flask_port, flask_host, do_debug, db_path, key_path_prefix, mysql, db_user, db_password, flush, dispatchsleep, redcap, redcap_token
+    return flask_port, flask_host, do_debug, db_path, key_path_prefix, mysql, tinymongo, db_user, db_password, flush, dispatchsleep, redcap, redcap_token
 
 # Function to watch CTRL+C keyboard input
 
@@ -103,7 +108,7 @@ def start_wserver(crypto, database, flask_host, flask_port, do_debug):
 # MAIN
 if __name__ == '__main__':
     # Get options
-    flask_port, flask_host, do_debug, db_path, key_path_prefix, mysql, db_user, db_password, flush, dispatchsleep, redcap, redcap_token = getopts()
+    flask_port, flask_host, do_debug, db_path, key_path_prefix, mysql, tinymongo, db_user, db_password, flush, dispatchsleep, redcap, redcap_token = getopts()
 
     # Start up the database module and the database AES / web server SSL module
     crypto = MyCrypto(hostname=flask_host, key_path_prefix=key_path_prefix)
@@ -113,6 +118,8 @@ if __name__ == '__main__':
     elif mysql == True:
         database = MysqlDatabase(crypto=crypto, db_path=db_path, db_password=db_password,
                                  db_user=db_user, flush=flush, dispatchsleep=dispatchsleep)
+    elif tinymongo == True:
+        database = MongoDatabase(crypto=crypto, db_path=db_path, flush=flush, dispatchsleep=dispatchsleep)
     else:
         database = SqliteDatabase(
             crypto=crypto, db_path=db_path, flush=flush, dispatchsleep=dispatchsleep)
