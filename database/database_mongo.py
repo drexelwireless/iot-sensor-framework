@@ -10,7 +10,7 @@ from tinymongo import TinyMongoClient
 import time
 
 class MongoDatabase(Database):
-    def __init__(self, crypto, db_path='mongodata', flush=False, dispatchsleep=0):
+    def __init__(self, crypto, db_path='mongodata.tdb', flush=False, dispatchsleep=0):
         Database.__init__(self, crypto, db_path=db_path, flush=flush)
         self.dispatchsleep = dispatchsleep
         self.insertion_queue = queue.Queue()
