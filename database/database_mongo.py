@@ -10,8 +10,9 @@ from tinymongo import TinyMongoClient
 import time
 
 class MongoDatabase(Database):
-    def __init__(self, crypto, db_path='mongodata.tdb', flush=False, dispatchsleep=0):
+    def __init__(self, crypto, db_path='tinymongodata', flush=False, dispatchsleep=0):
         Database.__init__(self, crypto, db_path=db_path, flush=flush)
+        self.open_db_connection()
         self.dispatchsleep = dispatchsleep
         self.insertion_queue = queue.Queue()
         self.dispatcher_thread = threading.Thread(
@@ -44,11 +45,10 @@ class MongoDatabase(Database):
                 # combine many rows together into a single insert, each with its own password
                 rowlist = []
                 for row in queuelist[db_pw]:
-                    row['freeform'] = self.db_encrypt(row['freeform'], row['interrogator_timestamp'])
+                    #print(row)
+                    row['freeform'] = self.db_encrypt(row['freeform'], row['interrogator_timestamp']).decode("utf-8") 
                     row['absolute_timestamp'] = time.time()
                     rowlist.append(row)
-
-                    #print(row)
 
                 # the additional interrogatortime entries are for the encryption function which requires a counter to synchronize stream encryption and decryption; this time should be to the microsecond (6 places after the decimal for seconds) to ensure uniqueness, but can be less precise if the interrogator resolution is lower.  relative_time is expected in microseconds, and both relativetime and interrogatortime are assumed to be whole numbers (i.e. epoch time)
                 # c.executemany('INSERT INTO IOTD (relative_timestamp, interrogator_timestamp, freeform) VALUES (?,?,encrypt(?,?))', rowlist)
@@ -75,6 +75,7 @@ class MongoDatabase(Database):
         try:
             os.mkdir(self.db_path)
         except FileExistsError:
+            #print("Warning: database path already exists:", self.db_path)
             pass
         os.chmod(self.db_path, 0o700)
         self.conn = TinyMongoClient(self.db_path)
@@ -160,8 +161,8 @@ class MongoDatabase(Database):
         freeformjson = json.dumps(freeform)
         #row = (relativetime, interrogatortime, freeformjson, interrogatortime)
         row = {}
-        row['relative_time'] = relativetime
-        row['interrogator_time'] = interrogatortime
+        row['relative_timestamp'] = relativetime
+        row['interrogator_timestamp'] = interrogatortime
         row['freeform'] = freeformjson
 
         self.insertion_queue.put((row, db_pw))  # to be read by dispatcher
