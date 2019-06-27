@@ -73,6 +73,7 @@ sudo apt-get install python-matplotlib
 sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
 sudo pip3 install scipy
 sudo pip3 install sllurp
+sudo pip3 install tinymongo
 
 # for client packages
 sudo pip3 install scikit-learn
