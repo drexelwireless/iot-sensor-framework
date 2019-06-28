@@ -1,6 +1,7 @@
 from database import Database
 from database_sqlite import SqliteDatabase
 from database_mysql import MysqlDatabase
+from database_mongo import MongoDatabase
 from mycrypto import MyCrypto
 import sys
 import getopt
@@ -22,6 +23,7 @@ def usage(flask_host, db_path, key_path_prefix, password):
         '\t-b <path> - path to the database: default %s\n' \
         '\t-k <path> - path to tke ssl key: default %s\n' \
         '\t-m - Enable mysql instead of sqlite (also add -s xxx and -w xxx)\n' \
+        '\t-o - Enable tinymongo instead of sqlite\n' \
         '\t-p <password> - database password: default %s\n' % (
             flask_host, db_path, key_path_prefix, password))
     sys.exit(1)
@@ -34,11 +36,12 @@ def getopts():
     key_path_prefix = 'key'
     password = ''
     mysql = False
+    tinymongo = False
     db_user = 'rssi'
     db_password = ''
 
     # Check command line
-    optlist, list = getopt.getopt(sys.argv[1:], 'hmp:f:b:k:s:w:')
+    optlist, list = getopt.getopt(sys.argv[1:], 'hmop:f:b:k:s:w:')
     for opt in optlist:
         if opt[0] == '-h':
             usage(flask_host, db_path, key_path_prefix, password)
@@ -52,25 +55,29 @@ def getopts():
             key_path_prefix = opt[1]
         if opt[0] == '-m':
             mysql = True
+        if opt[0] == '-o':
+            tinymongo = True
         if opt[0] == '-s':
             db_user = opt[1]
         if opt[0] == '-w':
             db_password = opt[1]
 
-    return flask_host, db_path, key_path_prefix, password, mysql, db_user, db_password
+    return flask_host, db_path, key_path_prefix, password, mysql, tinymongo, db_user, db_password
 
 # MAIN
 
 
 def main():
     # Get options
-    flask_host, db_path, key_path_prefix, password, mysql, db_user, db_password = getopts()
+    flask_host, db_path, key_path_prefix, password, mysql, tinymongo, db_user, db_password = getopts()
 
     # Start up the database module and the database AES / web server SSL module
     crypto = MyCrypto(hostname=flask_host, key_path_prefix=key_path_prefix)
     if mysql == True:
         database = MysqlDatabase(
             crypto=crypto, db_path=db_path, db_password=db_password, db_user=db_user)
+    elif tinymongo == True:
+        database = MongoDatabase(crypto=crypto, db_path=db_path)
     else:
         database = SqliteDatabase(crypto=crypto, db_path=db_path)
 
