@@ -5,6 +5,8 @@ from time import sleep, time
 
 class ExampleClient():
     def __init__(self, _db_host, _db_password, _cert_path):
+        # Inherit from Interrogator and can replace below block of initializations with the following superclass call (assuming the variables passed are included in the paramters passed to __init__ above)
+        # Interrogator.__init__(self, _db_host, _db_password, _cert_path, _debug, _dispatchsleep)
         self.start_timestamp = 0
         self.latest_timestamp = 0
         self.count = 0
