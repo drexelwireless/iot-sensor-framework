@@ -31,7 +31,7 @@ class ExampleClient():
     def test_insert(self): 
         input_dicts = []
         
-        for i in range(10):
+        for i in range(5):
             # freeform can be a dict of your choosing
             freeform = dict()
             freeform['data'] = dict()
@@ -66,7 +66,9 @@ class ExampleClient():
         resp, content = self.http_obj.request(uri=url, method='POST', headers={
             'Content-Type': 'application/json; charset=UTF-8'}, body=json.dumps(body))
             
-        print(content)
+        data = json.loads(content)
+
+        print(data)
         
 c = ExampleClient("https://localhost:5000", "abc123", "NONE")
 c.test_insert()
