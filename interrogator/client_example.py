@@ -23,7 +23,7 @@ class ExampleClient():
     # this can be called as often as one likes; however, there is a performance hit due to the I/O on each call
     # so a producer/consumer threaded paradigm and/or a batch array insert is desirable here
     def insert_tags(self, input_dicts):
-        url = self.db_host + '/api/rssi'
+        url = self.db_host + '/api/iot'
 
         resp, content = self.http_obj.request(uri=url, method='PUT', headers={
             'Content-Type': 'application/json; charset=UTF-8'}, body=json.dumps(input_dicts))
@@ -57,7 +57,7 @@ class ExampleClient():
         self.insert_tags(input_dicts)
         
     def retrieve(self):
-        url = self.db_host + '/api/rssi'
+        url = self.db_host + '/api/iot'
         
         body = dict()
         body['data'] = dict()
