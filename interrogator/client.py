@@ -15,7 +15,7 @@ def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antenna
         '\t-c <certfile> - path to the certificate file for verifying SSL certificate or NONE to bypass: default %s\n' \
         '\t-a <antenna number> - antenna number to interrogate (can specify more than once), if supported by the interrogator: default %s\n' \
         '\t-l <time in seconds> - length of time to sleep the dispatcher in between transmissions of data to the server, to allow new messages to queue up for efficiency: default %s\n' \
-        '\t-g <device> - device to use as the interrogator (impinj, r420): default %s\n' \
+        '\t-g <device> - device to use as the interrogator (impinj, r420, xarray): default %s\n' \
         '\t-t <pop> - sets tag population (4 good for 1 tag, 16 good for 2 tags): default %s\n' \
         '\t-d - Enable debugging: default %s\n' % (ip_address, db_host, db_password,
                                                    cert_path, antennas, dispatchsleep, device, tagpop, do_debug))
@@ -106,6 +106,13 @@ if __name__ == "__main__":
     elif device.lower() == "r420":
         rfid = ImpinjR420(ip_address, db_host, db_password, cert_path, do_debug,
                           _dispatchsleep=dispatchsleep, _antennas=antennas, _tagpop=tagpop)
+        t2 = threading.Thread(target=prog_quit, args=(rfid,))
+        t2.start()
+        rfid.start()
+    elif device.lower() == "xarray":
+        rfid = ImpinjXarray(ip_address, db_host, db_password, cert_path,
+                            do_debug, _dispatchsleep=dispatchsleep,
+                            _antennas=antennas, _tagpop=tagpop)
         t2 = threading.Thread(target=prog_quit, args=(rfid,))
         t2.start()
         rfid.start()
