@@ -30,34 +30,39 @@ def ws_web_audit():
     return make_response(jsonify({'data': data}), 200)
 
 
+@app.route('/api/iot/maxtime', methods=['GET'])
 @app.route('/api/rssi/maxtime', methods=['GET'])
 # GET
-def ws_rssi_web_max_rel_time():
+def ws_iot_web_max_rel_time():
     global ws_database
 
     data = ws_database.get_max_rel_time()
 
     return make_response(jsonify({'data': data}), 200)
 
+@app.route('/api/iot/seconds/<int:lastnsec>', methods=['POST'])
+@app.route('/api/iot/<int:starttime>/<int:endtime>', methods=['POST'])
+@app.route('/api/iot/<int:starttime>', methods=['POST'])
+@app.route('/api/iot', methods=['POST', 'PUT'])
 @app.route('/api/rssi/seconds/<int:lastnsec>', methods=['POST'])
 @app.route('/api/rssi/<int:starttime>/<int:endtime>', methods=['POST'])
 @app.route('/api/rssi/<int:starttime>', methods=['POST'])
 @app.route('/api/rssi', methods=['POST', 'PUT'])
 # PUT:
 # Content-Type: 'application/json'
-# { "data": { "db_password": "abc123", "rssi": 200, "relative_time": 500, "interrogator_time": "3/18/2014  10:59:19.123456 AM", "epc96": "epc123"} }
+# { "data": { "db_password": "abc123", "relative_time": 500, "interrogator_time": "3/18/2014  10:59:19.123456 AM", "freeform": "..."} }
 # POST (acting as a GET with a body):
 # Content-Type: 'application/json'
 # { "data": { "db_password": 'str'} }
-def ws_rssi_web(starttime=-1, endtime=-1, lastnsec=-1):
+def ws_iot_web(starttime=-1, endtime=-1, lastnsec=-1):
     if request.method == 'PUT':
-        return ws_rssi_add_data()
+        return ws_iot_add_data()
     elif request.method == 'POST':
-        return ws_rssi_get_all_data(starttime, endtime, lastnsec) 
+        return ws_iot_get_all_data(starttime, endtime, lastnsec) 
     else:
         abort(400)       
 
-def ws_rssi_get_all_data(starttime=-1, endtime=-1, lastnsec=-1):
+def ws_iot_get_all_data(starttime=-1, endtime=-1, lastnsec=-1):
     global ws_database
 
     if request.json and 'data' in request.json:
@@ -84,7 +89,7 @@ def getwithdefault(d, key, default):
     return result
 
 
-def ws_rssi_add_data():
+def ws_iot_add_data():
     global ws_do_debug
     global ws_database
 
