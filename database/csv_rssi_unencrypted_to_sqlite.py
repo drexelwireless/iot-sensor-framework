@@ -131,10 +131,8 @@ def main():
         freeform['inventoryparameterspecid'] = inventoryparameterspecid
         freeform['lastseentimestamp'] = lastseentimestamp
         
-        freeformjson = json.dumps(freeform)
-        
         # insert each into sqlite database
-        database.insert_row(relativetime, interrogatortime, freeformjson, db_pw=password)
+        database.insert_row(relativetime, interrogatortime, freeform, db_pw=password)
                             
         rows = rows + 1
 
