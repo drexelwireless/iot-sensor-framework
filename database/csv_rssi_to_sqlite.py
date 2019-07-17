@@ -134,8 +134,7 @@ def main():
         freeform['lastseentimestamp'] = lastseentimestamp
         
         # insert each into sqlite database
-        freeformjson = json.dumps(freeform)
-        database.insert_row(relativetime, interrogatortime, freeformjson, db_pw=password)
+        database.insert_row(relativetime, interrogatortime, freeform, db_pw=password)
 
     database.close_db_connection()
     time.sleep(10)  # allow the database to write
