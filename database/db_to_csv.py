@@ -83,7 +83,7 @@ def main():
 
     data = database.fetch_all(password)
 
-    #print data
+    #print(data)
 
     myjson = data  # assumed to be a json array
 
