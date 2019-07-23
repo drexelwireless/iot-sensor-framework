@@ -1,5 +1,6 @@
 from impinj import *
 from impinj_r420 import *
+from impinj_xarray_itemsense import *
 import getopt
 import sys
 import os
