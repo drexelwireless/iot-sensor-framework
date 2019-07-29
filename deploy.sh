@@ -39,7 +39,7 @@ sudo pip3 install python-dateutil
 sudo pip3 install pandas
 sudo pip3 install filterpy
 sudo pip3 install werkzeug
-sudo pip3 install hashlib
+#sudo pip3 install hashlib
 sudo pip3 install sklearn
 sudo pip3 install pykalman
 sudo pip3 install scikit-image
