@@ -32,7 +32,6 @@ sudo apt-get -y install libssl-dev
 export PYCURL_SSL_LIBRARY=openssl
 
 sudo pip3 install flask
-sudo pip3 install pymysql
 sudo pip3 install numpy
 sudo pip3 install python-dateutil
 
@@ -52,7 +51,6 @@ sudo apt-get install libmysqlclient-dev
 #sudo pip3 install MySQL-python # may be incompatible with Python3, switch to pymysql instead.
 sudo pip3 install pycurl --global-option="--with-openssl"
 sudo pip3 install pycrypto
-sudo pip3 install python-dateutil
 
 #httplib2 default installation is incompatible with Python 3 when using SSL
 PKGDIRS=`python -c "import site; p=site.getsitepackages(); print('\n'.join(str(x) for x in p))"`
