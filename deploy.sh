@@ -20,7 +20,6 @@ sudo apt-get -y install libmysqlclient-dev
 sudo mysql_secure_installation
 sudo mysqld --initialize #was mysql_install_db, may need to make an empty /var/lib/mysql directory and chown mysql:mysql with full permissions
 
-sudo pip3 install pymysql
 sudo pip3 install twisted
 
 # Install mysql-5.7 & use the root password 'bellyband'.
@@ -35,8 +34,6 @@ export PYCURL_SSL_LIBRARY=openssl
 sudo pip3 install flask
 sudo pip3 install pymysql
 sudo pip3 install numpy
-sudo pip3 install pycurl --global-option="--with-openssl"
-sudo pip3 install pycrypto
 sudo pip3 install python-dateutil
 
 # Packages needed by common ML/DSP systems that depend on the IOT Sensor Framework
@@ -65,7 +62,6 @@ do
 done
 sudo pip3 install httplib2 # may need to manually remove and then upgrade to fix a bug in httplib2 regarding verifying SSL certificates
 
-sudo pip3 install twisted
 sudo pip3 install mysqlclient
 sudo pip3 install pymysql
 sudo pip3 install service_identity
