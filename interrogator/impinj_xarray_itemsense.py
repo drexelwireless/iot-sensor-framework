@@ -34,7 +34,7 @@ class ImpinjXArray(Interrogator):
     def start_server(self):
         self.out('Starting Impinj XArray Interrogator client')
         
-        self.handler_dequeue = collections.deque()
+        self.tag_dicts_queue = queue.Queue()
         self.handler_thread = threading.Thread(
             target=self.handler_thread, args=())
         self.handler_thread.start()
@@ -48,8 +48,7 @@ class ImpinjXArray(Interrogator):
         recipe = 'IMPINJ_Fast_Location'
 
         # Get a Token
-
-        url = self._ip_address + 'authentication/v1/token/' + self._db_host
+        url = self.ip_address + '/authentication/v1/token/'
         Headers = {}
         Headers['Authorization'] = basicauth
         response = requests.put(url, headers=Headers)
@@ -57,8 +56,7 @@ class ImpinjXArray(Interrogator):
         self.tokenauth = 'Token {"token":\"' + token + '\"}'
 
         # Start a Job
-
-        url = self._ip_address + '/control/v1/jobs/start'
+        url = self.ip_address + '/control/v1/jobs/start'
         Data = {}
         Data['startDelay'] = 'PT1S'  # 1 second job start delay
         Data['facility'] = facility
@@ -71,7 +69,7 @@ class ImpinjXArray(Interrogator):
 
         self.jobId = jobId
         self.count = 0
-        self.baseurl = "http://%s/itemsense" % self.ip_address
+        self.baseurl = "http://%s/itemsense/" % self.ip_address
 
         while not self.exiting:            
             done = False
@@ -134,7 +132,7 @@ class ImpinjXArray(Interrogator):
                 elif responsejson['nextPageMarker'] is None:
                     done = True
                 
-                self.handler_dequeue.append(responsejson)
+                self.tag_dicts_queue.put(responsejson)
                 
             self.count = self.count + 1
 
@@ -142,7 +140,7 @@ class ImpinjXArray(Interrogator):
         while not self.exiting:
             responsearray = []
             
-            responsejson = self.handler_dequeue.get(block=True)
+            responsejson = self.tag_dicts_queue.get(block=True)
             responsearray.append(responsejson)
             
             # http://stackoverflow.com/questions/156360/get-all-items-from-thread-queue
@@ -154,7 +152,7 @@ class ImpinjXArray(Interrogator):
                 except queue.Empty:
                     break
                     
-            self.insert_tag(input_dicts)            
+            self.insert_tag(responsearray)            
 
     def start(self):
         self.out('XArray: start')
@@ -163,7 +161,7 @@ class ImpinjXArray(Interrogator):
     def close_server(self):
         self.exiting = True
         # Stop the Job
-        url = self._ip_address + '/control/v1/jobs/stop/' + self.jobId
+        url = self.ip_address + '/control/v1/jobs/stop/' + self.jobId
         Headers = {}
         Headers['Content-Type'] = 'application/json'
         Headers['Authorization'] = self.tokenauth
