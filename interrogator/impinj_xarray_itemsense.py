@@ -11,11 +11,14 @@ from time import sleep
 import collections
 
 class ImpinjXArray(Interrogator):
-    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0):
+    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _apiusername, _apipassword, _dispatchsleep=0):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
         self.exiting = False
         self.ip_address = _ip_address
+        
+        self.apiusername = _apiusername
+        self.apipassword = _apipassword
 
         if self.cert_path != 'NONE':
             self.http_obj = Http(ca_certs=self.cert_path)
@@ -37,7 +40,7 @@ class ImpinjXArray(Interrogator):
         self.handler_thread.start()
 
         # Create Clients and set them to connect
-        authstr = "%s:%s" % (self.db_host, self.db_password)
+        authstr = "%s:%s" % (self.apiusername, self.apipassword)
         basicenc = base64.b64encode(authstr.encode())
         basicauth = 'Basic' + basicenc.decode()
 

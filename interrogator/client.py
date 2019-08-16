@@ -18,6 +18,8 @@ def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antenna
         '\t-l <time in seconds> - length of time to sleep the dispatcher in between transmissions of data to the server, to allow new messages to queue up for efficiency: default %s\n' \
         '\t-g <device> - device to use as the interrogator (impinj, r420, xarray): default %s\n' \
         '\t-t <pop> - sets tag population (4 good for 1 tag, 16 good for 2 tags): default %s\n' \
+        '\t-u <api-username> - provides a username for API services such as the Impinj xArray\n'
+        '\t-w <api-password> - provides a password for API services such as the Impinj xArray\n'
         '\t-d - Enable debugging: default %s\n' % (ip_address, db_host, db_password,
                                                    cert_path, antennas, dispatchsleep, device, tagpop, do_debug))
     sys.exit(1)
@@ -35,9 +37,11 @@ def getopts():
     userantennas = []
     dispatchsleep = 0.5
     tagpop = 4
+    apiusername = "NONE"
+    apipassword = "NONE"
 
     # Check command line
-    optlist, list = getopt.getopt(sys.argv[1:], 'hi:o:p:dc:g:a:n:l:t:')
+    optlist, list = getopt.getopt(sys.argv[1:], 'hi:o:p:dc:g:a:n:l:t:u:w:')
 
     for opt in optlist:
         if opt[0] == '-h':
@@ -61,13 +65,17 @@ def getopts():
             dispatchsleep = float(opt[1])
         if opt[0] == '-t':
             tagpop = int(opt[1])
+        if opt[0] == '-u':
+            apiusername = opt[1]
+        if opt[0] == '-w':
+            apipassword = opt[1]
 
     if len(userantennas) > 0:
         antennas = userantennas
 
     #print ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep
 
-    return ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop
+    return ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop, apiusername, apipassword
 
 
 def print_stats(rfid):
@@ -96,7 +104,7 @@ def prog_quit(rfid, QUITFILE='quit'):
             os._exit(0)
 
 if __name__ == "__main__":
-    ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop = getopts()
+    ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop, apiusername, apipassword = getopts()
 
     if device.lower() == "impinj":
         rfid = Impinj(ip_address, db_host, db_password, cert_path,
@@ -113,7 +121,7 @@ if __name__ == "__main__":
     elif device.lower() == "xarray":
         rfid = ImpinjXarray(ip_address, db_host, db_password, cert_path,
                             do_debug, _dispatchsleep=dispatchsleep,
-                            _antennas=antennas, _tagpop=tagpop)
+                            _antennas=antennas, _tagpop=tagpop, _apiusername=apiusername, _apipassword=apipassword)
         t2 = threading.Thread(target=prog_quit, args=(rfid,))
         t2.start()
         rfid.start()
