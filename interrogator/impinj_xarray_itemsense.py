@@ -44,7 +44,6 @@ class ImpinjXArray(Interrogator):
         authstr = "%s:%s" % (self.apiusername, self.apipassword)
         basicenc = base64.b64encode(authstr.encode())
         self.basicauth = 'Basic ' + basicenc.decode()
-
         facility = 'MESS'
         recipe = 'IMPINJ_Fast_Location'
 
@@ -131,7 +130,7 @@ class ImpinjXArray(Interrogator):
                 else:
                   Data['pageMarker'] = responsejson['nextPageMarker']
                 
-                self.tag_dicts_queue.append(responsejson)
+                self.tag_dicts_queue.put(responsejson)
                 
             self.count = self.count + 1
 
@@ -182,22 +181,23 @@ class ImpinjXArray(Interrogator):
 
     def insert_tag(self, tagarray):
         input_dicts = []
-        items = tagarray[0]['items']
+        for entry in tagarray:
+          items = entry['items']
 
-        for freeform in items:
-          timestamp = freeform['lastModifiedTime']
-          epc = freeform['epc']
-          xPos = freeform["xLocation"]
-          yPos = freeform["yLocation"]
-          
-          self.out("Adding tag %s with timestamp %s and epc %s and xPosition %s and yPosition %s" % (
-              str(self.count), str(timestamp), str(epc), str(xPos), str(yPos)))
+          for freeform in items:
+            timestamp = freeform['lastModifiedTime']
+            epc = freeform['epc']
+            xPos = freeform["xLocation"]
+            yPos = freeform["yLocation"]
+            
+            self.out("Adding tag %s with timestamp %s and epc %s and xPosition %s and yPosition %s" % (
+                str(self.count), str(timestamp), str(epc), str(xPos), str(yPos)))
 
-          input_dict = dict()
-          input_dict['data'] = dict()
-          input_dict['data']['db_password'] = self.db_password
-          input_dict['data']['freeformjson'] = json.dumps(freeform)
-          input_dicts.append(input_dict)
+            input_dict = dict()
+            input_dict['data'] = dict()
+            input_dict['data']['db_password'] = self.db_password
+            input_dict['data']['freeformjson'] = json.dumps(freeform)
+            input_dicts.append(input_dict)
             
         url = self.db_host + '/api/rssi'
 
