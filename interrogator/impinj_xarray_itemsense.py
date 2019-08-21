@@ -16,6 +16,7 @@ class ImpinjXArray(Interrogator):
                               _cert_path, _debug, _dispatchsleep)
         self.exiting = False
         self.ip_address = _ip_address
+        self.baseurl = "http://%s/itemsense" % self.ip_address
         
         self.apiusername = _apiusername
         self.apipassword = _apipassword
@@ -42,24 +43,24 @@ class ImpinjXArray(Interrogator):
         # Create Clients and set them to connect
         authstr = "%s:%s" % (self.apiusername, self.apipassword)
         basicenc = base64.b64encode(authstr.encode())
-        basicauth = 'Basic' + basicenc.decode()
-
+        self.basicauth = 'Basic ' + basicenc.decode()
         facility = 'MESS'
         recipe = 'IMPINJ_Fast_Location'
 
         # Get a Token
-        url = self.ip_address + '/authentication/v1/token/'
+        url = self.baseurl + '/authentication/v1/token/' + self.apiusername
         Headers = {}
-        Headers['Authorization'] = basicauth
+        Headers['Authorization'] = self.basicauth
         response = requests.put(url, headers=Headers)
-        token = response.json()['token']
-        self.tokenauth = 'Token {"token":\"' + token + '\"}'
+        self.token = response.json()['token']
+        self.tokenauth = 'Token {"token":\"' + self.token + '\"}'
 
         # Start a Job
-        url = self.ip_address + '/control/v1/jobs/start'
+        url = self.baseurl + '/control/v1/jobs/start'
         Data = {}
         Data['startDelay'] = 'PT1S'  # 1 second job start delay
         Data['facility'] = facility
+        Data['recipeName'] = recipe
         Headers = {}
         Headers['Authorization'] = self.tokenauth
         Headers['Content-Type'] = 'application/json'
@@ -69,14 +70,13 @@ class ImpinjXArray(Interrogator):
 
         self.jobId = jobId
         self.count = 0
-        self.baseurl = "http://%s/itemsense/" % self.ip_address
 
         while not self.exiting:            
             done = False
             while (not done):
                 sleep(5)
-                url = baseurl + '/data/v1/items/show'
-                urlh = baseurl + '/data/v1/items/show/history'
+                url = self.baseurl + '/data/v1/items/show'
+                urlh = self.baseurl + '/data/v1/items/show/history'
                 Data = {}
                 Data['facility'] = facility
                 Data['jobId'] = jobId
@@ -85,52 +85,50 @@ class ImpinjXArray(Interrogator):
                 Headers['Authorization'] = self.tokenauth
                 response = requests.get(
                     url, data=json.dumps(Data), headers=Headers)
-                responseh = requests.get(
-                    urlh, data=json.dumps(Data), headers=Headers)
+                # responseh = requests.get(
+                #     urlh, data=json.dumps(Data), headers=Headers)
                 responsejson = response.json()
-                responsehjson = responseh.json()
-                if "nextPageMarker" in responsejson:
-                    Data['pageMarker'] = responsejson['nextPageMarker']
+                # responsehjson = responseh.json()
+                # self.out("==========================================================")
+                # self.out("DATA")
+                # self.out(response)
+                # self.out(response.text)
 
-                self.out("==========================================================")
-                self.out("DATA")
-                self.out(response)
-                self.out(response.text)
+                # self.out("==========================================================")
+                # self.out("timestamp\t\tepc\txLocation\tyLocation\tzLocation")
+                # t = 0
+                # for i in responsejson["items"]:
+                #     self.out(t)
+                #     t += 1
+                #     timestamp = i['lastModifiedTime']
+                #     epc = i['epc']
+                #     x = i["xLocation"]
+                #     y = i["yLocation"]
+                #     self.out("%s\t%s\t%d\t\t%d" % (timestamp, epc[-4:], x, y))
 
-                self.out("==========================================================")
-                self.out("timestamp\t\tepc\txLocation\tyLocation\tzLocation")
-                t = 0
-                for i in responsejson["items"]:
-                    self.out(t)
-                    t += 1
-                    timestamp = i['lastModifiedTime']
-                    epc = i['epc']
-                    x = i["xLocation"]
-                    y = i["yLocation"]
-                    self.out("%s\t%s\t%d\t\t%d" % (timestamp, epc[-4:], x, y))
+                # self.out("==========================================================")
 
-                self.out("==========================================================")
+                # self.out("timestamp\t\tepc\txLocation\tyLocation")
 
-                self.out("timestamp\t\tepc\txLocation\tyLocation")
+                # for i in responsehjson["history"]:
+                #     timestamp = i['observationTime']
+                #     epc = i['epc']
+                #     x = i["toX"] if i["toX"] is not None else 0
+                #     y = i["toY"] if i["toY"] is not None else 0
+                #     self.out("%s\t%s\t%d\t\t%d" % (timestamp, epc[-4:], x, y))
 
-                for i in responsehjson["history"]:
-                    timestamp = i['observationTime']
-                    epc = i['epc']
-                    x = i["toX"]
-                    y = i["toY"]
-                    self.out("%s\t%s\t%d\t\t%d" % (timestamp, epc[-4:], x, y))
+                # self.out("==========================================================")
 
-                self.out("==========================================================")
+                # self.out("HISTORY")
+                # self.out(responseh)
+                # self.out(responseh.text)
 
-                self.out("HISTORY")
-                self.out(responseh)
-                self.out(responseh.text)
-
-                responsejson = response.json()
                 if not "nextPageMarker" in responsejson:
                     done = True
                 elif responsejson['nextPageMarker'] is None:
                     done = True
+                else:
+                  Data['pageMarker'] = responsejson['nextPageMarker']
                 
                 self.tag_dicts_queue.put(responsejson)
                 
@@ -161,22 +159,32 @@ class ImpinjXArray(Interrogator):
     def close_server(self):
         self.exiting = True
         # Stop the Job
-        url = self.ip_address + '/control/v1/jobs/stop/' + self.jobId
+        url = self.baseurl + '/control/v1/jobs/stop/' + self.jobId
         Headers = {}
         Headers['Content-Type'] = 'application/json'
         Headers['Authorization'] = self.tokenauth
         response = requests.post(url, headers=Headers)
         self.out(response)
 
+        # Revoke the Token
+        url = self.baseurl + '/authentication/v1/revokeToken'
+        Headers = {}
+        Headers['Content-Type'] = 'application/json'
+        Headers['Authorization'] = self.basicauth
+        Data = {}
+        Data['token'] = self.token
+        response = requests.put(url, headers=Headers, data=json.dumps(Data))
+        print(response)
+
     def __del__(self):
         self.close_server()
 
     def insert_tag(self, tagarray):
         input_dicts = []
-        
-        for freeformjson in tagarray:
-            freeform = json.loads(freeformjson)
-            
+        for entry in tagarray:
+          items = entry['items']
+
+          for freeform in items:
             timestamp = freeform['lastModifiedTime']
             epc = freeform['epc']
             xPos = freeform["xLocation"]
@@ -188,8 +196,7 @@ class ImpinjXArray(Interrogator):
             input_dict = dict()
             input_dict['data'] = dict()
             input_dict['data']['db_password'] = self.db_password
-            input_dict['data']['freeform'] = freeform
-            
+            input_dict['data']['freeformjson'] = json.dumps(freeform)
             input_dicts.append(input_dict)
             
         url = self.db_host + '/api/rssi'

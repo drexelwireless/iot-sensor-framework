@@ -119,7 +119,7 @@ if __name__ == "__main__":
         t2.start()
         rfid.start()
     elif device.lower() == "xarray":
-        rfid = ImpinjXarray(ip_address, db_host, db_password, cert_path,
+        rfid = ImpinjXArray(ip_address, db_host, db_password, cert_path,
                             do_debug, _dispatchsleep=dispatchsleep,
                             _apiusername=apiusername, _apipassword=apipassword)
         t2 = threading.Thread(target=prog_quit, args=(rfid,))
