@@ -25,6 +25,8 @@ class ImpinjXArray(Interrogator):
             self.http_obj = Http(ca_certs=self.cert_path)
         else:
             self.http_obj = Http(disable_ssl_certificate_validation=True)
+            
+        self.timestamp = -1
 
         self.out('Initializing XArray Interrogator client')
 
@@ -184,7 +186,9 @@ class ImpinjXArray(Interrogator):
         for entry in tagarray:
           items = entry['items']
 
-          for freeform in items:
+          for freeformjson in items:
+            freeform = json.loads(freeformjson)
+            
             timestamp = freeform['lastModifiedTime']
             epc = freeform['epc']
             xPos = freeform["xLocation"]
@@ -193,10 +197,18 @@ class ImpinjXArray(Interrogator):
             self.out("Adding tag / collection %s with timestamp %s and epc %s and xPosition %s and yPosition %s" % (
                 str(self.count), str(timestamp), str(epc), str(xPos), str(yPos)))
 
+            if self.start_timestamp = -1:
+              self.start_timestamp = timestamp
+
             input_dict = dict()
             input_dict['data'] = dict()
             input_dict['data']['db_password'] = self.db_password
             input_dict['data']['freeform'] = freeform
+            input_dict['data']['relative_time'] = timestamp - self.start_timestamp
+            input_dict['data']['interrogator_time'] = timestamp            
+            
+            self.out("Input dict is: %s" % input_dict)
+            
             input_dicts.append(input_dict)
             
         url = self.db_host + '/api/rssi'
