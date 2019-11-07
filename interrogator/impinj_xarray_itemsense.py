@@ -186,9 +186,7 @@ class ImpinjXArray(Interrogator):
         for entry in tagarray:
           items = entry['items']
 
-          for freeformjson in items:
-            freeform = json.loads(freeformjson)
-            
+          for freeform in items:            
             timestamp = freeform['lastModifiedTime']
             epc = freeform['epc']
             xPos = freeform["xLocation"]
