@@ -197,7 +197,7 @@ class ImpinjXArray(Interrogator):
             self.out("Adding tag / collection %s with timestamp %s and epc %s and xPosition %s and yPosition %s" % (
                 str(self.count), str(timestamp), str(epc), str(xPos), str(yPos)))
 
-            if self.start_timestamp = -1:
+            if self.start_timestamp == -1:
               self.start_timestamp = timestamp
 
             input_dict = dict()
