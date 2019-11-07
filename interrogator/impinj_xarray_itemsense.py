@@ -202,7 +202,7 @@ class ImpinjXArray(Interrogator):
             input_dict['data'] = dict()
             input_dict['data']['db_password'] = self.db_password
             input_dict['data']['freeform'] = freeform
-            input_dict['data']['relative_time'] = timestamp - self.start_timestamp
+            input_dict['data']['relative_time'] = float(timestamp) - self.start_timestamp
             input_dict['data']['interrogator_time'] = timestamp            
             
             self.out("Input dict is: %s" % input_dict)
