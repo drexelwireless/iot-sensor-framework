@@ -65,7 +65,7 @@ class ImpinjXArray(Interrogator):
         Headers['Authorization'] = self.tokenauth
         Headers['Content-Type'] = 'application/json'
         response = requests.post(url, data=json.dumps(Data), headers=Headers)
-        jobId = response.json()['id']
+        jobId = response.json()['id'] # if id is not in response, need to stop existing running jobs
         self.out("Job ID: %s" % jobId)
 
         self.jobId = jobId
@@ -190,7 +190,7 @@ class ImpinjXArray(Interrogator):
             xPos = freeform["xLocation"]
             yPos = freeform["yLocation"]
             
-            self.out("Adding tag %s with timestamp %s and epc %s and xPosition %s and yPosition %s" % (
+            self.out("Adding tag / collection %s with timestamp %s and epc %s and xPosition %s and yPosition %s" % (
                 str(self.count), str(timestamp), str(epc), str(xPos), str(yPos)))
 
             input_dict = dict()
