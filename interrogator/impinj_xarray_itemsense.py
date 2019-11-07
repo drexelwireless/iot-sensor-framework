@@ -196,7 +196,7 @@ class ImpinjXArray(Interrogator):
             input_dict = dict()
             input_dict['data'] = dict()
             input_dict['data']['db_password'] = self.db_password
-            input_dict['data']['freeformjson'] = json.dumps(freeform)
+            input_dict['data']['freeform'] = json.dumps(freeform)
             input_dicts.append(input_dict)
             
         url = self.db_host + '/api/rssi'
