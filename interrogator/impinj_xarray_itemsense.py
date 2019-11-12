@@ -192,13 +192,14 @@ class ImpinjXArray(Interrogator):
             epc = freeform['epc']
             xPos = freeform["xLocation"]
             yPos = freeform["yLocation"]
+            zPos = freeform["zLocation"]
             
             # convert the timestamp from a string to numeric
             timestampdt = dateutil.parser.parse(timestamp)
-            timestampmicro = timestampdt.microsecond
+            timestampmicro = timestampdt * 1000
             
-            self.out("Adding tag / collection %s with timestamp %s and epc %s and xPosition %s and yPosition %s" % (
-                str(self.count), str(timestampmicro), str(epc), str(xPos), str(yPos)))
+            self.out("Adding tag / collection %s with timestamp %s and epc %s and xPosition %s and yPosition %s and zPosition %s" % (
+                str(self.count), str(timestampmicro), str(epc), str(xPos), str(yPos), str(zPos)))
 
             if self.start_timestamp == -1:
               self.start_timestamp = float(timestampmicro)
