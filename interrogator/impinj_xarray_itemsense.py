@@ -202,13 +202,13 @@ class ImpinjXArray(Interrogator):
                 str(self.count), str(timestampmicro), str(epc), str(xPos), str(yPos), str(zPos)))
 
             if self.start_timestamp == -1:
-              self.start_timestamp = float(timestampmicro)
+              self.start_timestamp = int(timestampmicro)
 
             input_dict = dict()
             input_dict['data'] = dict()
             input_dict['data']['db_password'] = self.db_password
             input_dict['data']['freeform'] = freeform
-            input_dict['data']['relative_time'] = float(timestampmicro) - self.start_timestamp
+            input_dict['data']['relative_time'] = int(timestampmicro) - self.start_timestamp
             input_dict['data']['interrogator_time'] = timestampmicro            
             
             self.out("Input dict is: %s" % input_dict)
