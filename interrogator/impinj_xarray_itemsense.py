@@ -9,6 +9,7 @@ import os
 import queue
 from time import sleep
 import collections
+import dateutil.parser
 
 class ImpinjXArray(Interrogator):
     def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _apiusername, _apipassword, _dispatchsleep=0):
@@ -192,18 +193,22 @@ class ImpinjXArray(Interrogator):
             xPos = freeform["xLocation"]
             yPos = freeform["yLocation"]
             
+            # convert the timestamp from a string to numeric
+            timestampdt = dateutil.parser.parse(timestamp)
+            timestampmicro = timestampdt.microsecond
+            
             self.out("Adding tag / collection %s with timestamp %s and epc %s and xPosition %s and yPosition %s" % (
-                str(self.count), str(timestamp), str(epc), str(xPos), str(yPos)))
+                str(self.count), str(timestampmicro), str(epc), str(xPos), str(yPos)))
 
             if self.start_timestamp == -1:
-              self.start_timestamp = timestamp
+              self.start_timestamp = float(timestampmicro)
 
             input_dict = dict()
             input_dict['data'] = dict()
             input_dict['data']['db_password'] = self.db_password
             input_dict['data']['freeform'] = freeform
-            input_dict['data']['relative_time'] = float(timestamp) - self.start_timestamp
-            input_dict['data']['interrogator_time'] = timestamp            
+            input_dict['data']['relative_time'] = float(timestampmicro) - self.start_timestamp
+            input_dict['data']['interrogator_time'] = timestampmicro            
             
             self.out("Input dict is: %s" % input_dict)
             
