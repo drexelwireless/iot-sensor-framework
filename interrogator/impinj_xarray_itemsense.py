@@ -27,7 +27,7 @@ class ImpinjXArray(Interrogator):
         else:
             self.http_obj = Http(disable_ssl_certificate_validation=True)
             
-        self.timestamp = -1
+        self.start_timestamp = -1
 
         self.out('Initializing XArray Interrogator client')
 
