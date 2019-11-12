@@ -184,6 +184,23 @@ class ImpinjXArray(Interrogator):
 
     def insert_tag(self, tagarray):
         input_dicts = []
+        
+        if self.start_timestamp == -1:
+          min_timestamp = -1
+          for entry in tagarray:
+            items = entry['items']
+
+            for freeform in items:
+              # convert the timestamp from a string to numeric
+              timestamp = freeform['lastModifiedTime']
+              timestampdt = dateutil.parser.parse(timestamp)
+              timestampmicro = timestampdt.timestamp() * 1000
+              
+              if int(timestampmicro) < min_timestamp or min_timestamp == -1:
+                min_timestamp = timestampmicro
+                
+          self.start_timestamp = int(min_timestamp)
+        
         for entry in tagarray:
           items = entry['items']
 
@@ -200,9 +217,6 @@ class ImpinjXArray(Interrogator):
             
             self.out("Adding tag / collection %s with timestamp %s and epc %s and xPosition %s and yPosition %s and zPosition %s" % (
                 str(self.count), str(timestampmicro), str(epc), str(xPos), str(yPos), str(zPos)))
-
-            if self.start_timestamp == -1:
-              self.start_timestamp = int(timestampmicro)
 
             input_dict = dict()
             input_dict['data'] = dict()
