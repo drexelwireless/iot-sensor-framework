@@ -196,7 +196,7 @@ class ImpinjXArray(Interrogator):
             
             # convert the timestamp from a string to numeric
             timestampdt = dateutil.parser.parse(timestamp)
-            timestampmicro = timestampdt * 1000
+            timestampmicro = timestampdt.timestamp() * 1000
             
             self.out("Adding tag / collection %s with timestamp %s and epc %s and xPosition %s and yPosition %s and zPosition %s" % (
                 str(self.count), str(timestampmicro), str(epc), str(xPos), str(yPos), str(zPos)))
