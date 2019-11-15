@@ -11,6 +11,7 @@ sudo apt-get update
 sudo apt-get -y install python3.6
 sudo apt-get -y install python-pip
 sudo apt-get -y install python3-pip
+sudo python3 -m pip uninstall pip && sudo apt install -y python3-pip --reinstall
 sudo apt-get -y install python-dev
 sudo apt-get -y install python3-dev
 pip3 install --upgrade pip
@@ -20,7 +21,7 @@ sudo apt-get -y install libmysqlclient-dev
 sudo mysql_secure_installation
 sudo mysqld --initialize #was mysql_install_db, may need to make an empty /var/lib/mysql directory and chown mysql:mysql with full permissions
 
-sudo pip3 install twisted
+pip3 --user install twisted
 
 # Install mysql-5.7 & use the root password 'bellyband'.
 echo 'mysql-server mysql-server/root_password password bellyband' | debconf-set-selections
@@ -31,26 +32,26 @@ sudo apt-get -y install libffi-dev
 sudo apt-get -y install libssl-dev
 export PYCURL_SSL_LIBRARY=openssl
 
-sudo pip3 install flask
-sudo pip3 install numpy
-sudo pip3 install python-dateutil
+pip3 --user install flask
+pip3 --user install numpy
+pip3 --user install python-dateutil
 
 # Packages needed by common ML/DSP systems that depend on the IOT Sensor Framework
-sudo pip3 install pandas
-sudo pip3 install filterpy
-sudo pip3 install werkzeug
-#sudo pip3 install hashlib
-sudo pip3 install sklearn
-sudo pip3 install pykalman
-sudo pip3 install scikit-image
-sudo pip3 install peakutils
-sudo pip3 install hmmlearn
-sudo pip3 install statsmodels 
+pip3 --user install pandas
+pip3 --user install filterpy
+pip3 --user install werkzeug
+#pip3 --user install hashlib
+pip3 --user install sklearn
+pip3 --user install pykalman
+pip3 --user install scikit-image
+pip3 --user install peakutils
+pip3 --user install hmmlearn
+pip3 --user install statsmodels 
 
 sudo apt-get install libmysqlclient-dev
-#sudo pip3 install MySQL-python # may be incompatible with Python3, switch to pymysql instead.
-sudo pip3 install pycurl --global-option="--with-openssl"
-sudo pip3 install pycrypto
+#pip3 --user install MySQL-python # may be incompatible with Python3, switch to pymysql instead.
+pip3 --user install pycurl --global-option="--with-openssl"
+pip3 --user install pycrypto
 
 #httplib2 default installation is incompatible with Python 3 when using SSL
 PKGDIRS=`python -c "import site; p=site.getsitepackages(); print('\n'.join(str(x) for x in p))"`
@@ -58,22 +59,22 @@ for P in PKGDIRS
 do
 	find $P -iname '*httplib2*' -exec sudo mv {} /tmp
 done
-sudo pip3 install httplib2 # may need to manually remove and then upgrade to fix a bug in httplib2 regarding verifying SSL certificates
+pip3 --user install httplib2 # may need to manually remove and then upgrade to fix a bug in httplib2 regarding verifying SSL certificates
 
-sudo pip3 install mysqlclient
-sudo pip3 install pymysql
-sudo pip3 install service_identity
+pip3 --user install mysqlclient
+pip3 --user install pymysql
+pip3 --user install service_identity
 sudo apt-get install python-matplotlib
 sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
-sudo pip3 install scipy
-sudo pip3 install sllurp
-sudo pip3 install tinymongo
+pip3 --user install scipy
+pip3 --user install sllurp
+pip3 --user install tinymongo
 
 # for client packages
-sudo pip3 install scikit-learn
+pip3 --user install scikit-learn
 sudo apt-get install libfreetype6-dev libpng3
-sudo pip3 install --upgrade pip
-sudo pip3 install --upgrade filterpy # this upgrades numpy / scipy stack
+pip3 --user install --upgrade pip
+pip3 --user install --upgrade filterpy # this upgrades numpy / scipy stack
 
 sudo apt-get install libgsl0-dev
 sudo apt-get install libgsl0ldbl
