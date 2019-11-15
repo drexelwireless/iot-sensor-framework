@@ -50,7 +50,7 @@ pip3 install --user pycrypto
 PKGDIRS=`python -c "import site; p=site.getsitepackages(); print('\n'.join(str(x) for x in p))"`
 for P in PKGDIRS
 do
-	find $P -iname '*httplib2*' -exec sudo mv {} /tmp
+	find $P -iname '*httplib2*' -exec sudo mv '{}' /tmp \;
 done
 pip3 install --user httplib2 # may need to manually remove and then upgrade to fix a bug in httplib2 regarding verifying SSL certificates
 
@@ -72,15 +72,17 @@ pip3 install --user --upgrade filterpy # this upgrades numpy / scipy stack
 sudo apt-get install libgsl0-dev
 sudo apt-get install libgsl0ldbl
 
+pip3 install --user 2to3
+
 #sudo pip install git+https://github.com/ajmendez/PyMix.git
 pushd /tmp
 git clone https://github.com/ajmendez/PyMix.git
 touch PyMix/README.rst
 sed 's/from distutils.core import setup, Extension,DistutilsExecError/#from distutils.core import setup, Extension,DistutilsExecError\nfrom distutils.core import setup, Extension' PyMix/setup.py
 sed "s/numpypath =  prefix + '\/lib\/python' +pyvs + '\/site-packages\/numpy\/core\/include\/numpy'  # path to arrayobject.h/#numpypath =  prefix + '\/lib\/python' +pyvs + '\/site-packages\/numpy\/core\/include\/numpy'  # path to arrayobject.h\n    try:\n        import numpy\n        numpypath = os.path.join(numpy.get_include(), 'numpy')\n    except ImportError:\n        raise ImportError("Unable to import Numpy, which is required by PyMix")\n/g" PyMix/setup.py
-sed -i 's/^as =/dummy =/g' PyMix/AminoAcidPropertyPrior.py
+sed -i 's/^as =/dummy =/g' PyMix/pymix/AminoAcidPropertyPrior.py
 pushd PyMix
 find . -iname '*.py' -exec 2to3 -w {} \;
-python3 setup.py install
+python3 setup.py install --user
 popd
 popd
