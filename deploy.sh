@@ -48,7 +48,7 @@ pip3 install --user pycrypto
 
 #httplib2 default installation is incompatible with Python 3 when using SSL
 PKGDIRS=`python -c "import site; p=site.getsitepackages(); print('\n'.join(str(x) for x in p))"`
-for P in PKGDIRS
+for P in "$PKGDIRS"
 do
 	find $P -iname '*httplib2*' -exec sudo mv '{}' /tmp \;
 done
@@ -82,7 +82,7 @@ sed 's/from distutils.core import setup, Extension,DistutilsExecError/#from dist
 sed "s/numpypath =  prefix + '\/lib\/python' +pyvs + '\/site-packages\/numpy\/core\/include\/numpy'  # path to arrayobject.h/#numpypath =  prefix + '\/lib\/python' +pyvs + '\/site-packages\/numpy\/core\/include\/numpy'  # path to arrayobject.h\n    try:\n        import numpy\n        numpypath = os.path.join(numpy.get_include(), 'numpy')\n    except ImportError:\n        raise ImportError("Unable to import Numpy, which is required by PyMix")\n/g" PyMix/setup.py
 sed -i 's/^as =/dummy =/g' PyMix/pymix/AminoAcidPropertyPrior.py
 pushd PyMix
-find . -iname '*.py' -exec 2to3 -w {} \;
+find . -iname '*.py' -exec 2to3 -w '{}' \;
 python3 setup.py install --user
 popd
 popd
