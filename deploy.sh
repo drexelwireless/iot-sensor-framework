@@ -47,7 +47,7 @@ pip3 install --user pycurl --global-option="--with-openssl"
 pip3 install --user pycrypto
 
 #httplib2 default installation is incompatible with Python 3 when using SSL
-PKGDIRS=`python -c "import site; p=site.getsitepackages(); print('\n'.join(str(x) for x in p))"`
+PKGDIRS=`python3 -c "import site; p=site.getsitepackages(); print('\n'.join(str(x) for x in p))"`
 for P in "$PKGDIRS"
 do
 	find $P -iname '*httplib2*' -exec sudo mv '{}' /tmp \;
