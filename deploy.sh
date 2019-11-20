@@ -70,7 +70,7 @@ pip3 install --user --upgrade pip
 pip3 install --user --upgrade filterpy # this upgrades numpy / scipy stack
 
 sudo apt-get install libgsl0-dev
-sudo apt-get install libgsl0ldbl
+#sudo apt-get install libgsl0ldbl
 
 pip3 install --user 2to3
 
