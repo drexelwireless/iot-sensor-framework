@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, abort, make_response, request
+from flask_cors import CORS
 
 # Data Members
 ws_database = None
@@ -8,6 +9,7 @@ ws_flask_port = None
 ws_name = None
 ws_do_debug = False
 app = Flask('Webserver')
+CORS(app)
 
 # call manually with abort(404)
 @app.errorhandler(404)
