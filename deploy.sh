@@ -74,6 +74,9 @@ sudo apt-get install libgsl0-dev
 
 pip3 install --user 2to3
 
+# enables CORS with Flask for API calls
+pip3 install --user flask-cors
+
 #sudo pip install git+https://github.com/ajmendez/PyMix.git
 pushd /tmp
 git clone https://github.com/ajmendez/PyMix.git
