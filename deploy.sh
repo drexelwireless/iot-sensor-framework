@@ -20,6 +20,8 @@ pip3 install --user twisted
 echo 'mysql-server mysql-server/root_password password bellyband' | debconf-set-selections
 echo 'mysql-server mysql-server/root_password_again password bellyband' | debconf-set-selections
 
+sudo python3 -m pip uninstall pip && sudo apt install python3-pip --reinstall
+
 sudo apt-get -y install libcurl4-openssl-dev
 sudo apt-get -y install libffi-dev
 sudo apt-get -y install libssl-dev
