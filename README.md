@@ -163,5 +163,5 @@ non-whitespace style changes.
 
 ## License
 Copyright 2014 William M. Mongan
-wmm24@cs.drexel.edu
+billmongan@gmail.com
 See license for license information 
