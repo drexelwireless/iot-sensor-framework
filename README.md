@@ -50,6 +50,7 @@ Navigate to `database/`:
 Navigate to `interrogator/` and run either of the following:
 * `client_r1000.sh` to use the Impinj Speedway R1000 RFID Reader
 * `client_r420.sh` to use Impinj Speedway R420 RFID Reader
+* `client_xarray.sh` to use Impinj xArray cluster
 
 #### Shutdown
 1. Create a file called 'quit' in the directory running the server to terminate the web server.
