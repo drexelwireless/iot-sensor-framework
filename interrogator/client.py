@@ -6,7 +6,7 @@ import sys
 import os
 import time
 
-def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop):
+def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop, recipe, facility):
     print('%s [<options>]' % sys.argv[0])
     print('where <options> are:\n' \
         '\t-h - show this help message\n' \
@@ -18,10 +18,12 @@ def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antenna
         '\t-l <time in seconds> - length of time to sleep the dispatcher in between transmissions of data to the server, to allow new messages to queue up for efficiency: default %s\n' \
         '\t-g <device> - device to use as the interrogator (impinj, r420, xarray): default %s\n' \
         '\t-t <pop> - sets tag population (4 good for 1 tag, 16 good for 2 tags): default %s\n' \
-        '\t-u <api-username> - provides a username for API services such as the Impinj xArray\n'
-        '\t-w <api-password> - provides a password for API services such as the Impinj xArray\n'
+        '\t-u <api-username> - provides a username for API services such as the Impinj xArray\n' \
+        '\t-w <api-password> - provides a password for API services such as the Impinj xArray\n' \
+        '\t-r <xarray-recipe> - provides a Recipe name for ItemSense if using the Impinj xArray: default %s\n' \
+        '\t-f <xarray-facility> - provides a Facility name for ItemSense if using the Impinj xArray: default %s\n' \
         '\t-d - Enable debugging: default %s\n' % (ip_address, db_host, db_password,
-                                                   cert_path, antennas, dispatchsleep, device, tagpop, do_debug))
+                                                   cert_path, antennas, dispatchsleep, device, tagpop, recipe, facility, do_debug))
     sys.exit(1)
 
 
@@ -39,14 +41,16 @@ def getopts():
     tagpop = 4
     apiusername = "NONE"
     apipassword = "NONE"
+    recipe = "IMPINJ_Fast_Location"
+    facility = "MESS"
 
     # Check command line
-    optlist, list = getopt.getopt(sys.argv[1:], 'hi:o:p:dc:g:a:n:l:t:u:w:')
+    optlist, list = getopt.getopt(sys.argv[1:], 'hi:o:p:dc:g:a:n:l:t:u:w:r:f:')
 
     for opt in optlist:
         if opt[0] == '-h':
             usage(ip_address, db_host, db_password, cert_path, do_debug,
-                  device, antennas, dispatchsleep, tagpop)
+                  device, antennas, dispatchsleep, tagpop, recipe, facility)
         if opt[0] == '-i':
             ip_address = opt[1]
         if opt[0] == '-o':
@@ -69,13 +73,17 @@ def getopts():
             apiusername = opt[1]
         if opt[0] == '-w':
             apipassword = opt[1]
+        if opt[0] == '-r':
+            recipe = opt[1]
+        if opt[0] == '-f':
+            facility = opt[1]            
 
     if len(userantennas) > 0:
         antennas = userantennas
 
     #print ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep
 
-    return ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop, apiusername, apipassword
+    return ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop, apiusername, apipassword, recipe, facility
 
 
 def print_stats(rfid):
@@ -104,7 +112,7 @@ def prog_quit(rfid, QUITFILE='quit'):
             os._exit(0)
 
 if __name__ == "__main__":
-    ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop, apiusername, apipassword = getopts()
+    ip_address, db_host, db_password, cert_path, do_debug, device, antennas, dispatchsleep, tagpop, apiusername, apipassword, recipe, facility = getopts()
 
     if device.lower() == "impinj":
         rfid = Impinj(ip_address, db_host, db_password, cert_path,
@@ -121,7 +129,7 @@ if __name__ == "__main__":
     elif device.lower() == "xarray":
         rfid = ImpinjXArray(ip_address, db_host, db_password, cert_path,
                             do_debug, _dispatchsleep=dispatchsleep,
-                            _apiusername=apiusername, _apipassword=apipassword)
+                            _apiusername=apiusername, _apipassword=apipassword, _recipe=recipe, _facility=facility)
         t2 = threading.Thread(target=prog_quit, args=(rfid,))
         t2.start()
         rfid.start()

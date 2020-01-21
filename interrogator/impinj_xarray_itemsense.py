@@ -12,7 +12,7 @@ import collections
 import dateutil.parser
 
 class ImpinjXArray(Interrogator):
-    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _apiusername, _apipassword, _dispatchsleep=0):
+    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _apiusername, _apipassword, _dispatchsleep=0, _recipe='IMPINJ_Fast_Location', _facility='MESS'):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
         self.exiting = False
@@ -28,6 +28,9 @@ class ImpinjXArray(Interrogator):
             self.http_obj = Http(disable_ssl_certificate_validation=True)
             
         self.start_timestamp = -1
+        
+        self.recipe = _recipe
+        self.facility = _facility
 
         self.out('Initializing XArray Interrogator client')
 
@@ -47,8 +50,8 @@ class ImpinjXArray(Interrogator):
         authstr = "%s:%s" % (self.apiusername, self.apipassword)
         basicenc = base64.b64encode(authstr.encode())
         self.basicauth = 'Basic ' + basicenc.decode()
-        facility = 'MESS'
-        recipe = 'IMPINJ_Fast_Location'
+        facility = self.facility #'MESS'
+        recipe = self.recipe #'IMPINJ_Fast_Location'
 
         # Get a Token
         url = self.baseurl + '/authentication/v1/token/' + self.apiusername

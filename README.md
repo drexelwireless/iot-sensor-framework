@@ -52,6 +52,10 @@ Navigate to `interrogator/` and run either of the following:
 * `client_r420.sh` to use Impinj Speedway R420 RFID Reader
 * `client_xarray.sh` to use Impinj xArray cluster
 
+One of the parameters passed to these scripts is the IP address of the Impinj device.  You will want to supply the correct IP address or network name for the device.  In the case of the xArray, the IP address of the ItemSense server should be given; this server, in turn, communicates with the xArray devices specified in your Job.  The default facility name is MESS and the default job recipe name is IMPINJ_Fast_Location.  The recipe should be configured to use the xArray interrogators in use.  The username and password to ItemSense are also provided as parameters from the xarray script.
+
+You can see the different configuration parameters used or eligible for use through the client scripts by entering: `python client.py -h`
+
 #### Shutdown
 1. Create a file called 'quit' in the directory running the server to terminate the web server.
 2. Create a file called 'quit' in the directory running the interrogator to terminate the interrogator.
