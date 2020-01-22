@@ -71,7 +71,35 @@ class ImpinjXArray(Interrogator):
         Headers['Authorization'] = self.tokenauth
         Headers['Content-Type'] = 'application/json'
         response = requests.post(url, data=json.dumps(Data), headers=Headers)
-        jobId = response.json()['id'] # if id is not in response, need to stop existing running jobs
+        
+        # Job start will fail if there is already a running job; cycle through our jobs and end those RUNNING jobs with a facility and recipe name that match ours; note that if there is another RUNNING job from another facility or recipe, this will continue to fail, but it seems better not to stop someone else's job
+        if not ('id' in response.json()): # if id is not in response, need to stop existing running jobs
+            # Stop Running Jobs, then Re-Start the Job
+            url = self.baseurl + '/control/v1/jobs/show'
+            Headers = {}
+            Headers['Authorization'] = self.tokenauth
+            Headers['Content-Type'] = 'application/json'
+            response = requests.get(url, headers=Headers)
+            
+            for j in response.json():
+                if j['job']['facility'].lower() == facility.lower() and j['job']['recipeName'].lower() == recipe.lower():
+                    if j['status'].lower() == 'running':
+                        url = self.baseurl + '/control/v1/jobs/stop/' + j['id']
+                        Headers = {}
+                        Headers['Content-Type'] = 'application/json'
+                        Headers['Authorization'] = self.tokenauth
+                        response = requests.post(url, headers=Headers)                    
+            # Re-Start the Job
+            url = self.baseurl + '/control/v1/jobs/start'
+            Data = {}
+            Data['startDelay'] = 'PT1S'  # 1 second job start delay
+            Data['facility'] = facility
+            Data['recipeName'] = recipe
+            Headers = {}
+            Headers['Authorization'] = self.tokenauth
+            Headers['Content-Type'] = 'application/json'
+            response = requests.post(url, data=json.dumps(Data), headers=Headers)            
+        jobId = response.json()['id'] # This will fail if the job did not start successfully, could handle more gracefully...
         self.out("Job ID: %s" % jobId)
 
         self.jobId = jobId
