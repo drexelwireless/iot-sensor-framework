@@ -42,10 +42,9 @@ sudo service mysql start
 ```
 ###### Web Server
 Navigate to `database/`:
-* Run `./server_mysql.sh` (for use with the interrogator and MySQL) or
-`python3 server.py -d -e 0.75` (for a SQLite instance when running processing modules)
+* `python3 server.py -d -e 0.75` (for a SQLite instance when running processing modules)
+    * Other servers can be run via parameters to `server.py`, for example, `python3 server.py -d -m -s dbuser -w dbpass -b localhost -e 0.75` will start a MySQL instance
 	* Run `service mysql start` as root if using MySQL and starting the MySQL server for the first time, and `destroy_and_initialize.sh` can be used to clear the database and instantiate the tables prior to use
-    * Other servers can be run via parameters to `server.py`, for example, `python3 server.py -d -m -s dbuser -w dbpass -b localhost -e 0.75`
 
 ###### IoT Sensor Device, i.e., RFID Interrogator
 Navigate to `interrogator/` and run either of the following:
