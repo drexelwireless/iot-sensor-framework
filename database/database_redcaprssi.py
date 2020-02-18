@@ -15,7 +15,7 @@ import io
 
 class REDCapRSSIDatabase(Database):
     def __init__(self, crypto, db_path='https://localhost', token='', dispatchsleep=0):
-        Database.__init__(self, crypto, db_path=db_path, flush=False)
+        Database.__init__(self, crypto, db_path=db_path)
         self.token = token
         self.insertion_queue = queue.Queue()
         self.dispatcher_thread = threading.Thread(
