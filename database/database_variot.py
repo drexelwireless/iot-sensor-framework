@@ -14,7 +14,7 @@ import io
 
 
 class VarIOTDatabase(Database):
-    def __init__(self, crypto, db_path='http://10.248.101.200:5000', token='', device='0000000000', dispatchsleep=0):
+    def __init__(self, crypto, db_path='https://variot.ece.drexel.edu', token='', device='0000000000', dispatchsleep=0):
         Database.__init__(self, crypto, db_path=db_path)
         self.token = token
         self.insertion_queue = queue.Queue()
