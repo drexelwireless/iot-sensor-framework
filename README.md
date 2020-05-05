@@ -1,3 +1,5 @@
+[![v1.0 Release DOI, 5/5/2020](https://zenodo.org/badge/DOI/10.5281/zenodo.3786933.svg)](https://doi.org/10.5281/zenodo.3786933)
+
 # IoT Data Collection and Storage Software
 
 This software suite contains scripts to collect and store IoT sensor data, such as RFID tag information using an Impinj Speedway RFID reader.
