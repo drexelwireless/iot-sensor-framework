@@ -6,7 +6,7 @@
 #
 # Copyright (C) 2009 Rodolfo Giometti <giometti@linux.it>
 # Copyright (C) 2009 CAEN RFID <support.rfid@caen.it>
-# Copyright (C) 2013 William M. Mongan <wmm24@cs.drexel.edu>
+# Copyright (C) 2013 William M. Mongan <billmongan@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
