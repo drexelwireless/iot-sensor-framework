@@ -1,4 +1,4 @@
-[![v1.0 Release DOI, 5/5/2020](https://zenodo.org/badge/DOI/10.5281/zenodo.3786933.svg)](https://doi.org/10.5281/zenodo.3786933)
+[![v1.0 Release DOI, 5/5/2020](https://zenodo.org/badge/DOI/10.5281/zenodo.3786932.svg)](https://doi.org/10.5281/zenodo.3786932)
 
 # IoT Data Collection and Storage Software
 
