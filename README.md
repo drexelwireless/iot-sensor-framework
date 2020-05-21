@@ -70,7 +70,7 @@ However, because it is a disk-based database, it is not suitable for real-time d
 Therefore, if an interrogator is to be invoked, it is recommended to use another 
 database engine such as MySQL.  The `-m` parameter can be passed to `server.py` 
 to specify a MySQL database engine (with additional parameters 
-`\texttt{-s <mysql user name> -w <mysql password> -b <mysql server IP>` to configure it).  
+`-s <mysql user name> -w <mysql password> -b <mysql server IP>` to configure it).  
 Similarly, the `-o` parameter can be passed to specify a MongoDB database (with 
 additional parameter `-b <database directory>` to configure it).
 
@@ -134,7 +134,7 @@ we ensure that the IV and password are unique on each AES encryption.
 | ﻿Service Endpoint | Method | Description | Parameters | Return Body |
 |--------------------------------|--------|------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
 | /api/iot/maxtime | GET | Obtain the maximum relative timestamp in the database | None | {"data": {"max_relative_timestamp": 500 }} |
-| /api/iot/<starttime>/<endtime> | POST | Retrieve data between <starttime> and <endtime> timestamps | { "data": { "db_password": 'str'} } | {"data": [ {"id": 0, "absolute_timestamp": "5/13/2020 3:32 PM", relative_timestamp: 500, interrogator_timestamp: 10500, freeform: "..."} ]} |
+| /api/iot/\<starttime\>/\<endtime\> | POST | Retrieve data between \<starttime\> and \<endtime\> timestamps | { "data": { "db_password": 'str'} } | {"data": [ {"id": 0, "absolute_timestamp": "5/13/2020 3:32 PM", relative_timestamp: 500, interrogator_timestamp: 10500, freeform: "..."} ]} |
 | /api/iot/seconds/<n> | POST | Retrieve data from the last <n> seconds | { "data": { "db_password": 'str'} } | {"data": [ {"id": 0, "absolute_timestamp": "5/13/2020 3:32 PM", relative_timestamp: 500, interrogator_timestamp: 10500, freeform: "..."} ]} |
 | /api/iot | PUT | Append data to the database | { "data": { "db_password": "str", "relative_time": 500, "interrogator_time": "3/18/2014 10:59:19.123456 AM", "freeform": "..."} } | HTTP 201 |
 | /api/audit | GET | Retrieve the HIPAA audit log | None | {"data": [{"id":0, "absolute_timestamp": "5/13/2020 3:32 PM", "log": "…"}]} |
