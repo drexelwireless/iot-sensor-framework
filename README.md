@@ -26,6 +26,119 @@ This package assumes an installation of python3 and pip3.
 openssl req -newkey rsa:2048 -nodes -keyout key.key -x509 -days 365 -out key.crt
 ```
 
+### System Architecture
+#### Interrogator Drivers
+The `Interrogator` is implemented by a client driver *i.e.*, the 
+`ImpinjR420` class), which implements the `start()` method.  Typically, this 
+method creates two threads: a `Producer` thread which collects interrogated data from 
+the device and appends it to a queue, and a `Consumer` thread, 
+which awaits data on the 
+queue and transmits it to the server via a RESTful network call at the 
+specified "dispatch" interval.  This is known as the Producer-Consumer 
+pattern; this approach separates the 
+high-latency network or disk operations from the interrogation functionality, so that the 
+interrogator may continue to produce data while collected records are stored.
+
+Once the queue and Producer/Consumer threads are initialized, the driver connects to the
+device or instantiates a library 
+to handle the physical-layer communications if one 
+is available.  As tags are received, they are inserted into the queue.  No additional 
+processing takes place, so that latency between interrogations is minimized.  The consumer
+thread iteratively polls the queue for new data, collects them into an array, and initiates
+a RESTful web service POST call to the framework database server to store them.  The interrogation client can be invoked as follows: 
+
+`python3 client.py -i <interrogator IP address> -p <data encryption/decryption password> -g r420 -a <antenna number(s), separated by comma> -l <dispatch sleep time in seconds or fractions of a second>}`
+
+where `r420` specifies the device driver to instnatiate (*i.e.*, `r420` for an Impinj R420, `impinj` for an Impinj R1000, or `xarray` for an Impinj XArray R680; these options are not limited to Impinj devices nor to RFID interrogators).
+
+#### Database Layer
+The `Server` class instantiates the database driver and the web server endpoints that 
+receive data from the interrogator and pass it to the database interface.  
+
+The database server is invoked via 
+`python3 server.py -e <dispatch sleep time in seconds or fractions of a second>}`  
+
+A test SSL certificate and encryption key are provided but can and should be 
+generated for each deployment.  By default, the database uses a Sqlite database called 
+`database.db` (The database filename can be specified by passing the 
+`-b <database filename>` parameter to `server.py`.
+  
+If this file does not exist, it will be created; 
+otherwise, it is appended to.  Sqlite is useful because the databases are portable; we have saved 
+several years of data collected in a repository for future experimentation and repeated analysis.  
+However, because it is a disk-based database, it is not suitable for real-time data collection.  
+Therefore, if an interrogator is to be invoked, it is recommended to use another 
+database engine such as MySQL.  The `-m` parameter can be passed to `server.py` 
+to specify a MySQL database engine (with additional parameters 
+`\texttt{-s <mysql user name> -w <mysql password> -b <mysql server IP>` to configure it).  
+Similarly, the `-o` parameter can be passed to specify a MongoDB database (with 
+additional parameter `-b <database directory>` to configure it).
+
+The server is invoked first, optionally followed by an interrogator driver to generate data,
+and also optionally followed by a processing module to visualize or process the data.  
+If an interrogator driver is not 
+invoked, an existing database can be opened by the server and processed as if it was 
+in real-time by a visualizer or processing node.
+
+#### RESTful Communications Layer
+The webserver is invoked automatically by the server, and is a Python Flask RESTful service 
+provider.  It provides web service endpoints to both retrieve and store data, as summarized
+in the Table below.  Parameters and body responses are provided as JSON 
+objects, with an outer object called \texttt{data} that encapsulates either an object or 
+an array of objects.  A data record takes the form shown in the Listing below.
+
+``
+"data": [
+    {
+        "relative_timestamp": 500,
+        "absolute_time": 1/1/2016 23:59:59.12345,
+        "interrogator_timestamp": 10500,
+        "id": 0,
+        "freeform": '{
+            "rssi": -38,
+            "doppler": 0,
+            "phase": 0,
+            "epc96": "2015abc",
+            "antenna": 1,
+            "channelIndex": 9
+        }'
+    },
+    ...
+]
+``
+
+The `interrogator_timestamp` is a numeric timestamp in microseconds or milliseconds, 
+which is converted by the interrogator driver to an `interrogator_timestamp` prior 
+to sending to the webserver.  This is done by subtracting the first observed 
+`interrogator_timestamp` from the current one to obtain a time value that starts
+with 0.  An `absolute\_timestamp` is provided which is the datetime that the 
+packet was received by the interrogator, or by the interrogator driver if the field 
+is omitted by the device.  An `id` serial number is provided, and, finally, a 
+`freeform` field.  
+
+This `freeform` field is a string that is typically populated with a JSON body.  
+However, no restriction is placed on its format, so that other data types are supported (for 
+example, a Base-64 encoded image).  For our purposes, a JSON object is used to represent
+an RFID interrogation record, as shown the example JSON listing.  
+The contents of the `freeform` field are encrypted by the server prior 
+to storage in the database, and decrypted when served back to a client if the correct 
+password is provided with the request.  The password is not stored on the server; rather, 
+it is used as the AES key to decrypt the value on each request.
+
+The `interrogator_timestamp` and the supplied password parameter are used to 
+set the initialization vector (IV) and password of the encryption module.  The framework
+uses AES in Counter Mode (CTR) provided by the PyCrypto library.  
+By re-initializing the IV with the most recent timestamp, 
+we ensure that the IV and password are unique on each AES encryption.  
+
+| ﻿Service Endpoint | Method | Description | Parameters | Return Body |
+|--------------------------------|--------|------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| /api/iot/maxtime | GET | Obtain the maximum relative timestamp in the database | None | {"data": {"max_relative_timestamp": 500 }} |
+| /api/iot/<starttime>/<endtime> | POST | Retrieve data between <starttime> and <endtime> timestamps | { "data": { "db_password": 'str'} } | {"data": [ {"id": 0, "absolute_timestamp": "5/13/2020 3:32 PM", relative_timestamp: 500, interrogator_timestamp: 10500, freeform: "..."} ]} |
+| /api/iot/seconds/<n> | POST | Retrieve data from the last <n> seconds | { "data": { "db_password": 'str'} } | {"data": [ {"id": 0, "absolute_timestamp": "5/13/2020 3:32 PM", relative_timestamp: 500, interrogator_timestamp: 10500, freeform: "..."} ]} |
+| /api/iot | PUT | Append data to the database | { "data": { "db_password": "str", "relative_time": 500, "interrogator_time": "3/18/2014 10:59:19.123456 AM", "freeform": "..."} } | HTTP 201 |
+| /api/audit | GET | Retrieve the HIPAA audit log | None | {"data": [{"id":0, "absolute_timestamp": "5/13/2020 3:32 PM", "log": "…"}]} |
+
 ### Instructions (Running framework on localhost for testing/development)
 Start the following components in the order presented below.
 Note that some scripts may be in a scripts/ subdirectory.
