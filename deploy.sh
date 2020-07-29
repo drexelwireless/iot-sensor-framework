@@ -11,14 +11,15 @@ pip3 install --user --upgrade pip
 
 sudo apt-get -y install mysql-server #-5.7
 sudo apt-get -y install libmysqlclient-dev
+sudo service mysql start
 sudo mysql_secure_installation
 sudo mysqld --initialize #was mysql_install_db, may need to make an empty /var/lib/mysql directory and chown mysql:mysql with full permissions
 
 pip3 install --user twisted
 
 # Install mysql-5.7 & use the root password 'bellyband'.
-echo 'mysql-server mysql-server/root_password password bellyband' | debconf-set-selections
-echo 'mysql-server mysql-server/root_password_again password bellyband' | debconf-set-selections
+echo 'mysql-server mysql-server/root_password password bellyband' | sudo debconf-set-selections
+echo 'mysql-server mysql-server/root_password_again password bellyband' | sudo debconf-set-selections
 
 sudo python3 -m pip uninstall pip && sudo apt install python3-pip --reinstall
 
@@ -67,7 +68,9 @@ pip3 install --user tinymongo
 
 # for client packages
 pip3 install --user scikit-learn
-sudo apt-get install libfreetype6-dev libpng3
+sudo apt-get install libfreetype6-dev 
+sudo apt-get install libpng3
+sudo apt-get install libpng-dev
 pip3 install --user --upgrade pip
 pip3 install --user --upgrade filterpy # this upgrades numpy / scipy stack
 
