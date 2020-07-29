@@ -61,7 +61,7 @@ pip3 install --user httplib2 # may need to manually remove and then upgrade to f
 pip3 install --user mysqlclient
 pip3 install --user pymysql
 pip3 install --user service_identity
-sudo apt-get install python-matplotlib
+sudo apt-get install python3-matplotlib # was python-matplotlib
 sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
 pip3 install --user scipy
 pip3 install --user sllurp
