@@ -12,6 +12,7 @@ pip3 install --user --upgrade pip
 sudo apt-get -y install mysql-server #-5.7
 sudo apt-get -y install libmysqlclient-dev
 sudo service mysql start
+echo "We'll use bellyband as the default root password for now, and you can change it later..."
 sudo mysql_secure_installation
 sudo mysqld --initialize #was mysql_install_db, may need to make an empty /var/lib/mysql directory and chown mysql:mysql with full permissions
 
