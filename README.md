@@ -9,18 +9,7 @@ software will be run on the same machine (IP addresses in all shell scripts
 have been set to `localhost`).  The host, port, keys, and other parameters can be set when running the scripts in the instructions.  
 
 ## Installation Videos
-
-### iot-software-framework
-<iframe width="560" height="315" src="https://www.youtube.com/embed/NOFdUsx6Fuk" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-</iframe>
-
-### iot-processing-framework
-<iframe width="560" height="315" src="https://www.youtube.com/embed/KdaFo_KRPlE" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-</iframe>
-
-### Running the Software
-<iframe width="560" height="315" src="https://www.youtube.com/embed/wwc1o67mbcw" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-</iframe>
+Installation Tutorial Videos can be found [here](https://www.youtube.com/playlist?list=PLM-MEGowMWmQa1SF-a9Xhoz0yrDuEZ1B9)
 
 ## On Windows - Install VcXsrv or Another X Window Server
 You can download [VcXsrv here](https://sourceforge.net/projects/vcxsrv/).
