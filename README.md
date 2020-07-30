@@ -8,7 +8,32 @@ This software suite contains scripts to collect and store IoT sensor data, such 
 software will be run on the same machine (IP addresses in all shell scripts
 have been set to `localhost`).  The host, port, keys, and other parameters can be set when running the scripts in the instructions.  
 
-### Requirements
+## Installation Videos
+
+### iot-software-framework
+<iframe width="560" height="315" src="https://www.youtube.com/embed/NOFdUsx6Fuk" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+
+### iot-processing-framework
+<iframe width="560" height="315" src="https://www.youtube.com/embed/KdaFo_KRPlE" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+
+### Running the Software
+<iframe width="560" height="315" src="https://www.youtube.com/embed/wwc1o67mbcw" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+
+## On Windows - Install VcXsrv or Another X Window Server
+You can download [VcXsrv here](https://sourceforge.net/projects/vcxsrv/).
+
+To forward X connections to your local computer, run `XLaunch` and export the following variable:
+
+`export DISPLAY=localhost:0.0`
+
+You might add this to your `.bashrc` file so that the variable is automatically set at login:
+
+`echo "export DISPLAY=localhost:0.0" >> ~/.bashrc`
+
+## Requirements
 The following software packages need to be installed before running 
 data collection. You will have to use the same install method (such as
 `pip install` or `easy_install`) listed here. Also, alternatives to using
@@ -21,7 +46,7 @@ The deployment script deploy.sh will also handle the installation steps locally.
 
 This package assumes an installation of python3 and pip3.
 
-# generate a web server key
+## generate a web server key
 ```
 openssl req -newkey rsa:2048 -nodes -keyout key.key -x509 -days 365 -out key.crt
 ```
