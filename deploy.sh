@@ -52,10 +52,15 @@ pip3 install --user pycrypto
 
 #httplib2 default installation is incompatible with Python 3 when using SSL
 PKGDIRS=`python3 -c "import site; p=site.getsitepackages(); print('\n'.join(str(x) for x in p))"`
+USERSITE=`python3 -m site --user-site`
 for P in "$PKGDIRS"
 do
-	find $P -iname '*httplib2*' -exec sudo mv '{}' /tmp \;
+        find $P -iname '*httplib2*' -exec sudo mv '{}' /tmp \;
 done
+pushd $USERSITE 
+find $P -iname '*httplib2*' -exec sudo mv '{}' /tmp \;
+popd
+
 pip3 install --user httplib2 # may need to manually remove and then upgrade to fix a bug in httplib2 regarding verifying SSL certificates
 
 pip3 install --user mysqlclient
