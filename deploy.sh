@@ -50,6 +50,9 @@ sudo apt-get install libmysqlclient-dev
 pip3 install --user pycurl --global-option="--with-openssl"
 pip3 install --user pycrypto
 
+pip3 install --user 2to3
+sudo apt-get install 2to3
+
 #httplib2 default installation is incompatible with Python 3 when using SSL
 PKGDIRS=`python3 -c "import site; p=site.getsitepackages(); print('\n'.join(str(x) for x in p))"`
 USERSITE=`python3 -m site --user-site`
@@ -82,8 +85,6 @@ pip3 install --user --upgrade filterpy # this upgrades numpy / scipy stack
 
 sudo apt-get install libgsl0-dev
 #sudo apt-get install libgsl0ldbl
-
-pip3 install --user 2to3
 
 # enables CORS with Flask for API calls
 pip3 install --user flask-cors
