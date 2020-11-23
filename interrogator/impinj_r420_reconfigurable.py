@@ -34,7 +34,7 @@ class ImpinjR420Reconfigurable(Interrogator):
         self.antennaclientsocket.connect((self.antennaclientip, self.antennaclientport))
         self.antennathread = threading.Thread(target=self.call_antenna, args=())
         self.antennathread.start()
-        self.state = 0 # default antenna state
+        self.reconfigurableantennastate = 0 # default antenna state
         
         self.out('Initializing R420 interrogator client')
 
@@ -126,9 +126,9 @@ class ImpinjR420Reconfigurable(Interrogator):
         while not self.exiting:
             x = random.randint(1,10)
             if x == 7:
-                self.state = random.randint(0,3)
-                self.out("Sending value %s to antenna" % (str(self.state)))
-                self.send_antenna_state(self.state)
+                self.reconfigurableantennastate = random.randint(0,3)
+                self.out("Sending value %s to antenna" % (str(self.reconfigurableantennastate)))
+                self.send_antenna_state(self.reconfigurableantennastate)
             sleep(self.dispatchsleep)
 
     def handle_event(self, msg):
@@ -247,7 +247,7 @@ class ImpinjR420Reconfigurable(Interrogator):
                     freeform['accessspecid'] = accessspecid
                     freeform['inventoryparameterspecid'] = inventoryparameterspecid
                     freeform['lastseentimestamp'] = lastseentimestamp
-                    freeform['antennastate'] = self.state
+                    freeform['antennastate'] = self.reconfigurableantennastate
                     
                     freeformjson = json.dumps(freeform)
 
