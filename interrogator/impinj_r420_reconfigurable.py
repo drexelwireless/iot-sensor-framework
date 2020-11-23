@@ -11,7 +11,7 @@ from time import sleep
 import collections
 import random
 
-class ImpinjR420(Interrogator):
+class ImpinjR420Reconfigurable(Interrogator):
     def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _tagpop=4, _antennaclientip, _antennaclientport):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
