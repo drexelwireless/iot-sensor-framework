@@ -36,6 +36,8 @@ class ImpinjR420Reconfigurable(Interrogator):
         self.antennathread.start()
         self.reconfigurableantennastate = 0 # default antenna state
         
+        self.antennathreadhistory = []
+        
         self.out('Initializing R420 interrogator client')
 
     def out(self, x):
@@ -121,7 +123,9 @@ class ImpinjR420Reconfigurable(Interrogator):
     def send_antenna_state(self, state):
         self.antennaclientsocket.send(state.encode())
     
-    # to do: change this to be an intelligent decision, non-random
+    # TODO: change this to be an intelligent decision, non-random
+    # using the adaptive pursuit algorithm
+    # look in the self.antennathreadhistory array for history data
     def call_antenna(self):
         while not self.exiting:
             x = random.randint(1,10)
@@ -129,6 +133,8 @@ class ImpinjR420Reconfigurable(Interrogator):
                 self.reconfigurableantennastate = random.randint(0,3)
                 self.out("Sending value %s to antenna" % (str(self.reconfigurableantennastate)))
                 self.send_antenna_state(self.reconfigurableantennastate)
+                
+            # sleep for a moment no matter what so that more data can arrive into self.antennathreadhistory
             sleep(self.dispatchsleep)
 
     def handle_event(self, msg):
@@ -290,6 +296,8 @@ class ImpinjR420Reconfigurable(Interrogator):
 
         self.tag_dicts_queue.put(input_dict)  # read by the consumer
 
-
+        # TODO: add input_dict to our own local array called self.antennathreadhistory
+        # TODO: trim off old values so that the array is never larger than some value N
+        
 # Requires:
 # easy_install httplib2 (not pip)
