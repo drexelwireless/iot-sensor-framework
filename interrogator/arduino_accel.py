@@ -147,11 +147,6 @@ class ArduinoAccel(Interrogator):
 
     def close_server(self):
         self.exiting = True
-        self.fac.politeShutdown()
-        reactor.stop()
-        if not (self.fac is None):
-            if not (self.fac.proto is None):
-                self.fac.proto.exiting = True
 
     def __del__(self):
         self.close_server()
