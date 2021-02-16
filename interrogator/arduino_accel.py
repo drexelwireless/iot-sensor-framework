@@ -48,7 +48,7 @@ class ArduinoAccel(Interrogator):
         while not self.exiting:
             x = None
             try:
-                x = ser.read()
+                x = self.ser.read()
                 #print(x)
             except:
                 #print("Failed to read")
@@ -121,30 +121,33 @@ class ArduinoAccel(Interrogator):
             input_msg = self.handler_dequeue.popleft()
             input_msgs.append(input_msg)
 
-            #### TODO
-            for (line, timestamp) in input_msgs:
-                tokens = line.split()
-                #print(tokens)
+           for (line, timestamp) in input_msgs:
+                try:
+                    tokens = line.split()
+                    #print(tokens)
+                    
+                    xval = tokens[1]
+                    yval = tokens[3]    
+                    zval = tokens[5]   
+                    
+                    freeform = {}
+                    freeform['xval'] = xval
+                    freeform['yval'] = yval
+                    freeform['zval'] = zval
                 
-                xval = tokens[1]
-                yval = tokens[3]    
-                zval = tokens[5]   
-                
-                freeform = {}
-                freeform['xval'] = xval
-                freeform['yval'] = yval
-                freeform['zval'] = zval
-            
-                # if this is the "first" firstseentimestamp, note that so the other times will be relative to that
-                if self.start_timestamp == 0:
-                    self.start_timestamp = timestamp
+                    # if this is the "first" firstseentimestamp, note that so the other times will be relative to that
+                    if self.start_timestamp == 0:
+                        self.start_timestamp = timestamp
 
-                self.latest_timestamp = timestamp
-                
-                freeformjson = json.dumps(freeform)
+                    self.latest_timestamp = timestamp
+                    
+                    freeformjson = json.dumps(freeform)
 
-                # call self.insert_tag to insert into database
-                self.insert_tag(timestamp, freeformjson, self.start_timestamp)
+                    # call self.insert_tag to insert into database
+                    self.insert_tag(timestamp, freeformjson, self.start_timestamp)
+                except:
+                    print("Error parsing accelerometer data")
+                    pass
 
     def close_server(self):
         self.exiting = True
