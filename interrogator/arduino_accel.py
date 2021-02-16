@@ -46,12 +46,13 @@ class ArduinoAccel(Interrogator):
         self.buf = []
         
         while not self.exiting:
+            x = None
             try:
                 x = ser.read()
                 #print(x)
             except:
                 #print("Failed to read")
-                pass
+                continue
             self.buf.extend(bytearray(x))
 
             if x == b'\n':
