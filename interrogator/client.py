@@ -2,6 +2,7 @@ from impinj import *
 from impinj_r420 import *
 from impinj_xarray_itemsense_localization import *
 from impinj_r420_reconfigurable import *
+from arduino_accel import *
 import getopt
 import sys
 import os
