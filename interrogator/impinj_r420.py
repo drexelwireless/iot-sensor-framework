@@ -21,6 +21,8 @@ class ImpinjR420(Interrogator):
         else:
             self.antennas = [1, 2, 3, 4]
         self.tagpop = _tagpop
+        
+        self.fac = None
 
         if self.cert_path != 'NONE':
             self.http_obj = Http(ca_certs=self.cert_path)
@@ -233,11 +235,17 @@ class ImpinjR420(Interrogator):
 
     def close_server(self):
         self.exiting = True
-        self.fac.politeShutdown()
-        reactor.stop()
-        if not (self.fac is None):
-            if not (self.fac.proto is None):
-                self.fac.proto.exiting = True
+
+        try:
+            reactor.stop()
+            
+            if not (self.fac is None):
+                self.fac.politeShutdown()
+                
+                if not (self.fac.proto is None):
+                    self.fac.proto.exiting = True
+        except:
+            self.out('R420: error shutting down the interrogator')                
 
     def __del__(self):
         self.close_server()

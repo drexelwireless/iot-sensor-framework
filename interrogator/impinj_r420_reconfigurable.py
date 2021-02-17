@@ -10,6 +10,7 @@ import queue
 from time import sleep
 import collections
 import random
+import socket
 
 class ImpinjR420Reconfigurable(Interrogator):
     def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _tagpop=4, _antennaclientip="localhost", _antennaclientport=8080):
@@ -22,19 +23,21 @@ class ImpinjR420Reconfigurable(Interrogator):
         else:
             self.antennas = [1, 2, 3, 4]
         self.tagpop = _tagpop
+        
+        self.fac = None
 
         if self.cert_path != 'NONE':
             self.http_obj = Http(ca_certs=self.cert_path)
         else:
             self.http_obj = Http(disable_ssl_certificate_validation=True)
             
+        self.reconfigurableantennastate = 0 # default antenna state
         self.antennaclientip = _antennaclientip
         self.antennaclientport = _antennaclientport
         self.antennaclientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.antennaclientsocket.connect((self.antennaclientip, self.antennaclientport))
         self.antennathread = threading.Thread(target=self.call_antenna, args=())
         self.antennathread.start()
-        self.reconfigurableantennastate = 0 # default antenna state
         
         self.antennathreadhistory = []
         
@@ -121,6 +124,7 @@ class ImpinjR420Reconfigurable(Interrogator):
         self.start_server()
    
     def send_antenna_state(self, state):
+        state = str(state)
         self.antennaclientsocket.send(state.encode())
     
     # TODO: change this to be an intelligent decision, non-random
@@ -262,11 +266,16 @@ class ImpinjR420Reconfigurable(Interrogator):
 
     def close_server(self):
         self.exiting = True
-        self.fac.politeShutdown()
-        reactor.stop()
-        if not (self.fac is None):
-            if not (self.fac.proto is None):
-                self.fac.proto.exiting = True
+        
+        try:
+            reactor.stop()
+            
+            if not (self.fac is None):
+                self.fac.politeShutdown()
+                if not (self.fac.proto is None):
+                    self.fac.proto.exiting = True
+        except:
+            self.out('R420: error shutting down the interrogator')
 
     def __del__(self):
         self.close_server()
