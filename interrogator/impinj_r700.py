@@ -18,23 +18,33 @@ try:
 except ImportError:
     from urllib.parse import urljoin
 
-''' DESCRPITION
-        - executuion begins in start()
+''' 
+-------------------------------------------------------------------------------------------------------    
+    DESCRPITION
+       - executuion begins in start()
             - multiple threads started: start_server(), communication_consumer(), and handler_thread()
-    START_SERVER
+        - start_server() is what we really have to focus on
+            - This is where we connect to the tag reader and write code to get
+              the tag reports back
+        - handler_thread() works to process the tag reports we give in
+            - puts the information into a standardized data structure that we can send
+              to the database for storage
+        - communication_consumer() sends those standardized structures to the database
+            - we don't have to worry about changing this
+-------------------------------------------------------------------------------------------------------    
+    START_SERVER (what we focus on)
         - connect to r700 in start_server
-        - get tags back
-        - add new tags to self.handler_dequeue using handler_event (or something else)
-    HANDLER_THREAD
+        - get tag reports from reader
+        - add new tags to self.handler_dequeue using handler_event()
+    HANDLER_THREAD (a couple modifications related to field-names)
         - process tags in handler_event into the freeform
             - i.e, make sure relevant data present, set up freeform, etc.
         - This is proccessed into a json that can be easily passed to insert_tag()
         - insert_tag() does some final processing before putting it into self.tag_dicts_queue
     COMMUNICATIONS_CONSUMER
         - communications consumer will take tag dicts from the queue and send them to the db
-'''
-    
-''' MODIFICATIONS
+-------------------------------------------------------------------------------------------------------    
+    MODIFICATIONS
     - Added dependencies: requests, signal, urljoin
     - Added connection method using python requests package
     - Append returned events to the handler_dequeue using handler_event method
@@ -305,6 +315,9 @@ class ImpinjR700(Interrogator):
 
 def signal_handler(signal, frame):
     sys.exit(0)
+
+
+
 
 # Requires:
 # easy_install httplib2 (not pip)
