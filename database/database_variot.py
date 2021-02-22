@@ -11,8 +11,9 @@ from time import sleep
 import pycurl
 import json
 import io
+import requests
 
-
+# Set up MAC address on server when ready, and use mac address as device ID; possibly token in the future
 class VarIOTDatabase(Database):
     def __init__(self, crypto, db_path='https://variot.ece.drexel.edu', token='', device='0000000000', dispatchsleep=0):
         Database.__init__(self, crypto, db_path=db_path)
@@ -39,8 +40,10 @@ class VarIOTDatabase(Database):
         # Post to https?
         # Which side encrypts?  Right now, eliminating this side encryption for VarIOT (hence removal of password from the body and use of crypto from this module
         payload = {'data': json.dumps(data)}
-        URL = self.db_path + '/api/v1/hub/message/rfid?address=' + self.dev
+        URL = self.db_path + '/api/v2/hubs/message/xarray?address=' + self.dev
         r = requests.post(url = URL, json = payload)
+        #print(r.status_code)
+        #print(r.text)        
 
     # dispatch insertions from the queue so that the webserver can continue receiving requests
     # log each request to the Audit
