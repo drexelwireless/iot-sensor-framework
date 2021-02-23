@@ -207,6 +207,14 @@ mv out.db1 database.db
 * This will create a file named `out.csv`. This file contains the collected RFID
 tag data.
 
+* If the database contains a `freeform` field, you can then run
+
+```
+csv_flatten_freeform.sh out.csv
+```
+
+to translate the freeform json fields into CSV columns.
+
 #### Remove collected data from MySQL database and re-initialize database
 * Run: `./destroy_mysql.sh`. When prompted for a password, press enter.
 * Run: `./initialize_mysql.sh`.
