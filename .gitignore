@@ -1,5 +1,6 @@
 client*.sh*
 server*.sh*
+impinj_r420_reconfigurable.py
 
 # Binaries
 *.o
