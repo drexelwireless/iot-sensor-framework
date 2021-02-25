@@ -1,7 +1,7 @@
 client*.sh*
 server*.sh*
-impinj_r420_reconfigurable.py
-*.db
+interrogator/impinj_r420_reconfigurable.py
+database/*.db
 
 # Binaries
 *.o
