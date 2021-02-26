@@ -121,7 +121,7 @@ class ArduinoAccel(Interrogator):
             input_msg = self.handler_dequeue.popleft()
             input_msgs.append(input_msg)
 
-           for (line, timestamp) in input_msgs:
+            for (line, timestamp) in input_msgs:
                 try:
                     tokens = line.split()
                     #print(tokens)
