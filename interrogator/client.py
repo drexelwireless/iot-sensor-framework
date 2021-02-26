@@ -4,6 +4,7 @@ from impinj_r700 import *
 from impinj_xarray_itemsense_localization import *
 from impinj_r420_reconfigurable import *
 from arduino_accel import *
+from noop_driver import *
 import getopt
 import sys
 import os
@@ -19,7 +20,7 @@ def usage(ip_address, db_host, db_password, cert_path, do_debug, device, antenna
         '\t-c <certfile> - path to the certificate file for verifying SSL certificate or NONE to bypass: default %s\n' \
         '\t-a <antenna number> - antenna number to interrogate (can specify more than once), if supported by the interrogator: default %s\n' \
         '\t-l <time in seconds> - length of time to sleep the dispatcher in between transmissions of data to the server, to allow new messages to queue up for efficiency: default %s\n' \
-        '\t-g <device> - device to use as the interrogator (impinj, r420, r420reconfigurable, r700, xarray, arduinoaccel): default %s\n' \
+        '\t-g <device> - device to use as the interrogator (impinj, r420, r420reconfigurable, r700, xarray, arduinoaccel, noop): default %s\n' \
         '\t-t <pop> - sets tag population (4 good for 1 tag, 16 good for 2 tags): default %s\n' \
         '\t-u <api-username> - provides a username for API services such as the Impinj xArray\n' \
         '\t-w <api-password> - provides a password for API services such as the Impinj xArray\n' \
@@ -149,7 +150,12 @@ if __name__ == "__main__":
                           _antennaclientip=controllerip, _antennaclientport=controllerport)
         t2 = threading.Thread(target=prog_quit, args=(rfid,))
         t2.start()
-        rfid.start()        
+        rfid.start() 
+    elif device.lower() == "noop":
+        rfid = NoopDriver(ip_address, db_host, db_password, cert_path, do_debug, _dispatchsleep=dispatchsleep)
+        t2 = threading.Thread(target=prog_quit, args=(rfid,))
+        t2.start()
+        rfid.start()         
     elif device.lower() == "xarray":
         rfid = ImpinjXArray(ip_address, db_host, db_password, cert_path,
                             do_debug, _dispatchsleep=dispatchsleep,
