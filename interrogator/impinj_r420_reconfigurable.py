@@ -13,11 +13,13 @@ import random
 import socket
 
 class ImpinjR420Reconfigurable(Interrogator):
-    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _tagpop=4, _antennaclientip="localhost", _antennaclientport=8080):
+    def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _tagpop=4, _antennaclientip="localhost", _antennaclientport=8080, _reconfigurableantennas=4):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
         self.exiting = False
         self.ip_address = _ip_address
+        
+        # antenna ports on the interrogator itself, not the reconfigurable ones
         if len(_antennas) > 0:
             self.antennas = _antennas
         else:
@@ -31,15 +33,16 @@ class ImpinjR420Reconfigurable(Interrogator):
         else:
             self.http_obj = Http(disable_ssl_certificate_validation=True)
             
+        self.antennathreadhistory = []
+        self.k = _reconfigurableantennas # k is the number of reconfigurable antennas to select
+        self.R = [0] * self.k # R is the recent RSSI history for each selected antenna in the k'th position
         self.reconfigurableantennastate = 0 # default antenna state
         self.antennaclientip = _antennaclientip
         self.antennaclientport = _antennaclientport
         self.antennaclientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.antennaclientsocket.connect((self.antennaclientip, self.antennaclientport))
-        self.antennathread = threading.Thread(target=self.call_antenna, args=())
+        self.antennathread = threading.Thread(target=self.select_antenna, args=())
         self.antennathread.start()
-        
-        self.antennathreadhistory = []
         
         self.out('Initializing R420 interrogator client')
 
@@ -123,24 +126,27 @@ class ImpinjR420Reconfigurable(Interrogator):
 
         self.start_server()
    
+    # ***** Antenna State Selection 
     def send_antenna_state(self, state):
         state = str(state)
         self.antennaclientsocket.send(state.encode())
-    
-    # TODO: change this to be an intelligent decision, non-random
+        # TODO: possible race condition - we're assuming the antenna state update is immediate
+
+    # make an intelligent antenna selection that is non-random
     # using the adaptive pursuit algorithm
     # look in the self.antennathreadhistory array for history data
-    def call_antenna(self):
-        while not self.exiting:
-            x = random.randint(1,10)
-            if x == 7:
-                self.reconfigurableantennastate = random.randint(0,3)
-                self.out("Sending value %s to antenna" % (str(self.reconfigurableantennastate)))
-                self.send_antenna_state(self.reconfigurableantennastate)
-                
+    # TODO: occasionally, sweep all the antennas and update their scores
+    def select_antenna(self, alpha = 0.8, beta = 0.8):
+        while not self.exiting:            
+            state = 0
+            
+            self.send_antenna_state(state)
+            
             # sleep for a moment no matter what so that more data can arrive into self.antennathreadhistory
-            sleep(self.dispatchsleep)
-
+            # TODO: should we wait for a larger multiple of dispatchsleep?
+            sleep(self.dispatchsleep) 
+    # ***** End: Antenna State Selection 
+    
     def handle_event(self, msg):
         self.handler_dequeue.append(msg)
 
@@ -306,8 +312,8 @@ class ImpinjR420Reconfigurable(Interrogator):
 
         self.tag_dicts_queue.put(input_dict)  # read by the consumer
 
-        # TODO: add input_dict to our own local array called self.antennathreadhistory
-        # TODO: trim off old values so that the array is never larger than some value N
+        # add input_dict to our own local array called self.antennathreadhistory
+        self.antennathreadhistory.append(input_dict)
         
 # Requires:
 # easy_install httplib2 (not pip)
