@@ -219,7 +219,7 @@ class NoopDriver(Interrogator):
                     freeform['accessspecid'] = accessspecid
                     freeform['inventoryparameterspecid'] = inventoryparameterspecid
                     freeform['lastseentimestamp'] = lastseentimestamp
-                    freeform['antennastate'] = 0
+                    freeform['antennastate'] = -1
                     
                     freeformjson = json.dumps(freeform)
 
