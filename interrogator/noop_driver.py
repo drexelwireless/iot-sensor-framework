@@ -9,8 +9,32 @@ from time import sleep, time
 import collections
 import random
 import socket
+import math
+import numpy as np
 
+class input_cell:
+    def __init__( self, _time, _rssi, _antenna_num, _antenna_port ):
+        self.time = _time
+        self.antenna_num = _antenna_num
+        self.antenna_port = _antenna_port
+        self.rssi = _rssi
+
+class output_cell:
+    def __init__( self, _location1, _location2, _fusedlocation ):
+        self.location1 = _location1
+        self.location2 = _location2
+        self.fusedlocation = _fusedlocation
+        
 class NoopDriver(Interrogator):
+    #TODO: create data structures for storing data
+    #add a queue for readings
+    
+    #queue for noah's values\
+    #queue for kevin adn ian values
+    
+    input_readings = {}
+    output_locations = {}
+    
     def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
@@ -105,7 +129,91 @@ class NoopDriver(Interrogator):
     
     def handle_event(self, msg):
         self.handler_dequeue.append(msg)
+        self.tag_count++
+        if self.tag_count%100==0:
+            
+        
+    #TODO: copy paste in localization algorithm
+    def noah_localize( epc, inputArray ):
+        #store data for processing
+        readings=inputArray        
+        #define the mapping from quadrant to position using unit vectors:
+        pos = {
+               0:[math.sqrt(2)/2, math.sqrt(2)/2],
+               1:[-math.sqrt(2)/2,math.sqrt(2)/2],
+               2:[-math.sqrt(2)/2,-math.sqrt(2)/2],
+               3:[math.sqrt(2)/2,-math.sqrt(2)/2]
+               }
+        
+        #Get the frequency of each quadrant for this epc
+        #def countQuads( epc, readings ):
+        quad_freq = []
+        total_reads = 0
+        for i in readings:
+            i_epc = i[ 'epc96' ]
+            i_quad = i[ 'antennastate' ]
+            if i_epc == epc:
+                quad_freq[ i_quad ] += 1
+                total_reads += 1
+            
+        #Remove multipath here
+        #start by getting the quadrant with the most reads
+        for i in range(len( quad_freq )):
+            if quad_freq[i]==max( quad_freq ):
+                strongest_quad = i
+        
+        #get the reflected quadrant from the strongest and remove reads                    
+        reflected_quad = (strongest_quad+(2)) % (2)
+        total_reads-= quad_freq[ reflected_quad ]
+        quad_freq[ reflected_quad ] = 0
+        
+        #normalize quadrant frequency
+        for j in range(len(quad_freq)):
+            quad_freq[j]/=total_reads
+        
+        #Calculate the weighted location
+        x_est = 0
+        y_est = 0
 
+        for i in range(len(quad_freq)):
+            x_est += quad_freq[i]*pos[i][0]
+            y_est += quad_freq[i]*pos[i][1]
+
+        rv = [ x_est, y_est ]
+        #return dict of locations per epc ????
+        return rv
+    
+    def KevinandIanLocalize(self,epc):
+        xyCoor = {}
+        # Check out extended and unscented Kalman filter
+        # this will go into a queue where each element is an array of all the vectors for one tag reading
+        for key in epc: # for each epc...
+            xyCoor[key] = []
+            for i in range( len( epc[key] ) ): # for each antenna reading of the epc
+                tempCoor = [0, 0]
+                temp = epc[key][i]
+                
+                rssi = temp['rssi']
+                phase = temp['phase']
+                port = temp['port']
+                antennastate = temp['antennastate']
+                tempCoor[0] = abs( rssi ) * np.cos(
+                    phase + (np.pi / 2 * port) + (np.pi / 4 * antennastate) )  # X coordinate
+                tempCoor[1] = abs( rssi ) * np.sin(
+                    phase + (np.pi / 2 * port) + (np.pi / 4 * antennastate) )  # Y coordinate
+                xyCoor[key].append( tempCoor )
+
+        # if queue.full():
+        #     queue.get()
+        #     queue.put(xyCoor)
+        # else:
+        #     queue.put(xyCoor)
+        return xyCoor #dict of locations per epc
+    
+    #TODO: copy paste in (when we call it, put it in sweep mode)
+    def MattAlgo():
+        return 
+    
     def handler_thread(self):
         while not self.exiting:            
             if len(self.handler_dequeue) == 0:
@@ -146,7 +254,8 @@ class NoopDriver(Interrogator):
                 tags = msg['RO_ACCESS_REPORT']['TagReportData']
 
                 self.out(tags)
-
+                
+                #TODO: add antenna_state to list of things to get
                 for tag in tags:
                     if 'FirstSeenTimestampUTC' in tag and 'EPC-96' in tag and 'AntennaID' in tag and 'PeakRSSI' in tag:
                         first_seen_timestamp = tag['FirstSeenTimestampUTC']
@@ -207,6 +316,16 @@ class NoopDriver(Interrogator):
 
                     self.latest_timestamp = first_seen_timestamp
                     
+                    #Add relevant info to data structure to store previous reads
+                    data = input_cell( first_seen_timestamp, rssi, antenna, antenna_state)
+                    input_readings[epc96].append(data)
+                    #TODO: update locations and data structures
+                    noahloc = noah_localize(epc96, input_readings[epc96] )
+                    kevinandianloc = getLocation(epc)
+                    
+                    locations = output_cell( noahloc, kevinandianloc, (0,0) )
+                    output_locations[epc96].append(locations)
+                    
                     freeform = {}
                     freeform['rssi'] = rssi
                     freeform['epc96'] = epc96
@@ -220,6 +339,10 @@ class NoopDriver(Interrogator):
                     freeform['inventoryparameterspecid'] = inventoryparameterspecid
                     freeform['lastseentimestamp'] = lastseentimestamp
                     freeform['antennastate'] = -1
+                    freeform['noahloc'] = noahloc
+                    freeform['kevinandianloc'] = kevinandianloc
+                    #freeform['filteredloc'] = filtered
+                    
                     
                     freeformjson = json.dumps(freeform)
 
