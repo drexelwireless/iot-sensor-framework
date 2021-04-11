@@ -49,7 +49,7 @@ class NoopDriver(Interrogator):
         #define persistent parameters for the input data
         self.tag_count = 0
 
-        self.quad_freq = {} #for use in Noah's algorithm
+        self.quad_freq = [0,0,0,0] #for use in Noah's algorithm, assumes 4 antennas
 
         #define dictionaries to store values
         #TODO: implement functionality to remove old values from these structures
@@ -104,6 +104,7 @@ class NoopDriver(Interrogator):
             
             tag = {}
             tag['FirstSeenTimestampUTC'] = tsutc
+            tag['AntennaState'] = 0
             tag['AntennaID'] = 1
             tag['PeakRSSI'] = rssi
             tag['EPC-96'] = '000011112222333344445555'
@@ -195,7 +196,8 @@ class NoopDriver(Interrogator):
 
         #Remove multipath here
         #start by getting the quadrant with the most reads
-        for i in range(len( this_quad_freq )):
+        #if we have no reads, just return a dummy location
+        for i in range(len(this_quad_freq)):
             if this_quad_freq[i]==max( this_quad_freq ):
                 strongest_quad = i
         
@@ -205,9 +207,8 @@ class NoopDriver(Interrogator):
         this_quad_freq[ reflected_quad ] = 0
         
         #normalize quadrant frequency
-        for j in range(len(this_quad_freq)):
-            this_quad_freq[j]/=total_reads
-        
+        this_quad_freq = [ i/10 for i in this_quad_freq ]
+
         #Calculate the weighted location
         x_est = 0
         y_est = 0
@@ -219,7 +220,7 @@ class NoopDriver(Interrogator):
         rv = [ x_est, y_est ]
         #return dict of locations per epc ????
         return rv
-    
+    '''
     def KevinandIanLocalize(self,epc):
         xyCoor = {}
         # Check out extended and unscented Kalman filter
@@ -247,42 +248,38 @@ class NoopDriver(Interrogator):
         # else:
         #     queue.put(xyCoor)
         return xyCoor #dict of locations per epc
-
-        #I made some changes to try and work with the program flow, let me know what you think
-        #Hopefully I didn't brick anything haha
-        '''
-        CHANGES:
-            - Removed checking every epc (we only want to update 1 position)
+    '''
+    #I made some changes to try and work with the program flow, let me know what you think
+    #Hopefully I didn't brick anything haha
+    '''
+    CHANGES:
+        - Removed checking every epc (we only want to update 1 position)
+        
+    '''
+    def getLocation(self,epc):
+        xyCoor = []
+        # Check out extended and unscented Kalman filter
+        # this will go into a queue where each element is an array of all the vectors for one tag reading 
+        for reading in self.input_readings[epc]: # for each antenna reading of the epc
+            tempCoor = [0, 0]
             
-        '''
-        def getLocation(self,epc):
-            xyCoor = []
-            # Check out extended and unscented Kalman filter
-            # this will go into a queue where each element is an array of all the vectors for one tag reading 
-            for reading in self.input_readings[epc]: # for each antenna reading of the epc
-                tempCoor = [0, 0]
-                
-                rssi = reading.rssi
-                phase = reading.phase
-                port = reading.antenna_port
-                antennastate = reading.antenna_num
+            rssi = reading.rssi
+            phase = reading.phase
+            port = reading.antenna_port
+            antennastate = reading.antenna_num
 
-                tempCoor[0] = abs( rssi ) * np.cos(
-                    phase + (np.pi / 2 * port) + (np.pi / 4 * antennastate) )  # X coordinate
-                tempCoor[1] = abs( rssi ) * np.sin(
-                    phase + (np.pi / 2 * port) + (np.pi / 4 * antennastate) )  # Y coordinate
-                xyCoor.append( tempCoor )
-            
-            # if queue.full():
-            #     queue.get()
-            #     queue.put(xyCoor)
-            # else:
-            #     queue.put(xyCoor)
-            return xyCoor #dict of locations per epc
-
-    #TODO: copy paste in (when we call it, put it in sweep mode)
-    def MattAlgo():
-        return 
+            tempCoor[0] = abs( rssi ) * np.cos(
+                phase + (np.pi / 2 * port) + (np.pi / 4 * antennastate) )  # X coordinate
+            tempCoor[1] = abs( rssi ) * np.sin(
+                phase + (np.pi / 2 * port) + (np.pi / 4 * antennastate) )  # Y coordinate
+            xyCoor.append( tempCoor )
+        
+        # if queue.full():
+        #     queue.get()
+        #     queue.put(xyCoor)
+        # else:
+        #     queue.put(xyCoor)
+        return xyCoor #dict of locations per epc
     
     def handler_thread(self):
         while not self.exiting:            
@@ -327,11 +324,12 @@ class NoopDriver(Interrogator):
                 
                 #TODO: add antenna_state to list of things to get and move used parameters to mandatory check
                 for tag in tags:
-                    if 'FirstSeenTimestampUTC' in tag and 'EPC-96' in tag and 'AntennaID' in tag and 'PeakRSSI' in tag:
+                    if 'FirstSeenTimestampUTC' in tag and 'EPC-96' in tag and 'AntennaID' in tag and 'PeakRSSI' in tag and 'AntennaState' in tag:
                         first_seen_timestamp = tag['FirstSeenTimestampUTC']
                         epc96 = tag['EPC-96']
-                        antenna = tag['AntennaID']
+                        antenna_num = tag['AntennaID']
                         rssi = tag['PeakRSSI']
+                        antenna_port = tag['AntennaState']
                     else:
                         self.out(
                             "Message did not contain all elements\n" + str(tag))
@@ -387,28 +385,36 @@ class NoopDriver(Interrogator):
                     self.latest_timestamp = first_seen_timestamp
                     
                     #update step
-                    data = input_cell( first_seen_timestamp, rssi, phase, antenna, antenna_state)
+                    data = input_cell( first_seen_timestamp, rssi, phase, antenna_num, antenna_port)
+                    if not epc96 in self.input_readings:
+                        self.input_readings[epc96]=[]
                     self.input_readings[epc96].append(data)
-                    tag_count+=1
+                    self.tag_count+=1
+                    #TODO:clear out the tags
                     if self.tag_count%100==0:
-                        #TODO:clear out the tags
                         None
-
-                    self.quad_freq[antenna_state]+=1
+                    self.quad_freq[antenna_num]+=1
 
                     #update locations and put into output data structure
-                    noahloc = self.noah_localize(epc96)
-                    kevinandianloc = self.getLocation(epc96)
+                    #grace period to make sure there's some data there
+                    if self.tag_count > 1:
+                        noahloc = self.noah_localize(epc96)
+                        kevinandianloc = self.getLocation(epc96)
+                    else:
+                        noahloc = [-1,-1]
+                        kevinandianloc =  [-1,-1]
                     
+                    if not epc96 in self.output_locations:
+                        self.output_locations[epc96]=[]
                     locations = output_cell( noahloc, kevinandianloc, (0,0) )
                     self.output_locations[epc96].append(locations)
-                    
+
                     freeform = {}
                     freeform['rssi'] = rssi
                     freeform['epc96'] = epc96
                     freeform['doppler'] = doppler
                     freeform['phase'] = phase
-                    freeform['antenna'] = antenna
+                    freeform['antenna'] = antenna_num
                     freeform['rospecid'] = rospecid
                     freeform['channelindex'] = channelindex
                     freeform['tagseencount'] = tagseencount
