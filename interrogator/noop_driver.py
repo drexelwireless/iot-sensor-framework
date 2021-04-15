@@ -11,6 +11,7 @@ import random
 import socket
 import math
 import numpy as np
+import filterpy
 
 class input_cell:
     def __init__( self, _time, _rssi, _phase, _antenna_num, _antenna_port ):
@@ -50,6 +51,10 @@ class NoopDriver(Interrogator):
         self.tag_count = 0
 
         self.quad_freq = [0,0,0,0] #for use in Noah's algorithm, assumes 4 antennas
+
+        self.array = []
+
+        self.KF = KalmanFilter(dim_x = 2, dim_z = 2) #Kalman Filter
 
         #define dictionaries to store values
         #TODO: implement functionality to remove old values from these structures
@@ -281,6 +286,62 @@ class NoopDriver(Interrogator):
         #     queue.put(xyCoor)
         return xyCoor #dict of locations per epc
     
+    #TODO
+
+    def KalmanFilter(self, kevinandianloc,noahloc):
+
+        
+
+        dt = 0.5 #seconds between each reading
+
+        
+
+        #initial guess for XY Location
+
+        
+
+        if len(self.input_readings) == 1:
+
+            xMin, yMin = -10, 10 #Can be changed depending on the dimension of the area
+
+            xMax, yMax = -10,10 #Can be changed depending on the dimension of the area
+
+            initialX, initialY = random.randint(xMin, xMax), random.randint(yMin, yMax)
+
+            self.KF.x = np.array([initialX,initialY]) #Initial Location Guess
+
+            self.KF.P = np.diag([250,250])
+
+            self.KF.Q = Q_discrete_white_noise(2, dt=0.5, var=1)
+
+            self.KF.F = np.array([[1,0],[0,1]])
+
+            self.KF.H = np.array([[1,0], [0,1]])
+
+            
+
+        
+
+        error_KevinandIanLoc = 500 #Noise measurement/Standard deviation of Kevin and Ian's algo Placeholder right now
+
+        error_NoahLoc = 500 #Noise measurement/Standard deviation of Noah's Algo Placeholder right now
+
+        
+
+        self.KF.R = error_KevinandIanLoc
+
+        self.KF.predict()
+
+        self.KF.update(kevinandianloc)
+
+        self.KF.R = error_NoahLoc
+
+        self.KF.update(noahloc)
+
+        
+
+        return self.KF.x
+
     def handler_thread(self):
         while not self.exiting:            
             if len(self.handler_dequeue) == 0:
