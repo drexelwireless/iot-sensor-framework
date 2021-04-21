@@ -24,19 +24,26 @@ class input_cell:
         self.rssi = _rssi
 
 class output_cell:
-    def __init__( self, _location1, _location2, _fusedlocation ):
+    def __init__( self, _location1, _location2, _filtered ):
         self.location1 = _location1
         self.location2 = _location2
-        self.fusedlocation = _fusedlocation
+        self.filtered = _filtered
+
+    #getters
+    def getLocation1(self):
+        return self.location1
+    def getLocation2(self):
+        return self.location2
+    def getFilteredLocation(self):
+        return self.filtered
+
 
 
 
 
 class Localize():
 
-    def __init__(self, _vars):
-        self.vars = _vars
-
+    def __init__(self):
         #initialize data storage
         self.tag_count = 0
 
@@ -143,7 +150,92 @@ class Localize():
             location1 = [-1,-1]
             location2 =  [-1,-1]
         
-        if not epc96 in self.output_locations:
-            self.output_locations[epc96]=[]
-        rv = output_cell( location1, location2, (0,0) ) #TODO: add filtered location
+        #TODO: get filtered location here
+        filtered = [-1,-1]
+        rv = output_cell( location1, location2, filtered ) #TODO: add filtered location
         return rv
+
+    #TODO
+    def KalmanFilter(self, kevinandianloc,noahloc):
+
+        
+
+        dt = 0.5 #seconds between each reading
+
+        
+
+        #initial guess for XY Location
+
+        
+
+        if len(self.input_readings) == 1:
+
+            xMin, yMin = -10, 10 #Can be changed depending on the dimension of the area
+
+            xMax, yMax = -10,10 #Can be changed depending on the dimension of the area
+
+            initialX, initialY = random.randint(xMin, xMax), random.randint(yMin, yMax)
+
+            self.KF.x = np.array([initialX,initialY]) #Initial Location Guess
+
+            self.KF.P = np.diag([250,250])
+
+            self.KF.Q = Q_discrete_white_noise(2, dt=0.5, var=1)
+
+            self.KF.F = np.array([[1,0],[0,1]])
+
+            self.KF.H = np.array([[1,0], [0,1]])
+
+            
+
+        
+
+        error_KevinandIanLoc = 500 #Noise measurement/Standard deviation of Kevin and Ian's algo Placeholder right now
+
+        error_NoahLoc = 500 #Noise measurement/Standard deviation of Noah's Algo Placeholder right now
+
+        
+
+        self.KF.R = error_KevinandIanLoc
+
+        self.KF.predict()
+
+        self.KF.update(kevinandianloc)
+
+        self.KF.R = error_NoahLoc
+
+        self.KF.update(noahloc)
+
+        
+
+        return self.KF.x
+
+
+
+
+'''
+-------------------NOTES-------------------
+
+-- Outline of the data structures --
+
+input_readings{
+    epc_1 -> [ cell, cell, cell ... ]
+    epc_2 -> [ cell, ... ]
+    epc_3 -> [ ]
+    ...
+    epc_n -> [ cell, cell, cell, cell ... ]
+}
+where each 'cell' is an object called input_cell defined as such:
+
+input_cell( _time, _rssi, _phase, _antenna_num, _antenna_port )
+
+
+-- So how to use the structures? --
+
+- When you get a reading:
+    * create a new cell and input the data you have
+        EX: newcell = input_cell( newtime, newrssi, newantenna_num, newantenna_port)
+    * input this cell into the dictionary
+        Ex: input_readings[ current_epc ].append( newcell ) 
+'''
+

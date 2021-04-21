@@ -12,20 +12,10 @@ import socket
 import math
 import numpy as np
 import filterpy
+from filterpy.kalman import KalmanFilter
+from filterpy.common import Q_discrete_white_noise
+import localize
 
-class input_cell:
-    def __init__( self, _time, _rssi, _phase, _antenna_num, _antenna_port ):
-        self.time = _time
-        self.phase = _phase
-        self.antenna_num = _antenna_num
-        self.antenna_port = _antenna_port
-        self.rssi = _rssi
-
-class output_cell:
-    def __init__( self, _location1, _location2, _fusedlocation ):
-        self.location1 = _location1
-        self.location2 = _location2
-        self.fusedlocation = _fusedlocation
         
 class NoopDriver(Interrogator):
     #TODO: create data structures for storing data
@@ -47,48 +37,8 @@ class NoopDriver(Interrogator):
         
         self.out('Initializing noop interrogator client')
         
-        #define persistent parameters for the input data
-        self.tag_count = 0
-
-        self.quad_freq = [0,0,0,0] #for use in Noah's algorithm, assumes 4 antennas
-
-        self.array = []
-
-        self.KF = KalmanFilter(dim_x = 2, dim_z = 2) #Kalman Filter
-
-        #define dictionaries to store values
-        #TODO: implement functionality to remove old values from these structures
-        self.input_readings = {}
-        self.output_locations = {}
-
-        '''
-        -- Outline of the data structures --
-
-        input_readings{
-            epc_1 -> [ cell, cell, cell ... ]
-            epc_2 -> [ cell, ... ]
-            epc_3 -> [ ]
-            ...
-            epc_n -> [ cell, cell, cell, cell ... ]
-        }
-        where each 'cell' is an object called input_cell defined as such:
-        
-        input_cell( _time, _rssi, _antenna_num, _antenna_port )
-
-        
-        -- So how to use the structures? --
-
-        - When you get a reading:
-            * create a new cell and input the data you have
-               EX: newcell = input_cell( newtime, newrssi, newantenna_num, newantenna_port)
-            * input this cell into the dictionary
-               Ex: input_readings[ current_epc ].append( newcell ) 
-        - To access an old reading:
-            * pick which epc, then pick a tag out from the list of tags associated with that epc
-            * IDEALLY, pop() the tag so we can control the length of the list
-              EX: input_readings[ current_epc ].pop()
-        '''
-
+        #create localize object
+        self.loc = localize.Localize()
 
     def out(self, x):
         if self.debug:
@@ -173,174 +123,6 @@ class NoopDriver(Interrogator):
     def handle_event(self, msg):
         self.handler_dequeue.append(msg)
             
-
-    def noah_localize( self, epc ):
-        #define the mapping from quadrant to position using unit vectors:
-        pos = {
-               0:[math.sqrt(2)/2, math.sqrt(2)/2],
-               1:[-math.sqrt(2)/2,math.sqrt(2)/2],
-               2:[-math.sqrt(2)/2,-math.sqrt(2)/2],
-               3:[math.sqrt(2)/2,-math.sqrt(2)/2]
-               }
-        
-        #Get the frequency of each quadrant for this epc
-        #REMOVED, we now update this stuff each round! Don't need to recalc here
-        '''
-        quad_freq = []
-        total_reads = 0
-        for i in readings:
-            i_epc = i[ 'epc96' ]
-            i_quad = i[ 'antennastate' ]
-            if i_epc == epc:
-                quad_freq[ i_quad ] += 1
-                total_reads += 1
-        '''
-        #Copy the paramters so that we don't mess them up
-        this_quad_freq = self.quad_freq
-        total_reads = self.tag_count
-
-        #Remove multipath here
-        #start by getting the quadrant with the most reads
-        #if we have no reads, just return a dummy location
-        for i in range(len(this_quad_freq)):
-            if this_quad_freq[i]==max( this_quad_freq ):
-                strongest_quad = i
-        
-        #get the opposite quadrant to the strongest and remove reads                    
-        reflected_quad = (strongest_quad+(2)) % (2)
-        total_reads-= this_quad_freq[ reflected_quad ]
-        this_quad_freq[ reflected_quad ] = 0
-        
-        #normalize quadrant frequency
-        this_quad_freq = [ i/10 for i in this_quad_freq ]
-
-        #Calculate the weighted location
-        x_est = 0
-        y_est = 0
-
-        for i in range(len(this_quad_freq)):
-            x_est += this_quad_freq[i]*pos[i][0]
-            y_est += this_quad_freq[i]*pos[i][1]
-
-        rv = [ x_est, y_est ]
-        #return dict of locations per epc ????
-        return rv
-    '''
-    def KevinandIanLocalize(self,epc):
-        xyCoor = {}
-        # Check out extended and unscented Kalman filter
-        # this will go into a queue where each element is an array of all the vectors for one tag reading
-        
-        for key in input_readings: # for each epc...
-            xyCoor[key] = []
-            for i in range( len( epclist[key] ) ): # for each antenna reading of the epc
-                tempCoor = [0, 0]
-                temp = epc[key][i]
-                
-                rssi = temp['rssi']
-                phase = temp['phase']
-                port = temp['port']
-                antennastate = temp['antennastate']
-                tempCoor[0] = abs( rssi ) * np.cos(
-                    phase + (np.pi / 2 * port) + (np.pi / 4 * antennastate) )  # X coordinate
-                tempCoor[1] = abs( rssi ) * np.sin(
-                    phase + (np.pi / 2 * port) + (np.pi / 4 * antennastate) )  # Y coordinate
-                xyCoor[key].append( tempCoor )
-
-        # if queue.full():
-        #     queue.get()
-        #     queue.put(xyCoor)
-        # else:
-        #     queue.put(xyCoor)
-        return xyCoor #dict of locations per epc
-    '''
-    #I made some changes to try and work with the program flow, let me know what you think
-    #Hopefully I didn't brick anything haha
-    '''
-    CHANGES:
-        - Removed checking every epc (we only want to update 1 position)
-        
-    '''
-    def getLocation(self,epc):
-        xyCoor = []
-        # Check out extended and unscented Kalman filter
-        # this will go into a queue where each element is an array of all the vectors for one tag reading 
-        for reading in self.input_readings[epc]: # for each antenna reading of the epc
-            tempCoor = [0, 0]
-            
-            rssi = reading.rssi
-            phase = reading.phase
-            port = reading.antenna_port
-            antennastate = reading.antenna_num
-
-            tempCoor[0] = abs( rssi ) * np.cos(
-                phase + (np.pi / 2 * port) + (np.pi / 4 * antennastate) )  # X coordinate
-            tempCoor[1] = abs( rssi ) * np.sin(
-                phase + (np.pi / 2 * port) + (np.pi / 4 * antennastate) )  # Y coordinate
-            xyCoor.append( tempCoor )
-        
-        # if queue.full():
-        #     queue.get()
-        #     queue.put(xyCoor)
-        # else:
-        #     queue.put(xyCoor)
-        return xyCoor #dict of locations per epc
-    
-    #TODO
-
-    def KalmanFilter(self, kevinandianloc,noahloc):
-
-        
-
-        dt = 0.5 #seconds between each reading
-
-        
-
-        #initial guess for XY Location
-
-        
-
-        if len(self.input_readings) == 1:
-
-            xMin, yMin = -10, 10 #Can be changed depending on the dimension of the area
-
-            xMax, yMax = -10,10 #Can be changed depending on the dimension of the area
-
-            initialX, initialY = random.randint(xMin, xMax), random.randint(yMin, yMax)
-
-            self.KF.x = np.array([initialX,initialY]) #Initial Location Guess
-
-            self.KF.P = np.diag([250,250])
-
-            self.KF.Q = Q_discrete_white_noise(2, dt=0.5, var=1)
-
-            self.KF.F = np.array([[1,0],[0,1]])
-
-            self.KF.H = np.array([[1,0], [0,1]])
-
-            
-
-        
-
-        error_KevinandIanLoc = 500 #Noise measurement/Standard deviation of Kevin and Ian's algo Placeholder right now
-
-        error_NoahLoc = 500 #Noise measurement/Standard deviation of Noah's Algo Placeholder right now
-
-        
-
-        self.KF.R = error_KevinandIanLoc
-
-        self.KF.predict()
-
-        self.KF.update(kevinandianloc)
-
-        self.KF.R = error_NoahLoc
-
-        self.KF.update(noahloc)
-
-        
-
-        return self.KF.x
 
     def handler_thread(self):
         while not self.exiting:            
@@ -445,30 +227,16 @@ class NoopDriver(Interrogator):
 
                     self.latest_timestamp = first_seen_timestamp
                     
-                    #update step
-                    data = input_cell( first_seen_timestamp, rssi, phase, antenna_num, antenna_port)
-                    if not epc96 in self.input_readings:
-                        self.input_readings[epc96]=[]
-                    self.input_readings[epc96].append(data)
-                    self.tag_count+=1
-                    #TODO:clear out the tags
-                    if self.tag_count%100==0:
-                        None
-                    self.quad_freq[antenna_num]+=1
-
-                    #update locations and put into output data structure
-                    #grace period to make sure there's some data there
-                    if self.tag_count > 1:
-                        noahloc = self.noah_localize(epc96)
-                        kevinandianloc = self.getLocation(epc96)
-                    else:
-                        noahloc = [-1,-1]
-                        kevinandianloc =  [-1,-1]
+                    #update localize class and unpack output vals
+                    output = self.loc.update( epc96, first_seen_timestamp, rssi, phase, antenna_num, antenna_port)                    
                     
-                    if not epc96 in self.output_locations:
-                        self.output_locations[epc96]=[]
-                    locations = output_cell( noahloc, kevinandianloc, (0,0) )
-                    self.output_locations[epc96].append(locations)
+                    location1 = output.getLocation1()
+                    location2 = output.getLocation2()
+                    filtered = output.getFilteredLocation()
+
+                    #added for localization testing
+                    self.out("tag %s has location1 %s, location2 %s, and filtered location %s" % (
+                        str(epc96), str(location1), str(location2), str(filtered)))
 
                     freeform = {}
                     freeform['rssi'] = rssi
@@ -483,9 +251,9 @@ class NoopDriver(Interrogator):
                     freeform['inventoryparameterspecid'] = inventoryparameterspecid
                     freeform['lastseentimestamp'] = lastseentimestamp
                     freeform['antennastate'] = -1
-                    freeform['noahloc'] = noahloc
-                    freeform['kevinandianloc'] = kevinandianloc
-                    #freeform['filteredloc'] = filtered
+                    freeform['location1'] = location1
+                    freeform['location2'] = location2
+                    freeform['filtered'] = filtered
                     
                     
                     freeformjson = json.dumps(freeform)
