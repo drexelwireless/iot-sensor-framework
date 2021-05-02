@@ -61,6 +61,8 @@ class Localize():
 
 
     #Noah location
+    #TODO: Add scaling factor
+    #TODO: Which is the antenna number on an antenna array? Antenna ID or antenna state?
     def getLocation1( self, epc ):
         #define the mapping from quadrant to position using unit vectors:
         pos = {
@@ -126,7 +128,17 @@ class Localize():
         #     queue.put(xyCoor)
         # else:
         #     queue.put(xyCoor)
-        return xyCoor #dict of locations per epc
+
+        #TODO: Adding an averaging mechanism so that the method returns 1 location (needed for kalman filter)
+        #Modify this as needed, I just put this in so that I could confirm that the kalman filter works
+        xpos=0
+        ypos=0
+        n=len(xyCoor)
+        for p in xyCoor:
+            xpos+=p[0] / n
+            ypos+=p[1] / n
+        rv = [xpos, ypos]
+        return rv
     
     def update(self, epc96, first_seen_timestamp, rssi, phase, antenna_num, antenna_port):
         #store the data and update persistent parameters
@@ -146,18 +158,18 @@ class Localize():
         if self.tag_count > 1:
             location1 = self.getLocation1(epc96)
             location2 = self.getLocation2(epc96)
+            filtered = self.doKalmanFilter(location2, location1)
         else:
             location1 = [-1,-1]
             location2 =  [-1,-1]
-        
-        #TODO: get filtered location here
-        filtered = [-1,-1]
-        rv = output_cell( location1, location2, filtered ) #TODO: add filtered location
+            filtered = [-1,-1]
+
+        rv = output_cell( location1, location2, filtered )
         return rv
 
-    #TODO
-    def KalmanFilter(self, kevinandianloc,noahloc):
-
+    def doKalmanFilter(self, ki_loc, n_loc):
+        kevinandianloc = np.array(ki_loc)
+        noahloc = np.array(n_loc)
         
 
         dt = 0.5 #seconds between each reading

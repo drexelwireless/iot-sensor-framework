@@ -59,8 +59,8 @@ class NoopDriver(Interrogator):
             
             tag = {}
             tag['FirstSeenTimestampUTC'] = tsutc
-            tag['AntennaState'] = 0
-            tag['AntennaID'] = 1
+            tag['AntennaState'] = np.random.randint(low=0,high=3)
+            tag['AntennaID'] = np.random.randint(low=0,high=3)
             tag['PeakRSSI'] = rssi
             tag['EPC-96'] = '000011112222333344445555'
             tag['RFDopplerFrequency'] = 0
@@ -232,8 +232,8 @@ class NoopDriver(Interrogator):
                     
                     location1 = output.getLocation1()
                     location2 = output.getLocation2()
-                    filtered = output.getFilteredLocation()
-
+                    temp = output.getFilteredLocation()
+                    filtered = [ temp[0], temp[1] ] #convert np.array to python array to be able to use json 
                     #added for localization testing
                     self.out("tag %s has location1 %s, location2 %s, and filtered location %s" % (
                         str(epc96), str(location1), str(location2), str(filtered)))
