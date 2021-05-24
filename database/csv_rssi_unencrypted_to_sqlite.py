@@ -138,7 +138,7 @@ def main():
 
     #print(rows)
     database.close_db_connection()
-    time.sleep(10)  # allow the database to write
+    time.sleep(60)  # allow the database to write and to flush the journal
     csvfile.close()
     os._exit(0)
 
