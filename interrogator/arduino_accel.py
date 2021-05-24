@@ -13,7 +13,7 @@ import collections
 import serial # pip install pyserial
 
 class ArduinoAccel(Interrogator):
-    def __init__(self, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _port="/dev/cu.SLAB_USBtoUART", _baud=9600, _parity=serial.PARITY_NONE, _rtscts=0, _xonxoff=0, _bytesize=serial.EIGHTBITS, _stopbits=serial.STOPBITS_ONE):
+    def __init__(self, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _port="/dev/cu.usbserial-02243210", _baud=9600, _parity=serial.PARITY_NONE, _rtscts=0, _xonxoff=0, _bytesize=serial.EIGHTBITS, _stopbits=serial.STOPBITS_ONE):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
         self.exiting = False
@@ -120,11 +120,11 @@ class ArduinoAccel(Interrogator):
 
             input_msg = self.handler_dequeue.popleft()
             input_msgs.append(input_msg)
-
-            for (line, timestamp) in input_msgs:
+            
+            for (timestamp, line) in input_msgs:
                 try:
                     tokens = line.split()
-                    #print(tokens)
+                    # print(tokens)
                     
                     xval = tokens[1]
                     yval = tokens[3]    
@@ -134,7 +134,7 @@ class ArduinoAccel(Interrogator):
                     freeform['xval'] = xval
                     freeform['yval'] = yval
                     freeform['zval'] = zval
-                
+                    print(freeform)
                     # if this is the "first" firstseentimestamp, note that so the other times will be relative to that
                     if self.start_timestamp == 0:
                         self.start_timestamp = timestamp
