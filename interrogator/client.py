@@ -1,6 +1,6 @@
 from impinj import *
 from impinj_r420 import *
-from impinj_xarray_itemsense import *
+from impinj_xarray_itemsense_localization import *
 import getopt
 import sys
 import os
@@ -41,7 +41,7 @@ def getopts():
     tagpop = 4
     apiusername = "NONE"
     apipassword = "NONE"
-    recipe = "IMPINJ_Fast_Location"
+    recipe = "IMPINJ_Deep_Scan_Inventory"
     facility = "MESS"
 
     # Check command line
