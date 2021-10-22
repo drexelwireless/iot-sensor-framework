@@ -264,7 +264,7 @@ class ImpinjR420(Interrogator):
         channelindex = freeform['channelindex']
         doppler = freeform['doppler']
         self.out("Adding tag %s with RSSI %s and timestamp %s and ID %s on antenna %s with Phase %s and Doppler %s and Channel %s" % (
-            str(self.count), str(peak_rssi), str(first_seen_timestamp), str(epc), str(antenna), str(doppler), str(phase), str(channelindex)))
+            str(self.count), str(peak_rssi), str(first_seen_timestamp), str(epc), str(antenna), str(phase), str(doppler), str(channelindex)))
 
         input_dict = dict()
         input_dict['data'] = dict()
