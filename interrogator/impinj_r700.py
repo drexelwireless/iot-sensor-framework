@@ -248,7 +248,7 @@ class ImpinjR700Reconfigurable(Interrogator):
                 first_seen_timestamp_nanos = int(first_seen_timestamp_nanos)
                 first_seen_timestamp = first_seen_timestamp[:-3] # remove nanoseconds for strptime
                 dt_first_seen_timestamp = datetime.strptime(first_seen_timestamp.replace('Z', ''), '%Y-%m-%dT%H:%M:%S.%f')
-                first_seen_timestamp = int(dt_first_seen_timestamp.timestamp() * 1000)
+                first_seen_timestamp = int(dt_first_seen_timestamp.timestamp() * 1000000)
                # first_seen_timestamp = first_seen_timestamp + first_seen_timestamp_nanos
 
                 # if this is the "first" firstseentimestamp, note that so the other times will be relative to that
