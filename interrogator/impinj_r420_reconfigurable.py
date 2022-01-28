@@ -173,11 +173,12 @@ class ImpinjR420Reconfigurable(Interrogator):
         return maxx
                 
     def random_Distribution(self, arr):
-        return np.random.choice(range(len(arr)), 1, p=arr/np.sum(arr))
+        result = np.random.choice(range(len(arr)), 1, p=arr/np.sum(arr))
+        return result[0]
         
     ##### # TODO: could change this to be the average of the last 5 seconds for each antenna
     ##### # TODO: if no tags are seen for a period, sweep, and do that sweep in the beginning
-    def get_recent_antenna_RSSI(self, max_age = 5e6, go_back_n=100):
+    def get_recent_antenna_RSSI(self, max_age = 5e6 * (self.k + 1), go_back_n=500 * (self.k + 1)):
         # Given self.k antennas, loop backwards over self.antennathreadhistory, which are tag_dict, to get the most recent RSSI for each antenna,
         # which we set in self.R.  Clear self.R before we begin so that we don't select based on old readings if an antenna goes out of range.
         newR = [0] * self.k
@@ -217,7 +218,7 @@ class ImpinjR420Reconfigurable(Interrogator):
         # if a monitor tag epc is provided, filter out non-matching epc96 tags
         matching_items = []
         for item in antenna_history_items:
-            if (self.reconfigurableantennatagmonitor is None) or item['data']['epc96'] == self.reconfigurableantennatagmonitor:
+            if (self.reconfigurableantennatagmonitor is None) or item['data']['freeform']['epc96'] == self.reconfigurableantennatagmonitor:
                 matching_items.append(item)
                 
         #print(matching_items)
