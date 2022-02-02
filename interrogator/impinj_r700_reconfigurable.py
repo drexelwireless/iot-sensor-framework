@@ -241,7 +241,7 @@ class ImpinjR700Reconfigurable(Interrogator):
         
     ##### # TODO: could change this to be the average of the last 5 seconds for each antenna
     ##### # TODO: if no tags are seen for a period, sweep, and do that sweep in the beginning
-    def get_recent_antenna_RSSI(self, max_age = 5e6 * (self.k + 1), go_back_n=500 * (self.k + 1)):
+    def get_recent_antenna_RSSI(self, max_age = 5e6, go_back_n=500):
         # Given self.k antennas, loop backwards over self.antennathreadhistory, which are tag_dict, to get the most recent RSSI for each antenna,
         # which we set in self.R.  Clear self.R before we begin so that we don't select based on old readings if an antenna goes out of range.
         newR = [0] * self.k
@@ -343,7 +343,7 @@ class ImpinjR700Reconfigurable(Interrogator):
                 self.out("Performing sweep...")
                 self.antenna_sweep()
             else:
-                self.R = self.get_recent_antenna_RSSI()
+                self.R = self.get_recent_antenna_RSSI(max_age=5e6 * (self.k + 1), go_back_n=100 * (self.k + 1))
                 
                 self.out("R: %s" % (str(self.R)))
                 
