@@ -28,7 +28,8 @@ class VarIOTDatabase(Database):
     def variot_dispatch(self, recordsdictlist):
         # Remove password since there is no application level encryption to VarIOT
         for record in recordsdictlist:
-            del record['values']['db_pw']
+            #del record['values']['db_pw']
+            del record['db_pw']
             #record['ts']=int(time.time())
             #print(int(time.time()))
 
@@ -83,7 +84,8 @@ class VarIOTDatabase(Database):
         	#input_dict['values'][key] = freeform[key]
             input_dict[key] = freeform[key]
             
-        input_dict['values']['db_pw'] = db_pw
+        #input_dict['values']['db_pw'] = db_pw
+        input_dict['db_pw'] = db_pw
 
         self.insertion_queue.put(input_dict)
         #TODO: Add fetch_since method
