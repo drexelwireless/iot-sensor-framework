@@ -61,7 +61,7 @@ from localize_noah import localizer
     - Changed the names of relevant and present parameters in handler_thread()
 '''
 
-class ImpinjR700Reconfigurable(Interrogator):
+class ImpinjR700(Interrogator):
     def __init__(self, _ip_address, _db_host, _db_password, _cert_path, _debug, _dispatchsleep=0, _antennas=[], _tagpop=4):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
