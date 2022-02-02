@@ -30,6 +30,16 @@ class VarIOTDatabase(Database):
         self.dispatchsleep = dispatchsleep
         self.dev = device
 
+    # https://thingsboard.io/docs/pe/user-guide/attributes/
+    def postDeviceAttribute(self, attrname, attrvalue):
+        payload = {attrname: attrvalue}
+        headers = {"Authorization": "Bearer " + self.token}
+        URL = self.db_path + '/api/plugins/telemetry/DEVICE/' + self.dev + '/SERVER_SCOPE'
+        r = requests.post(url = URL, json = payload, headers = headers, verify=False)    
+        resp = r.text
+        # print(resp)
+        return resp     
+        
     def getToken(self):
         payload = {'username': self.username, 'password': self.password}
         URL = self.db_path + '/api/auth/login'
@@ -54,13 +64,15 @@ class VarIOTDatabase(Database):
         # Post to https?
         # Which side encrypts?  Right now, eliminating this side encryption for VarIOT (hence removal of password from the body and use of crypto from this module
         # Documentation of REST API: https://thingsboard.io/docs/reference/rest-api/
-        payload = {'ts': record['interrogatortime'], 'values': json.dumps(data)}
-        headers = {"Authorization": "Bearer " + self.token}
-        #URL = self.db_path + '/api/v2/hubs/message/xarray?address=' + self.dev
-        URL = self.db_path + '/api/v1/' + self.token + '/telemetry'
-        r = requests.post(url = URL, json = payload, headers = headers, verify=False)
+        # payload = {'ts': record['interrogatortime'], 'values': json.dumps(data)}
+        #headers = {"Authorization": "Bearer " + self.token}
+        ##URL = self.db_path + '/api/v2/hubs/message/xarray?address=' + self.dev
+        #URL = self.db_path + '/api/v1/' + self.token + '/telemetry'
+        #r = requests.post(url = URL, json = payload, headers = headers, verify=False)
         #print(r.status_code)
         #print(r.text)        
+        
+        self.postDeviceAttribute('data', json.dumps(data))
 
     # dispatch insertions from the queue so that the webserver can continue receiving requests
     # log each request to the Audit
