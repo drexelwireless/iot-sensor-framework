@@ -129,7 +129,7 @@ class ImpinjR700Reconfigurable(Interrogator):
             requests.get(urljoin(self.hostname, '/api/v1/status')).raise_for_status()
         except (requests.ConnectionError, requests.exceptions.HTTPError):
             self.out('Error : Unable to connect to the Impinj Reader API on "{0}"'.format(self.hostname))
-            if len(hostname.split(':')) == 2:
+            if len(self.hostname.split(':')) == 2:
                 self.out('        Have you provided the port number with your reader hostname?')
                 self.out('        ex.  --reader <your-reader-hostname>:<api-port>')
             sys.exit(1)
