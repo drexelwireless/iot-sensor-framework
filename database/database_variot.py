@@ -33,7 +33,7 @@ class VarIOTDatabase(Database):
     def getToken(self):
         payload = {'username': self.username, 'password': self.password}
         URL = self.db_path + '/api/auth/login'
-        r = requests.post(url = URL, json = payload)    
+        r = requests.post(url = URL, json = payload, verify=False)    
         resp = r.text
         # print(resp)
         respjson = json.loads(resp)
@@ -58,7 +58,7 @@ class VarIOTDatabase(Database):
         headers = {"Authorization": "Bearer " + self.token}
         #URL = self.db_path + '/api/v2/hubs/message/xarray?address=' + self.dev
         URL = self.db_path + '/api/v1/' + self.token + '/telemetry'
-        r = requests.post(url = URL, json = payload, headers = headers)
+        r = requests.post(url = URL, json = payload, headers = headers, verify=False)
         #print(r.status_code)
         #print(r.text)        
 
