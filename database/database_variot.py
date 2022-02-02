@@ -15,9 +15,14 @@ import requests
 
 # Set up MAC address on server when ready, and use mac address as device ID; possibly token in the future
 class VarIOTDatabase(Database):
-    def __init__(self, crypto, db_path='https://variot.ece.drexel.edu', token='', device='0000000000', dispatchsleep=0):
+    def __init__(self, crypto, db_path='https://variot.ece.drexel.edu', token=None, device='0000000000', dispatchsleep=0, username='', password=''):
         Database.__init__(self, crypto, db_path=db_path)
-        self.token = token
+        self.username = username
+        self.password = password
+        if not (token is None):
+            self.token = token
+        else:
+            self.token = self.getToken()
         self.insertion_queue = queue.Queue()
         self.dispatcher_thread = threading.Thread(
             target=self.dispatcher, args=())
@@ -25,6 +30,15 @@ class VarIOTDatabase(Database):
         self.dispatchsleep = dispatchsleep
         self.dev = device
 
+    def getToken(self):
+        payload = {'username': self.username, 'password': self.password}
+        URL = self.db_path + '/api/auth/login'
+        r = requests.post(url = URL, json = payload)    
+        resp = r.text
+        # print(resp)
+        respjson = json.loads(resp)
+        return respjson['token']
+    
     def variot_dispatch(self, recordsdictlist):
         # Remove password since there is no application level encryption to VarIOT
         for record in recordsdictlist:
@@ -39,9 +53,12 @@ class VarIOTDatabase(Database):
         # Viewable at http://10.248.101.200:5000/messages/5e4af7041c9d440000f0cd38
         # Post to https?
         # Which side encrypts?  Right now, eliminating this side encryption for VarIOT (hence removal of password from the body and use of crypto from this module
-        payload = {'data': json.dumps(data)}
-        URL = self.db_path + '/api/v2/hubs/message/xarray?address=' + self.dev
-        r = requests.post(url = URL, json = payload)
+        # Documentation of REST API: https://thingsboard.io/docs/reference/rest-api/
+        payload = {'ts': record['interrogatortime'], 'values': json.dumps(data)}
+        headers = {"Authorization": "Bearer " + self.token}
+        #URL = self.db_path + '/api/v2/hubs/message/xarray?address=' + self.dev
+        URL = self.db_path + '/api/v1/' + self.token + '/telemetry'
+        r = requests.post(url = URL, json = payload, headers = headers)
         #print(r.status_code)
         #print(r.text)        
 
