@@ -178,10 +178,10 @@ class ImpinjR420Reconfigurable(Interrogator):
         
     ##### # TODO: could change this to be the average of the last 5 seconds for each antenna
     ##### # TODO: if no tags are seen for a period, sweep, and do that sweep in the beginning
-    def get_recent_antenna_RSSI(self, max_age = 5e6, go_back_n=500):
+    def get_recent_antenna_RSSI(self, max_age = 5e6, go_back_n=500, decay=0.9):
         # Given self.k antennas, loop backwards over self.antennathreadhistory, which are tag_dict, to get the most recent RSSI for each antenna,
         # which we set in self.R.  Clear self.R before we begin so that we don't select based on old readings if an antenna goes out of range.
-        newR = [0] * self.k
+        newR = self.R #[0] * self.k
         
         # no data? return no score
         if self.antennathreadhistory.qsize() == 0:
@@ -250,7 +250,7 @@ class ImpinjR420Reconfigurable(Interrogator):
             # compute the recent average RSSI for each antenna (or 0 if no reads found for that antenna)
             for i in range(self.k):
                 if not (i in rssidict):
-                    newR[i] = 0
+                    newR[i] = self.R[i] * decay #0
                 else:
                     newR[i] = self.avg(rssidict[i])
 
