@@ -87,7 +87,7 @@ class ImpinjR700(Interrogator):
 
         #temporarily use these to calculate doppler
         self.last_time={}
-        self.last_phase={}
+        self.last_phase={}        
 
     def out(self, x):
         if self.debug:
@@ -438,8 +438,6 @@ class ImpinjR700(Interrogator):
 
         self.tag_dicts_queue.put(input_dict)  # read by the consumer
         
-        self.antennathreadhistory.put(input_dict)
-
     def signal_handler(self, signal, frame):
         self.close_server()
         sys.exit(0)
