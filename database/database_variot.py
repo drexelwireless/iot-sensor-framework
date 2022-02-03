@@ -15,7 +15,7 @@ import requests
 import time
 
 class VarIOTDatabase(Database):
-    def __init__(self, crypto, db_path='https://variot.ece.drexel.edu', token='e2tmxfzcJG6JfPuyzTOT', device='6592aa50-579f-11ec-b72a-b3a72eee71ca', dispatchsleep=0):
+    def __init__(self, crypto, db_path='https://variot.ece.drexel.edu', token='', device='', dispatchsleep=0):
         Database.__init__(self, crypto, db_path=db_path)
         self.token = token
         self.insertion_queue = queue.Queue()
