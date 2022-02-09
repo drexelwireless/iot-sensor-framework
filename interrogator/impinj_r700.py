@@ -88,6 +88,10 @@ class ImpinjR700(Interrogator):
         #temporarily use these to calculate doppler
         self.last_time={}
         self.last_phase={}        
+        
+        #initialize localizer dict. Add entries for each epc
+        self.NoahLocalizer = {}
+        self.out('Initialized Noah Localizer')
 
     def out(self, x):
         if self.debug:
@@ -239,7 +243,9 @@ class ImpinjR700(Interrogator):
                     doppler = msg['tagInventoryEvent']['doppler']
                 else:
                     doppler = 0
-                
+                if 'antennastate' in msg['tagInventoryEvent']:
+                    antennastate = msg['tagInventoryReport']['antennastate']
+
                 self.count = self.count + 1
                 
                 # converted first_seen_timestamp to milliseconds because strptime is incompatible with date format
@@ -280,6 +286,15 @@ class ImpinjR700(Interrogator):
                 accessspecid = 1
                 inventoryparameterspecid = 1                
                 
+                #initialize Noah Localizer
+                if not epc96 in self.NoahLocalizer:
+                    self.NoahLocalizer[epc96] = localizer(len(self.antennas))
+                
+                self.NoahLocalizer[epc96].update(antenna)
+                (xn, yn)=self.NoahLocalizer[epc96].localize()
+                self.out('xn is {}'.format(xn))
+                self.out('yn is {}'.format(yn))
+
                 self.out('phase was: {}'.format(phase))
                 phase = phase*math.pi/180
                 self.out('phase is: {}'.format(phase))
@@ -296,7 +311,9 @@ class ImpinjR700(Interrogator):
                 freeform['accessspecid'] = accessspecid
                 freeform['inventoryparameterspecid'] = inventoryparameterspecid
                 freeform['lastseentimestamp'] = lastseentimestamp
-            
+                freeform['xn'] = xn
+                freeform['yn'] = yn
+
                 freeformjson = json.dumps(freeform)
 
                 # call self.insert_tag to insert into database
