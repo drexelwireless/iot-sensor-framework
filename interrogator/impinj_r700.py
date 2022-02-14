@@ -25,7 +25,7 @@ except ImportError:
 
 #import localization noah class
 from localize_noah import localizer
-
+from localize_spherical import spherical_localizer
 
 ''' 
 -------------------------------------------------------------------------------------------------------    
@@ -92,6 +92,10 @@ class ImpinjR700(Interrogator):
         #initialize localizer dict. Add entries for each epc
         self.NoahLocalizer = {}
         self.out('Initialized Noah Localizer')
+        
+        #initialize sperical localizer dict
+        self.SphericalLocalizer = {}
+        self.out('Initialized Spherical Localizer')
 
     def out(self, x):
         if self.debug:
@@ -290,14 +294,23 @@ class ImpinjR700(Interrogator):
                 if not epc96 in self.NoahLocalizer:
                     self.NoahLocalizer[epc96] = localizer(len(self.antennas))
                 
+                #get new quadrant based location
                 self.NoahLocalizer[epc96].update(antenna)
                 (xn, yn)=self.NoahLocalizer[epc96].localize()
                 self.out('xn is {}'.format(xn))
                 self.out('yn is {}'.format(yn))
-
+                
+                #calculate phase
                 self.out('phase was: {}'.format(phase))
                 phase = phase*math.pi/180
                 self.out('phase is: {}'.format(phase))
+                
+                #TODO: DO WE NEED TO INITIALIZE SPHERICAL LOCALIZER???
+                if not epc96 in self.SphericalLocalizer:
+                    self.SphericalLocalizer[epc96] = spherical_localizer()
+
+                #calculate spherical location
+                (xs, ys) = self.SphericalLocalizer[epc96].getLocation(rssi, phase, antenna)
 
                 freeform = {}
                 freeform['rssi'] = rssi
@@ -313,6 +326,8 @@ class ImpinjR700(Interrogator):
                 freeform['lastseentimestamp'] = lastseentimestamp
                 freeform['xn'] = xn
                 freeform['yn'] = yn
+                freeform['xs'] = xs
+                freeform['ys'] = ys
 
                 freeformjson = json.dumps(freeform)
 
