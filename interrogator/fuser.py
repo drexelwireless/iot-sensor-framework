@@ -45,3 +45,10 @@ class Fuser():
         #return estimated position [x,y]
         return rv
 
+    def fuse_kalman(self):
+        #TODO: Get variance/kalmann parameters
+        
+        #TODO: Implement fusion
+        
+        rv = (xk, yk)
+        return rv
