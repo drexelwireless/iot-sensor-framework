@@ -23,10 +23,12 @@ try:
 except ImportError:
     from urllib.parse import urljoin
 
-#import localization noah class
+#import localization classes
 from localize_noah import localizer
+from localize_spherical import spherical_localizer
 
-
+#import fuser class
+from fuser import Fuser
 ''' 
 -------------------------------------------------------------------------------------------------------    
     DESCRPITION
@@ -102,10 +104,11 @@ class ImpinjR700Reconfigurable(Interrogator):
         
         self.out('Initializing R700 interrogator client')
 
-        #initialize localizer dict. Add entries for each epc
+        #initialize dictionaries for localization/fusion
         self.NoahLocalizer = {}
-        self.out('Initialized Noah Localizer')
-
+        self.SphericalLocalizer = {}
+        self.FusedLocations = {}
+	
         #temporarily use these to calculate doppler
         self.last_time={}
         self.last_phase={}
@@ -431,7 +434,9 @@ class ImpinjR700Reconfigurable(Interrogator):
                     doppler = msg['tagInventoryEvent']['doppler']
                 else:
                     doppler = 0
-                
+                if self.reconfigurableantennastate != -1: # if we're using reconfigurable antennas, set antennastate
+                    antennastate = int(self.reconfigurableantennastate)
+                    
                 self.count = self.count + 1
                 
                 # converted first_seen_timestamp to milliseconds because strptime is incompatible with date format
@@ -454,7 +459,7 @@ class ImpinjR700Reconfigurable(Interrogator):
 
                 lastseentimestamp = first_seen_timestamp
                 
-                #TODO: calculate doppler here
+                #calculate doppler
                 if not epc96 in self.last_phase.keys():
                     doppler=0
                 else:
@@ -474,18 +479,38 @@ class ImpinjR700Reconfigurable(Interrogator):
                 accessspecid = 1
                 inventoryparameterspecid = 1                
                 
-                self.out('antenna: {}'.format(antenna))
-                if not epc96 in self.NoahLocalizer:
-                    self.NoahLocalizer[epc96]=localizer(len(self.antennas))
-
-                self.NoahLocalizer[epc96].update(antenna)
-                (xn,yn)=self.NoahLocalizer[epc96].localize()
-                self.out( 'Noah localization test: ({} , {})'.format(xn,yn) )
-                
                 self.out('phase was: {}'.format(phase))
                 phase = phase*math.pi/180
                 self.out('phase is: {}'.format(phase))
+                
+                #print antenna for debugging
+                self.out('antenna: {}'.format(antennastate))
+                
+                #initialize Noah Localizer
+                if not epc96 in self.NoahLocalizer:
+                    self.NoahLocalizer[epc96] = localizer(len(self.antennas))
+                
+                #get new quadrant based location
+                self.NoahLocalizer[epc96].update(antennastate)
+                (xn, yn)=self.NoahLocalizer[epc96].localize()
+                self.out('xn is {}'.format(xn))
+                self.out('yn is {}'.format(yn))
+                
+                #TODO: DO WE NEED TO INITIALIZE SPHERICAL LOCALIZER???
+                if not epc96 in self.SphericalLocalizer:
+                    self.SphericalLocalizer[epc96] = spherical_localizer()
 
+                #calculate spherical location
+                (xs, ys) = self.SphericalLocalizer[epc96].getLocation(rssi, phase, antennastate)
+                
+                #initialize fuser
+                if not epc96 in self.FusedLocations:
+                    self.FusedLocations[epc96] = Fuser()
+                
+                #calculate fused location
+                self.FusedLocations[epc96].update(x1=xn, y1=yn, x2=xs, y2=ys)
+                (xf, yf) = self.FusedLocations[epc96].fuse()
+                
                 freeform = {}
                 freeform['rssi'] = rssi
                 freeform['epc96'] = epc96
@@ -498,7 +523,13 @@ class ImpinjR700Reconfigurable(Interrogator):
                 freeform['accessspecid'] = accessspecid
                 freeform['inventoryparameterspecid'] = inventoryparameterspecid
                 freeform['lastseentimestamp'] = lastseentimestamp
-            
+                freeform['xn'] = xn
+                freeform['yn'] = yn
+                freeform['xs'] = xs
+                freeform['ys'] = ys
+                freeform['xf'] = xf
+                freeform['yf'] = yf
+                
                 if self.reconfigurableantennastate != -1: # if we're using reconfigurable antennas, include the state
                     freeform['antennastate'] = self.reconfigurableantennastate
             
