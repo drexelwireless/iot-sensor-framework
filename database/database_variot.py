@@ -15,7 +15,7 @@ import requests
 import time
 
 class VarIOTDatabase(Database):
-    def __init__(self, crypto, db_path='https://variot.ece.drexel.edu', token='', device='', dispatchsleep=0):
+    def __init__(self, crypto, db_path='https://variot.ece.drexel.edu:8080', token='', device='', personaltoken='', telemetryfields='rssi' dispatchsleep=0):
         Database.__init__(self, crypto, db_path=db_path)
         self.token = token
         self.insertion_queue = queue.Queue()
@@ -24,7 +24,48 @@ class VarIOTDatabase(Database):
         self.dispatcher_thread.start()
         self.dispatchsleep = dispatchsleep
         self.dev = device
+        self.personaltoken = personaltoken # BEARER token: curl -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{"username":"<ENTER USERNAME HERE>", "password":"<ENTER PASSWORD HERE>"}' 'http://variot.ece.drexel.edu/api/auth/login'
+        self.telemetryfields = telemetryfields
+        
+    def fetch_all(self, db_pw=''):
+        data = []
+        
+        URL = self.db_path + f'/api/plugins/telemetry/DEVICE/{self.device}/values/timeseries?keys={self.telemetryfields}'
+        r = requests.get(url = URL, verify=False, headers={"Content-Type":"application/json", "X-Authorization: Bearer " + self.personaltoken})
+        print('Status code: '+str(r.status_code))
+        print('Payload: '+str(r.text))         
+        respjson = r.json()
+        
+        if ',' in self.telemetryfields.split(','):
+            fields = self.telemetryfields.split(',')
+        else:
+            fields = [self.telemetryfields]
+               
+        vals = dict()
+        
+        for field in fields:        
+            for i in range(len(respjson[field])):
+                if not str(i) in vals:
+                    vals[str(i)] = dict()
+                if not 'data' in vals[str(i)]:
+                    vals[str(i)]['data'] = dict()
+                    
+                vals[str(i)]['data'][field] = respjson[field][i]['value']
+                vals[str(i)]['ts'] = respjson[field][i]['ts']
 
+        for id in vals.keys():
+            d = dict()
+            
+            d['id'] = str(id)
+            d['absolute_timestamp'] = vals[id]['ts']
+            d['relative_timestamp'] = vals[id]['ts']
+            d['interrogator_timestamp'] = vals[id]['ts']
+            d['freeform'] = vals[id]['data']
+            
+            data.append(d)
+            
+        return data
+        
     def variot_dispatch(self, recordsdictlist):
         # Remove password since there is no application level encryption to VarIOT
         for record in recordsdictlist:
