@@ -33,11 +33,10 @@ class VarIOTDatabase(Database):
             #record['ts']=int(time.time())
             #print(int(time.time()))
 
-        # TODO POST TO VARIOT HERE
+        # POST TO VARIOT HERE
         # data is a json array of json records
         # token constructor parameter will be the API key when VarIOT is ready for that
-        # self.dev is the device ID on VarIOT
-        # Viewable at http://10.248.101.200:5000/messages/5e4af7041c9d440000f0cd38
+        # self.dev is the device ID on VarIOT, self.token is the api key
         # Post to https?
         # Which side encrypts?  Right now, eliminating this side encryption for VarIOT (hence removal of password from the body and use of crypto from this module
         for payload in recordsdictlist:
