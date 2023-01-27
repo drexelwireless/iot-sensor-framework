@@ -49,7 +49,7 @@ pip3 install --user requests
 sudo apt-get install libmysqlclient-dev
 #pip3 install --user MySQL-python # may be incompatible with Python3, switch to pymysql instead.
 pip3 install --user pycurl --global-option="--with-openssl"
-pip3 install --user pycrypto
+pip3 install --user pycryptodome
 
 pip3 install --user 2to3
 sudo apt-get install 2to3

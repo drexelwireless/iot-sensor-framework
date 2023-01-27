@@ -9,7 +9,6 @@ import hashlib
 import datetime
 from dateutil import parser
 import time
-#from Crypto.Hash.MD2 import bchr, bord
 from Crypto.Util.py3compat import bchr, bord
 
 class MyCrypto:
@@ -134,7 +133,7 @@ class MyCrypto:
         self.db_password = self.db_password.encode('ascii')
         key = hashlib.sha512(self.db_password).hexdigest()[:self.KEY_SIZE]
         ctr = Counter.new(self.MAX_COUNTER_BITS, initial_value=counter)
-        aes = AES.new(key, AES.MODE_CTR, counter=ctr)
+        aes = AES.new(key.encode("utf8"), AES.MODE_CTR, counter=ctr)
         return aes
 
     def get_db_key(self, db_password, counter=None):
