@@ -9,8 +9,8 @@ import hashlib
 import datetime
 from dateutil import parser
 import time
-from Crypto.Hash.MD2 import bchr, bord
-
+#from Crypto.Hash.MD2 import bchr, bord
+from Crypto.Util.py3compat import bchr, bord
 
 class MyCrypto:
     KEY_SIZE = 32
