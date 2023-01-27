@@ -44,6 +44,7 @@ pip3 install --user scikit-image
 pip3 install --user peakutils
 pip3 install --user hmmlearn
 pip3 install --user statsmodels 
+pip3 install --user requests
 
 sudo apt-get install libmysqlclient-dev
 #pip3 install --user MySQL-python # may be incompatible with Python3, switch to pymysql instead.
