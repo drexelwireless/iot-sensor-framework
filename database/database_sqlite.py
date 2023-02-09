@@ -9,8 +9,9 @@ from time import sleep
 import json
 
 class SqliteDatabase(Database):
-    def __init__(self, crypto, db_path='database.db', flush=False, dispatchsleep=0):
+    def __init__(self, crypto, db_path='database.db', flush=False, dispatchsleep=0, memory=False):
         Database.__init__(self, crypto, db_path=db_path, flush=flush)
+        self.memory = memory
         self.dispatchsleep = dispatchsleep
         self.insertion_queue = queue.Queue()
         self.dispatcher_thread = threading.Thread(
@@ -63,14 +64,30 @@ class SqliteDatabase(Database):
     def close_db_connection(self, thread='main'):
         while self.insertion_queue.qsize() > 0:
             sleep(5+2*self.dispatchsleep)  # wait for dispatchers to finish
+            
+        if self.memory:
+            self.dump_to_file()
 
     def __del__(self):
         self.close_db_connection()
+        
+    def dump_to_file(self):
+        conn = sqlite3.connect("file:" + self.db_path + "?mode=memory&cache=shared", uri=True)
+        
+        dumpconn = sqlite3.connect(self.db_path)
+        os.chmod(self.db_path, 0o600)
+        
+        conn.backup(dumpconn)
+        
+        dumpconn.close()
 
     def open_db_connection(self):
         # don't store the connection because each thread requires its own
-        conn = sqlite3.connect(self.db_path)
-        os.chmod(self.db_path, 0o600)
+        if self.memory:
+            conn = sqlite3.connect("file:" + self.db_path + "?mode=memory&cache=shared", uri=True)
+        else:
+            conn = sqlite3.connect(self.db_path)
+            os.chmod(self.db_path, 0o600)
 
         sqlite3.enable_callback_tracebacks(True) # for user defined function exceptions
         

@@ -9,15 +9,154 @@ import json
 import time
 import tinymongo as tm
 import tinydb
+import io
+from abc import ABC, abstractmethod
+from typing import Dict, Any, Optional
+import atexit
 
+# https://tinydb.readthedocs.io/en/latest/_modules/tinydb/storages.html
+def touch(path: str, create_dirs: bool):
+    """
+    Create a file if it doesn't exist yet.
+
+    :param path: The file to create.
+    :param create_dirs: Whether to create all missing parent directories.
+    """
+    if create_dirs:
+        base_dir = os.path.dirname(path)
+
+        # Check if we need to create missing parent directories
+        if not os.path.exists(base_dir):
+            os.makedirs(base_dir)
+
+    # Create the file by opening it in 'a' mode which creates the file if it
+    # does not exist yet but does not modify its contents
+    with open(path, 'a'):
+        pass
+        
+class Storage(ABC):
+    """
+    The abstract base class for all Storages.
+
+    A Storage (de)serializes the current state of the database and stores it in
+    some place (memory, file on disk, ...).
+    """
+
+    # Using ABCMeta as metaclass allows instantiating only storages that have
+    # implemented read and write
+
+    @abstractmethod
+    def read(self) -> Optional[Dict[str, Dict[str, Any]]]:
+        """
+        Read the current state.
+
+        Any kind of deserialization should go here.
+
+        Return ``None`` here to indicate that the storage is empty.
+        """
+
+        raise NotImplementedError('To be overridden!')
+
+
+    @abstractmethod
+    def write(self, data: Dict[str, Dict[str, Any]]) -> None:
+        """
+        Write the current state of the database to the storage.
+
+        Any kind of serialization should go here.
+
+        :param data: The current state of the database.
+        """
+
+        raise NotImplementedError('To be overridden!')
+
+    @abstractmethod
+    def close(self) -> None:
+        """
+        Optional: Close open file handles, etc.
+        """
+
+        raise NotImplementedError('To be overridden!')
+        
+class CachedJSONStorage(Storage):
+    """
+    Store the data in a JSON file.
+    """
+
+    def __init__(self, path: str, create_dirs=False, encoding=None, access_mode='r+', **kwargs):
+        """
+        Create a new instance.
+
+        Also creates the storage file, if it doesn't exist and the access mode is appropriate for writing.
+
+        :param path: Where to store the JSON data.
+        :param access_mode: mode in which the file is opened (r, r+, w, a, x, b, t, +, U)
+        :type access_mode: str
+        """
+
+        super().__init__()
+
+        self._mode = access_mode
+        self.kwargs = kwargs
+        
+        # Register atexit to write db on quit
+        atexit.register(self.dump)
+
+        # Create the file if it doesn't exist and creating is allowed by the
+        # access mode
+        if any([character in self._mode for character in ('+', 'w', 'a')]):  # any of the writing modes
+            touch(path, create_dirs=create_dirs)
+
+        # Open the file for reading/writing
+        self._handle = open(path, mode=self._mode, encoding=encoding)
+        
+        # Save the cache
+        self.cache = {}
+
+    def close(self) -> None: 
+        self._handle.close()  
+        
+    def read(self) -> Optional[Dict[str, Dict[str, Any]]]:
+        return self.cache 
+
+    def dump(self) -> None:       
+        # Move the cursor to the beginning of the file just in case
+        self._handle.seek(0)
+
+        # Serialize the database state using the user-provided arguments
+        serialized = json.dumps(self.cache, **self.kwargs)
+
+        # Write the serialized data to the file
+        try:
+            self._handle.write(serialized)
+        except io.UnsupportedOperation:
+            raise IOError('Cannot write to the database. Access mode is "{0}"'.format(self._mode))
+
+        # Ensure the file has been written
+        self._handle.flush()
+        os.fsync(self._handle.fileno())
+
+        # Remove data that is behind the new cursor in case the file has
+        # gotten shorter
+        self._handle.truncate()  
+
+    def write(self, data: Dict[str, Dict[str, Any]]):
+        self.cache.update(data)
+        
 class TinyMongoClient(tm.TinyMongoClient):
     @property
     def _storage(self):
         return tinydb.storages.JSONStorage
 
+class TinyMongoCachedClient(tm.TinyMongoClient):
+    @property
+    def _storage(self):
+        return CachedJSONStorage
+        
 class MongoDatabase(Database):
-    def __init__(self, crypto, db_path='tinymongodata', flush=False, dispatchsleep=0):
+    def __init__(self, crypto, db_path='tinymongodata', flush=False, dispatchsleep=0, memory=False):
         Database.__init__(self, crypto, db_path=db_path, flush=flush)
+        self.memory = memory        
         self.open_db_connection()
         self.dispatchsleep = dispatchsleep
         self.insertion_queue = queue.Queue()
@@ -69,22 +208,27 @@ class MongoDatabase(Database):
 
         #conn.close()
 
-    def close_db_connection(self, thread='main'):
+    def close_db_connection(self, thread='main'):       
         while self.insertion_queue.qsize() > 0:
             sleep(5+2*self.dispatchsleep)  # wait for dispatchers to finish
+            
+        self.conn.close()
 
     def __del__(self):
         self.close_db_connection()
 
     def open_db_connection(self):
-        # don't store the connection because each thread requires its own
         try:
             os.mkdir(self.db_path)
         except FileExistsError:
             #print("Warning: database path already exists:", self.db_path)
             pass
         os.chmod(self.db_path, 0o700)
-        self.conn = TinyMongoClient(self.db_path)
+        
+        if self.memory:
+            self.conn = TinyMongoCachedClient(self.db_path)
+        else:
+            self.conn = TinyMongoClient(self.db_path)
 
         #sqlite3.enable_callback_tracebacks(True) # for user defined function exceptions
         

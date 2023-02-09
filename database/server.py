@@ -11,10 +11,12 @@ from mycrypto import MyCrypto
 import os
 import threading
 import time
+import requests
+import signal
 
 # OPTIONS
 
-def usage(flask_port, flask_host, do_debug, db_path, flush, key_path_prefix, dispatchsleep):
+def usage(flask_port, flask_host, do_debug, db_path, flush, key_path_prefix, dispatchsleep, memory):
     print('%s [<options>]' % sys.argv[0])
     print('where <options> are:\n' \
         '\t-h - show this help message\n' \
@@ -28,8 +30,9 @@ def usage(flask_port, flask_host, do_debug, db_path, flush, key_path_prefix, dis
         '\t-b <path> - path or hostname to the database or API endpoint: default %s\n' \
         '\t-l - flush the database on run: default %s\n' \
         '\t-e <time in seconds> - length of time to sleep the dispatcher in between transmissions of data to the database, to allow new messages to queue up from the client for efficiency: default %s\n' \
-        '\t-k <path> - path to tke ssl key: default %s\n' % (
-            flask_host, flask_port, do_debug, db_path, flush, dispatchsleep, key_path_prefix))
+        '\t-k <path> - path to the ssl key: default %s\n' \
+        '\t-y - Enable in-memory database if supported: default %s\n' % (
+            flask_host, flask_port, do_debug, db_path, flush, dispatchsleep, key_path_prefix, memory))
     sys.exit(1)
 
 
@@ -50,13 +53,14 @@ def getopts():
     dispatchsleep = 0
     token = ''
     device = '0000000000'
+    memory = False
 
     # Check command line
-    optlist, list = getopt.getopt(sys.argv[1:], 'hp:f:db:k:mos:w:e:lrt:vc:')
+    optlist, list = getopt.getopt(sys.argv[1:], 'hp:f:db:k:mos:w:e:lrt:vc:y')
     for opt in optlist:
         if opt[0] == '-h':
             usage(flask_port, flask_host, do_debug, db_path,
-                  flush, key_path_prefix, dispatchsleep)
+                  flush, key_path_prefix, dispatchsleep, memory)
         if opt[0] == '-p':
             flask_port = int(opt[1])
         if opt[0] == '-f':
@@ -87,26 +91,29 @@ def getopts():
             device = opt[1]
         if opt[0] == '-v':
             variot = True
+        if opt[0] == '-y':
+            memory = True
 
     if do_debug:
-        print('Parameters: [flask host = %s, flask port = %d, debug = %s, database = %s, key = %s, mysql = %d, mongo = %d, db_user = %s, db_password = %s, flush = %s, dispatchsleep = %s, redcap = %s, variot = %s, token = %s, device = %s]' % (
-            flask_host, flask_port, do_debug, db_path, key_path_prefix, mysql, tinymongo, db_user, db_password, flush, dispatchsleep, redcap, variot, token, device))
+        print('Parameters: [flask host = %s, flask port = %d, debug = %s, database = %s, key = %s, mysql = %d, mongo = %d, db_user = %s, db_password = %s, flush = %s, dispatchsleep = %s, redcap = %s, variot = %s, token = %s, device = %s, memory = %s]' % (
+            flask_host, flask_port, do_debug, db_path, key_path_prefix, mysql, tinymongo, db_user, db_password, flush, dispatchsleep, redcap, variot, token, device, memory))
 
-    return flask_port, flask_host, do_debug, db_path, key_path_prefix, mysql, tinymongo, db_user, db_password, flush, dispatchsleep, redcap, variot, token, device
+    return flask_port, flask_host, do_debug, db_path, key_path_prefix, mysql, tinymongo, db_user, db_password, flush, dispatchsleep, redcap, variot, token, device, memory
 
 # Function to watch CTRL+C keyboard input
 
 
-def prog_quit(QUITFILE='quit'):
+def prog_quit(database, QUITFILE='quit'):
     print("Create file " + QUITFILE + " to quit.")
     while 1:
-        try:
-            if os.path.isfile(QUITFILE):
-                print(QUITFILE + " has been found")
-                os._exit(0)
-            time.sleep(1)
-        except:
-            os._exit(0)
+        if os.path.isfile(QUITFILE):
+            print(QUITFILE + " has been found")
+            database.close_db_connection()
+                
+            print("Press CTRL-C to finish quit") # do this instead of os._exit per below
+            sys.exit() # don't do os._exit(0) since some db drivers use atexit to flush from cache
+
+        time.sleep(1)
 
 def start_wserver(crypto, database, flask_host, flask_port, do_debug):
     ws_start(crypto, database, flask_host=flask_host,
@@ -116,7 +123,7 @@ def start_wserver(crypto, database, flask_host, flask_port, do_debug):
 # MAIN
 if __name__ == '__main__':
     # Get options
-    flask_port, flask_host, do_debug, db_path, key_path_prefix, mysql, tinymongo, db_user, db_password, flush, dispatchsleep, redcap, variot, token, device = getopts()
+    flask_port, flask_host, do_debug, db_path, key_path_prefix, mysql, tinymongo, db_user, db_password, flush, dispatchsleep, redcap, variot, token, device, memory = getopts()
 
     # Start up the database module and the database AES / web server SSL module
     crypto = MyCrypto(hostname=flask_host, key_path_prefix=key_path_prefix)
@@ -127,15 +134,15 @@ if __name__ == '__main__':
         database = MysqlDatabase(crypto=crypto, db_path=db_path, db_password=db_password,
                                  db_user=db_user, flush=flush, dispatchsleep=dispatchsleep)
     elif tinymongo == True:
-        database = MongoDatabase(crypto=crypto, db_path=db_path, flush=flush, dispatchsleep=dispatchsleep)
+        database = MongoDatabase(crypto=crypto, db_path=db_path, flush=flush, dispatchsleep=dispatchsleep, memory=memory)
     elif variot == True:
         database = VarIOTDatabase(crypto=crypto, db_path=db_path, dispatchsleep=dispatchsleep, token=token, device=device)
     else:
         database = SqliteDatabase(
-            crypto=crypto, db_path=db_path, flush=flush, dispatchsleep=dispatchsleep)
+            crypto=crypto, db_path=db_path, flush=flush, dispatchsleep=dispatchsleep, memory=memory)
 
     # enable graceful shutdown
-    t2 = threading.Thread(target=prog_quit, args=())
+    t2 = threading.Thread(target=prog_quit, args=(database,))
     t2.start()
 
     # Start up the web server
