@@ -31,7 +31,7 @@ def usage(flask_port, flask_host, do_debug, db_path, flush, key_path_prefix, dis
         '\t-l - flush the database on run: default %s\n' \
         '\t-e <time in seconds> - length of time to sleep the dispatcher in between transmissions of data to the database, to allow new messages to queue up from the client for efficiency: default %s\n' \
         '\t-k <path> - path to the ssl key: default %s\n' \
-        '\t-y - Enable in-memory database if supported: default %s\n' % (
+        '\t-y - Enable in-memory database if supported (may not pre-load an existing database, and may not incrementally write before quit): default %s\n' % (
             flask_host, flask_port, do_debug, db_path, flush, dispatchsleep, key_path_prefix, memory))
     sys.exit(1)
 

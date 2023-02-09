@@ -1,6 +1,7 @@
 client*.sh*
 server*.sh*
 database/*.db
+database.db.bak
 
 # Binaries
 *.o
