@@ -6,8 +6,14 @@ import threading
 import queue
 from time import sleep
 import json
-from tinymongo import TinyMongoClient
 import time
+import tinymongo as tm
+import tinydb
+
+class TinyMongoClient(tm.TinyMongoClient):
+    @property
+    def _storage(self):
+        return tinydb.storages.JSONStorage
 
 class MongoDatabase(Database):
     def __init__(self, crypto, db_path='tinymongodata', flush=False, dispatchsleep=0):
