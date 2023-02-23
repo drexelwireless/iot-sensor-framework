@@ -76,16 +76,16 @@ class MysqlDatabase(Database):
         #    self.db = None
 
         if (self.db is None):
-            self.db = pymysql.connect(self.db_path, self.db_user, self.db_password, self.db_name, charset='utf8', use_unicode=True)
+            self.db = pymysql.connect(host=self.db_path, user=self.db_user, password=self.db_password, database=self.db_name, charset='utf8', use_unicode=True)
 
             self.init_database(self.db)
 
         if (self.dispatcher_db is None):
-            self.dispatcher_db = pymysql.connect(self.db_path, self.db_user, self.db_password, self.db_name, charset='utf8', use_unicode=True)
+            self.dispatcher_db = pymysql.connect(host=self.db_path, user=self.db_user, password=self.db_password, database=self.db_name, charset='utf8', use_unicode=True)
             self.init_database(self.dispatcher_db)
 
         if (self.log_db is None):
-            self.log_db = pymysql.connect(self.db_path, self.db_user, self.db_password, self.db_name, charset='utf8', use_unicode=True)
+            self.log_db = pymysql.connect(host=self.db_path, user=self.db_user, password=self.db_password, database=self.db_name, charset='utf8', use_unicode=True)
             self.init_database(self.log_db)
 
         return self.db

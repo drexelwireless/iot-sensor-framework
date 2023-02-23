@@ -25,8 +25,8 @@ def usage(flask_port, flask_host, do_debug, db_path, flush, key_path_prefix, dis
         '\t-d - Enable debugging: default %s\n' \
         '\t-m - Enable mysql instead of sqlite (also add -s xxx and -w xxx for user and password to the database)\n' \
         '\t-o - Enable mongodb instead of sqlite\n' \
-        '\t-r - Enable redcap instead of sqlite (also add -t xxx for the API token)' \
-        '\t-v - Enable VarIOT instead of sqlite (also add -t xxx for the API token, -b for the hostname of the API endpoint, -c xxx for the device ID)' \
+        '\t-r - Enable redcap instead of sqlite (also add -t xxx for the API token)\n' \
+        '\t-v - Enable VarIOT instead of sqlite (also add -t xxx for the API token, -b for the hostname of the API endpoint, -c xxx for the device ID)\n' \
         '\t-b <path> - path or hostname to the database or API endpoint: default %s\n' \
         '\t-l - flush the database on run: default %s\n' \
         '\t-e <time in seconds> - length of time to sleep the dispatcher in between transmissions of data to the database, to allow new messages to queue up from the client for efficiency: default %s\n' \
