@@ -11,7 +11,7 @@ class Interrogator:
         self.debug = _debug
         self.dispatchsleep = _dispatchsleep
         
-    def sendhttp(url, headerdict=dict(), bodydict=dict(), method='POST'):
+    def sendhttp(self, url, headerdict=dict(), bodydict=dict(), method='POST'):
         if self.cert_path == 'NONE':
             verifypath = False
         else:
