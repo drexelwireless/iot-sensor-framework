@@ -1,4 +1,5 @@
 import requests
+import json
 
 class Interrogator:
     def __init__(self, _db_host, _db_password, _cert_path="NONE", _debug=False, _dispatchsleep=0.25):
