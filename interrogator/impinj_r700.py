@@ -148,7 +148,7 @@ class ImpinjR700(Interrogator):
                 except queue.Empty:
                     break
 
-            resp, content = Interrogator.sendhttp(url, headerdict={'Content-Type': 'application/json; charset=UTF-8'}, bodydict=input_dicts, method='PUT')
+            resp, content = self.sendhttp(url, headerdict={'Content-Type': 'application/json; charset=UTF-8'}, bodydict=input_dicts, method='PUT')
 
             if self.dispatchsleep > 0:
                 # if desired, sleep the dispatcher for a short time to queue up some inserts and give the producer some CPU time
