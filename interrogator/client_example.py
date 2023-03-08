@@ -1,9 +1,26 @@
 import json
 import sys
-from httplib2 import Http
 from time import sleep, time
+import requests
 
 class ExampleClient():
+    def sendhttp(url, headerdict=dict(), bodydict=dict(), method='POST', certfile='NONE'):
+        if certfile == 'NONE':
+            verifypath = False
+        else:
+            verifypath = certfile
+
+        if method.lower() == 'get':
+            fun = requests.get
+        elif method.lower() == 'put':
+            fun = requests.put
+        elif method.lower() == 'post':
+            fun = requests.post
+
+        response = fun(url, verify = verifypath, data = json.dumps(bodydict), headers=headerdict)
+
+        return response, response.text
+        
     def __init__(self, _db_host, _db_password, _cert_path):
         # Inherit from Interrogator and can replace below block of initializations with the following superclass call (assuming the variables passed are included in the paramters passed to __init__ above)
         # Interrogator.__init__(self, _db_host, _db_password, _cert_path, _debug, _dispatchsleep)
@@ -16,19 +33,13 @@ class ExampleClient():
         
         self.exiting = False
 
-        if self.cert_path != 'NONE':
-            self.http_obj = Http(ca_certs=self.cert_path)
-        else:
-            self.http_obj = Http(disable_ssl_certificate_validation=True)
-
     # input_dicts is an array of dict() items; this can also be a single dict
     # this can be called as often as one likes; however, there is a performance hit due to the I/O on each call
     # so a producer/consumer threaded paradigm and/or a batch array insert is desirable here
     def insert_tags(self, input_dicts):
         url = self.db_host + '/api/iot'
 
-        resp, content = self.http_obj.request(uri=url, method='PUT', headers={
-            'Content-Type': 'application/json; charset=UTF-8'}, body=json.dumps(input_dicts))
+        resp, content = self.sendhttp(url, headerdict={'Content-Type': 'application/json; charset=UTF-8'}, bodydict=input_dicts, method='PUT')
 
     def test_insert(self): 
         input_dicts = []

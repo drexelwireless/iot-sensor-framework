@@ -4,7 +4,6 @@ import json
 import sys
 import queue
 import os
-from httplib2 import Http
 from llrp_proto import *
 from time import sleep
 
@@ -13,11 +12,6 @@ class Impinj(Interrogator):
         Interrogator.__init__(self, _db_host, _db_password,
                               _cert_path, _debug, _dispatchsleep)
         self.ip_address = _ip_address
-
-        if self.cert_path != 'NONE':
-            self.http_obj = Http(ca_certs=self.cert_path)
-        else:
-            self.http_obj = Http(disable_ssl_certificate_validation=True)
 
     def out(self, x):
         if self.debug:
@@ -133,8 +127,7 @@ class Impinj(Interrogator):
                 except queue.Empty:
                     break
 
-            resp, content = self.http_obj.request(uri=url, method='PUT', headers={
-                                                  'Content-Type': 'application/json; charset=UTF-8'}, body=json.dumps(input_dicts))
+            resp, content = Interrogator.sendhttp(url, headerdict={'Content-Type': 'application/json; charset=UTF-8'}, bodydict=input_dicts, method='PUT')
 
             if self.dispatchsleep > 0:
                 # if desired, sleep the dispatcher for a short time to queue up some inserts and give the producer some CPU time
