@@ -11,11 +11,11 @@ class Interrogator:
         self.debug = _debug
         self.dispatchsleep = _dispatchsleep
         
-    def sendhttp(url, headerdict=dict(), bodydict=dict(), method='POST', certfile='NONE'):
-        if certfile == 'NONE':
+    def sendhttp(url, headerdict=dict(), bodydict=dict(), method='POST'):
+        if self.cert_path == 'NONE':
             verifypath = False
         else:
-            verifypath = certfile
+            verifypath = self.cert_path
 
         if method.lower() == 'get':
             fun = requests.get
