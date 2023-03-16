@@ -38,13 +38,14 @@ pip3 install --user pandas
 pip3 install --user filterpy
 pip3 install --user werkzeug
 #pip3 install --user hashlib
-pip3 install --user sklearn
+# pip3 install --user sklearn
 pip3 install --user pykalman
 pip3 install --user scikit-image
 pip3 install --user peakutils
 pip3 install --user hmmlearn
 pip3 install --user statsmodels 
 pip3 install --user requests
+pip3 install --user scikit-learn
 
 sudo apt-get install libmysqlclient-dev
 #pip3 install --user MySQL-python # may be incompatible with Python3, switch to pymysql instead.
@@ -75,6 +76,7 @@ sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
 pip3 install --user scipy
 pip3 install --user sllurp
 pip3 install --user tinymongo
+pip3 install --user pyserial
 
 # for client packages
 pip3 install --user scikit-learn
@@ -91,14 +93,15 @@ sudo apt-get install libgsl0-dev
 pip3 install --user flask-cors
 
 #sudo pip install git+https://github.com/ajmendez/PyMix.git
-pushd /tmp
-git clone https://github.com/ajmendez/PyMix.git
-touch PyMix/README.rst
-sed 's/from distutils.core import setup, Extension,DistutilsExecError/#from distutils.core import setup, Extension,DistutilsExecError\nfrom distutils.core import setup, Extension' PyMix/setup.py
-sed "s/numpypath =  prefix + '\/lib\/python' +pyvs + '\/site-packages\/numpy\/core\/include\/numpy'  # path to arrayobject.h/#numpypath =  prefix + '\/lib\/python' +pyvs + '\/site-packages\/numpy\/core\/include\/numpy'  # path to arrayobject.h\n    try:\n        import numpy\n        numpypath = os.path.join(numpy.get_include(), 'numpy')\n    except ImportError:\n        raise ImportError("Unable to import Numpy, which is required by PyMix")\n/g" PyMix/setup.py
-sed -i 's/as =  alpha/dummy = alpha/g' PyMix/pymix/AminoAcidPropertyPrior.py
-pushd PyMix
-find . -iname '*.py' -exec 2to3 -w '{}' \;
-python3 setup.py install --user
-popd
-popd
+pip3 install --user git+https://github.com/BillJr99/PyMix.git
+#pushd /tmp
+#git clone https://github.com/ajmendez/PyMix.git
+#touch PyMix/README.rst
+#sed 's/from distutils.core import setup, Extension,DistutilsExecError/#from distutils.core import setup, Extension,DistutilsExecError\nfrom distutils.core import setup, Extension' PyMix/setup.py
+#sed "s/numpypath =  prefix + '\/lib\/python' +pyvs + '\/site-packages\/numpy\/core\/include\/numpy'  # path to arrayobject.h/#numpypath =  prefix + '\/lib\/python' +pyvs + '\/site-packages\/numpy\/core\/include\/numpy'  # path to arrayobject.h\n    try:\n        import numpy\n        numpypath = os.path.join(numpy.get_include(), 'numpy')\n    except ImportError:\n        raise ImportError("Unable to import Numpy, which is required by PyMix")\n/g" PyMix/setup.py
+#sed -i 's/as =  alpha/dummy = alpha/g' PyMix/pymix/AminoAcidPropertyPrior.py
+#pushd PyMix
+#find . -iname '*.py' -exec 2to3 -w '{}' \;
+#python3 setup.py install --user
+#popd
+#popd
